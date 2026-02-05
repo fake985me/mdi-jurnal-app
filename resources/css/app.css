@@ -1,0 +1,333 @@
+@import "tailwindcss";
+
+/* @import './base.css'; */
+
+html {
+    scroll-behavior: smooth;
+}
+
+@layer base {
+    body {
+        @apply antialiased;
+        min-height: 100vh;
+        color: var(--color-text);
+        background: var(--color-background);
+        transition: color 0.5s, background-color 0.5s;
+        line-height: 1.6;
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            Roboto,
+            Oxygen,
+            Ubuntu,
+            Cantarell,
+            'Fira Sans',
+            'Droid Sans',
+            'Helvetica Neue',
+            sans-serif;
+        font-size: 15px;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+@layer components {
+
+    /* Custom button styles */
+    .btn-primary {
+        @apply px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg;
+    }
+
+    .btn-secondary {
+        @apply px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200;
+    }
+
+    .btn-danger {
+        @apply px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200;
+    }
+
+    /* Card styles */
+    .card {
+        @apply bg-white rounded-xl shadow-lg overflow-hidden;
+    }
+
+    .card-header {
+        @apply px-6 py-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200;
+    }
+
+    /* Input styles */
+    .input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200;
+    }
+
+    /* Badge styles */
+    .badge {
+        @apply px-3 py-1 text-xs font-semibold rounded-full;
+    }
+
+    .badge-success {
+        @apply px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800;
+    }
+
+    .badge-warning {
+        @apply px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800;
+    }
+
+    .badge-danger {
+        @apply px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800;
+    }
+
+    .badge-info {
+        @apply px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800;
+    }
+
+    /* Table styles */
+    .table-wrapper {
+        @apply bg-white rounded-xl shadow-lg overflow-hidden;
+    }
+
+    .table-header {
+        @apply bg-gradient-to-r from-gray-50 to-gray-100;
+    }
+
+    /* Stat card */
+    .stat-card {
+        @apply bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300;
+    }
+
+    .stat-icon {
+        @apply p-3 rounded-full text-2xl;
+    }
+}
+
+@layer utilities {
+
+    /* Custom animations */
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(-100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    /* Gradient backgrounds */
+    .gradient-primary {
+        @apply bg-gradient-to-r from-indigo-600 to-purple-600;
+    }
+
+    .gradient-success {
+        @apply bg-gradient-to-r from-green-500 to-teal-500;
+    }
+
+    .gradient-danger {
+        @apply bg-gradient-to-r from-red-500 to-pink-500;
+    }
+
+    .gradient-warning {
+        @apply bg-gradient-to-r from-yellow-500 to-orange-500;
+    }
+}
+
+/*--------------------------------------------------------------
+# Hero Section
+--------------------------------------------------------------*/
+#hero {
+  width: 100%;
+  height: 80vh;
+  background: #000;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (max-height: 500px) {
+  #hero {
+    height: 150vh;
+  }
+}
+
+#hero img {
+  margin-bottom: 15px;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+@media only screen and (max-width: 280px) {
+  /* Untuk layar sangat kecil jangan pakai width 400px supaya tidak overflow */
+  #hero img {
+    max-width: 100%;
+  }
+}
+
+#hero .carousel,
+#hero .carousel-inner,
+#hero .carousel-item,
+#hero .carousel-item::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+}
+
+#hero .carousel-item {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#hero .carousel-item::before {
+  content: "";
+  background-color: rgba(0, 0, 0, 0.363);
+}
+
+#hero .carousel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: 0;
+  top: 70px;
+  left: 50px;
+  right: 50px;
+}
+
+#hero .container {
+  /* FIX: sebelumnya `position: center;` (tidak valid) */
+  position: relative;
+  text-align: center;
+  margin: 0 auto;
+}
+
+#hero h2 {
+  color: #fff;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  #hero h2 {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+}
+
+#hero p {
+  width: 80%;
+  font-size: 28px;
+  text-shadow: 4px 5px 8px rgb(13 12 12);
+  line-height: 1.5;
+  margin: 0 auto 30px auto;
+  color: #cdd6eb;
+}
+
+@media (min-width: 1024px) {
+  #hero p {
+    width: 60%;
+  }
+}
+
+@media (max-width: 280px) {
+  #hero p {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+}
+
+#hero .carousel-fade {
+  overflow: hidden;
+}
+
+#hero .carousel-fade .carousel-inner .carousel-item {
+  transition-property: opacity;
+}
+
+#hero .carousel-fade .carousel-inner .carousel-item,
+#hero .carousel-fade .carousel-inner .active.carousel-item-start,
+#hero .carousel-fade .carousel-inner .active.carousel-item-end {
+  opacity: 0;
+}
+
+#hero .carousel-fade .carousel-inner .active,
+#hero .carousel-fade .carousel-inner .carousel-item-next.carousel-item-start,
+#hero .carousel-fade .carousel-inner .carousel-item-prev.carousel-item-end {
+  opacity: 1;
+  transition: 0.5s;
+}
+
+#hero .carousel-fade .carousel-inner .carousel-item-next,
+#hero .carousel-fade .carousel-inner .carousel-item-prev,
+#hero .carousel-fade .carousel-inner .active.carousel-item-start,
+#hero .carousel-fade .carousel-inner .active.carousel-item-end {
+  left: 0;
+  transform: translate3d(0, 0, 0);
+}
+
+#hero .carousel-control-prev,
+#hero .carousel-control-next {
+  width: 10%;
+}
+
+@media (min-width: 1024px) {
+  #hero .carousel-control-prev,
+  #hero .carousel-control-next {
+    width: 5%;
+  }
+}
+
+#hero .carousel-control-next-icon,
+#hero .carousel-control-prev-icon {
+  background: none;
+  font-size: 32px;
+  line-height: 1;
+}
+
+#hero .carousel-indicators li {
+  cursor: pointer;
+  list-style-type: none;
+}
+
+#hero .btn-get-started {
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1px;
+  display: inline-block;
+  padding: 8px 32px;
+  border-radius: 50px;
+  transition: 0.5s;
+  margin: 10px;
+  color: #fff;
+  background: #3ec1d5;
+}
+
+#hero .btn-get-started:hover {
+  background: #fff;
+  color: #3ec1d5;
+}

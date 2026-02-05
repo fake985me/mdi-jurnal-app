@@ -1,0 +1,17 @@
+<!-- This file contains the pattern for collapsed sidebar navigation items -->
+<!-- Use this as reference when updating DashboardLayout.vue -->
+
+Pattern for each router-link:
+
+<router-link to="/path"
+  :class="[
+    'flex items-center rounded-lg hover:bg-indigo-800 transition-all duration-200',
+    sidebarCollapsed ? 'px-2 py-3 justify-center' : 'px-4 py-3 hover:translate-x-1'
+  ]"
+  active-class="bg-gradient-to-r from-indigo-700 to-indigo-600 shadow-lg"
+  :title="sidebarCollapsed ? 'Label Name' : ''">
+  <span :class="sidebarCollapsed ? 'text-2xl' : 'mr-3 text-lg'">🎯</span>
+  <span v-show="!sidebarCollapsed" class="font-medium">Label Name</span>
+</router-link>
+
+Apply this pattern to all navigation links in DashboardLayout.vue

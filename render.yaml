@@ -1,0 +1,64 @@
+services:
+  # Web Service - Laravel Application (Docker-based)
+  - type: web
+    name: mai-app
+    runtime: docker
+    plan: free # atau 'starter' untuk paid plan
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    envVars:
+      - key: APP_NAME
+        value: MAI-App
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true # Render akan generate otomatis, atau bisa manual
+      - key: APP_URL
+        value: https://mai-app.onrender.com # Ganti dengan URL Render Anda
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: mai-app-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: mai-app-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: mai-app-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: mai-app-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: mai-app-db
+          property: password
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: BROADCAST_DRIVER
+        value: log
+      - key: FILESYSTEM_DISK
+        value: local
+
+databases:
+  # PostgreSQL Database
+  - name: mai-app-db
+    databaseName: mai_app
+    plan: free # atau 'starter' untuk paid plan
+    postgresMajorVersion: 16 # atau 15, 14

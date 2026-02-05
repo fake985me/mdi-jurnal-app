@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Aplikasi Laravel + Vue.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mai-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./docker/supervisor/supervisord.dev.conf:/etc/supervisor/conf.d/supervisord.conf
+    ports:
+      - "8000:80"
+      - "5173:5173"
+    networks:
+      - mai-network
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    depends_on:
+      - mysql
+      - redis
+
+  # Database MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mai-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-mai_app}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-mai_user}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3306:3306"
+    networks:
+      - mai-network
+
+  # Redis untuk caching dan queue
+  redis:
+    image: redis:7-alpine
+    container_name: mai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mai-network
+
+  # phpMyAdmin untuk manajemen database
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: mai-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "8080:80"
+    networks:
+      - mai-network
+    depends_on:
+      - mysql
+
+networks:
+  mai-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local

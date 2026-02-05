@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Aplikasi Laravel + Vue.js (Production)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mai-app-prod
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    ports:
+      - "80:80"
+    networks:
+      - mai-network-prod
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    depends_on:
+      - mysql
+      - redis
+
+  # Database MySQL (Production)
+  mysql:
+    image: mysql:8.0
+    container_name: mai-mysql-prod
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - mysql-prod-data:/var/lib/mysql
+    networks:
+      - mai-network-prod
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis untuk caching dan queue (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: mai-redis-prod
+    restart: always
+    volumes:
+      - redis-prod-data:/data
+    networks:
+      - mai-network-prod
+    command: redis-server --appendonly yes
+
+networks:
+  mai-network-prod:
+    driver: bridge
+
+volumes:
+  mysql-prod-data:
+    driver: local
+  redis-prod-data:
+    driver: local

@@ -1,0 +1,77 @@
+# Render.com optimized Dockerfile untuk Laravel + Vue.js
+FROM php:8.3-cli-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libwebp-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    postgresql-dev \
+    oniguruma-dev \
+    nginx
+
+# Configure and install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
+    docker-php-ext-install \
+    pdo_pgsql \
+    mbstring \
+    zip \
+    exif \
+    pcntl \
+    bcmath \
+    gd
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Node.js
+RUN apk add --no-cache nodejs npm
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files
+COPY . .
+
+# Install PHP dependencies (update to include new doctrine/dbal)
+RUN composer update --no-dev --no-interaction --optimize-autoloader
+
+# Install Node dependencies and build
+RUN npm install --prefer-offline --legacy-peer-deps && \
+    npm run build && \
+    npm cache clean --force
+
+# Create minimal .env for build-time artisan commands
+RUN cp .env.example .env || echo "APP_KEY=" > .env && \
+    php artisan key:generate --force
+
+# Create storage link and set permissions
+RUN php artisan storage:link || true && \
+    chmod -R 755 storage bootstrap/cache
+
+# Optimize Laravel (skip cache to avoid DB connection during build)
+# Note: Will cache on first request in production
+RUN php artisan route:cache && \
+    php artisan view:cache
+
+# Run migrations during build (optional - bisa di-comment)
+# RUN php artisan migrate --force
+
+# Copy env generation script
+COPY docker/scripts/generate-env.sh /usr/local/bin/generate-env.sh
+RUN chmod +x /usr/local/bin/generate-env.sh
+
+# Expose dynamic PORT for Render.com
+EXPOSE $PORT
+
+# Start: Generate .env, clear cache, migrate, then serve
+CMD /usr/local/bin/generate-env.sh && \
+    php artisan config:clear && \
+    (php artisan migrate --force || echo "⚠️  Migrations had errors but continuing...") && \
+    php artisan serve --host=0.0.0.0 --port=$PORT
