@@ -127,6 +127,54 @@
           <div><span class="text-gray-500">Total Stock:</span> <strong class="text-emerald-600">{{ selectedWarehouse.stocks_sum_quantity || 0 }}</strong></div>
         </div>
 
+        <!-- Product Stocks Section -->
+        <div class="border-t pt-4 mt-4">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="font-semibold text-gray-800">Product Stocks ({{ warehouseStocks.length }})</h4>
+            <button v-if="selectedWarehouse.is_default" @click="openAddProductModal()" 
+              class="text-sm text-orange-600 hover:text-orange-800">+ Add Product</button>
+          </div>
+
+          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">Loading stocks...</div>
+          
+          <table v-else-if="warehouseStocks.length" class="min-w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left">SKU</th>
+                <th class="px-4 py-2 text-left">Product</th>
+                <th class="px-4 py-2 text-left">Brand</th>
+                <th class="px-4 py-2 text-left">Location</th>
+                <th class="px-4 py-2 text-right">Quantity</th>
+                <th class="px-4 py-2 text-right">Last Updated</th>
+                <th class="px-4 py-2 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="stock in warehouseStocks" :key="stock.id">
+                <td class="px-4 py-2 font-mono text-sm">{{ stock.product?.sku || '-' }}</td>
+                <td class="px-4 py-2 font-medium">{{ stock.product?.title || '-' }}</td>
+                <td class="px-4 py-2 text-gray-600">{{ stock.product?.brand || '-' }}</td>
+                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || 'No Location' }}</td>
+                <td class="px-4 py-2 text-right">
+                  <span class="font-bold text-emerald-600">{{ stock.quantity }}</span>
+                </td>
+                <td class="px-4 py-2 text-right text-gray-500 text-xs">
+                  {{ stock.last_updated ? new Date(stock.last_updated).toLocaleDateString() : '-' }}
+                </td>
+              <td class="px-4 py-2 text-right text-gray-500 text-xs">
+                <button
+                  :disabled="!stock.product"
+                  @click="editProduct(stock.product)"
+                  class="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed">
+                  Edit
+                </button>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="text-center text-gray-500 py-4">No products in this warehouse</p>
+        </div>
+
         <!-- Locations Section -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-4">
@@ -166,44 +214,6 @@
           <p v-else class="text-center text-gray-500 py-4">No locations defined</p>
         </div>
 
-        <!-- Product Stocks Section -->
-        <div class="border-t pt-4 mt-4">
-          <div class="flex justify-between items-center mb-4">
-            <h4 class="font-semibold text-gray-800">Product Stocks ({{ warehouseStocks.length }})</h4>
-            <button v-if="selectedWarehouse.is_default" @click="showAddProductModal = true; resetAddProductForm()" 
-              class="text-sm text-orange-600 hover:text-orange-800">+ Add Product</button>
-          </div>
-
-          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">Loading stocks...</div>
-          
-          <table v-else-if="warehouseStocks.length" class="min-w-full text-sm">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left">SKU</th>
-                <th class="px-4 py-2 text-left">Product</th>
-                <th class="px-4 py-2 text-left">Brand</th>
-                <th class="px-4 py-2 text-left">Location</th>
-                <th class="px-4 py-2 text-right">Quantity</th>
-                <th class="px-4 py-2 text-right">Last Updated</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="stock in warehouseStocks" :key="stock.id">
-                <td class="px-4 py-2 font-mono text-sm">{{ stock.product?.sku || '-' }}</td>
-                <td class="px-4 py-2 font-medium">{{ stock.product?.title || '-' }}</td>
-                <td class="px-4 py-2 text-gray-600">{{ stock.product?.brand || '-' }}</td>
-                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || 'No Location' }}</td>
-                <td class="px-4 py-2 text-right">
-                  <span class="font-bold text-emerald-600">{{ stock.quantity }}</span>
-                </td>
-                <td class="px-4 py-2 text-right text-gray-500 text-xs">
-                  {{ stock.last_updated ? new Date(stock.last_updated).toLocaleDateString() : '-' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p v-else class="text-center text-gray-500 py-4">No products in this warehouse</p>
-        </div>
       </div>
 
       <div v-else class="p-8 text-center text-gray-500">
@@ -336,7 +346,7 @@
         <div class="border-t pt-4 mt-4">
           <div class="flex justify-between items-center mb-4">
             <h4 class="font-semibold text-gray-800">Product Stocks ({{ warehouseStocks.length }})</h4>
-            <button v-if="selectedWarehouse?.is_default" @click="showAddProductModal = true; resetAddProductForm()" 
+            <button v-if="selectedWarehouse?.is_default" @click="openAddProductModal()" 
               class="text-sm text-orange-600 hover:text-orange-800">+ Add Product</button>
           </div>
 
@@ -351,6 +361,7 @@
                 <th class="px-4 py-2 text-left">Location</th>
                 <th class="px-4 py-2 text-right">Quantity</th>
                 <th class="px-4 py-2 text-right">Last Updated</th>
+                <th class="px-4 py-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -365,6 +376,14 @@
                 <td class="px-4 py-2 text-right text-gray-500 text-xs">
                   {{ stock.last_updated ? new Date(stock.last_updated).toLocaleDateString() : '-' }}
                 </td>
+              <td class="px-4 py-2 text-right text-gray-500 text-xs">
+                <button
+                  :disabled="!stock.product"
+                  @click="editProduct(stock.product)"
+                  class="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed">
+                  Edit
+                </button>
+              </td>
               </tr>
             </tbody>
           </table>
@@ -458,31 +477,7 @@
                       {{ product.title || product.name }} - {{ product.brand }} (Stock: {{ product.stock || 0 }})
                     </option>
                   </select>
-            
-            <!-- <input 
-              v-model="productSearch" 
-              @input="searchProducts"
-              type="text" 
-              class="input" 
-              placeholder="Type to search products..." 
-              :disabled="!defaultWarehouse" />
-            <div v-if="productSearchResults.length > 0" class="mt-2 border rounded-lg max-h-40 overflow-auto">
-              <button
-                v-for="product in productSearchResults"
-                :key="product.id"
-                type="button"
-                @click="selectProduct(product)"
-                class="w-full text-left px-3 py-2 hover:bg-gray-100 border-b last:border-b-0">
-                <span class="font-medium">{{ product.title }}</span>
-                <span class="text-sm text-gray-500 ml-2">(Stock: {{ product.stock }})</span>
-              </button>
-            </div> -->
           </div>
-
-          <!-- <div v-if="selectedProduct" class="p-3 bg-blue-50 rounded-lg">
-            <p class="font-medium">{{ selectedProduct.title }}</p>
-            <p class="text-sm text-gray-600">Current stock: {{ selectedProduct.stock }}</p>
-          </div> -->
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
@@ -499,7 +494,7 @@
           <div class="flex justify-end space-x-3 pt-4 border-t">
             <button type="button" @click="showAddProductModal = false" class="btn-secondary">Cancel</button>
             <button type="submit" :disabled="addingProduct || !defaultWarehouse || !addProductForm.product_id" class="btn-primary">
-              {{ addingProduct ? 'Adding...' : 'Add Stock' }}
+              {{ editingProduct ? 'Edit Product' : 'Add Product' }}
             </button>
           </div>
         </form>
@@ -523,6 +518,7 @@ const activeWarehouseId = ref(null);
 const allWarehouses = ref([]);
 const editingId = ref(null);
 const editingLocationId = ref(null);
+const editingProduct = ref(null);
 const saving = ref(false);
 const savingLocation = ref(false);
 const error = ref('');
@@ -724,6 +720,71 @@ const deleteLocation = async (location) => {
   } catch (err) {
     alert(err.response?.data?.message || 'Failed to delete location');
   }
+};
+
+const editProduct = (product) => {
+    if (!product) {
+        console.warn('editProduct called without product');
+        return;
+    }
+
+    editingProduct.value = product;
+    
+    // Convert category_pairs to form.categories format
+    const categoryPairs = product.category_pairs || [];
+    const formCategories = categoryPairs.map(pair => ({
+        category_id: pair.category_id || '',
+        sub_category_id: pair.sub_category_id || ''
+    }));
+
+    form.value = {
+        title: product.title || '',
+        sku: product.sku || '',
+        brand: product.brand || '',
+        image: product.image || '',
+        stock: product.stock || 0,
+        minimum_stock: product.minimum_stock || 0,
+        categories: formCategories.length > 0 ? formCategories : []
+    };
+    showModal.value = true;
+};
+
+const saveProduct = async () => {
+    saving.value = true;
+    try {
+        // Filter out empty category pairs
+        const validCategories = form.value.categories.filter(c => c.category_id);
+        const payload = {
+            ...form.value,
+            categories: validCategories
+        };
+
+        if (editingProduct.value) {
+            await api.put(`/products/${editingProduct.value.id}`, payload);
+        } else {
+            await api.post('/products', payload);
+        }
+        showModal.value = false;
+        editingProduct.value = null;
+        resetForm();
+        loadProducts();
+    } catch (error) {
+        console.error('Failed to save product:', error);
+        alert('Failed to save product: ' + (error.response?.data?.message || 'Unknown error'));
+    } finally {
+        saving.value = false;
+    }
+};
+
+const deleteProduct = async (id) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+        await api.delete(`/products/${id}`);
+        loadProducts();
+    } catch (error) {
+        console.error('Failed to delete product:', error);
+        alert('Failed to delete product');
+    }
 };
 
 // Add Product Stock states

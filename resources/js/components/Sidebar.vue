@@ -76,6 +76,7 @@ const menuSections = computed(() => [
     items: [
       { name: t('nav.sales'), icon: 'sales', to: '/dashboard/sales', roles: ['admin', 'staff'] },
       { name: t('nav.purchases'), icon: 'purchases', to: '/dashboard/purchases', roles: ['admin', 'staff'] },
+      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] }
     ]
   },
   {
@@ -85,7 +86,6 @@ const menuSections = computed(() => [
       { name: t('nav.assetManagement'), icon: 'table', to: '/dashboard/assets', roles: ['admin', 'staff'] },
       { name: t('nav.warehouses'), icon: 'warehouse', to: '/dashboard/warehouses', roles: ['admin', 'staff'] },
       { name: t('nav.stockTransfers'), icon: 'transfer', to: '/dashboard/stock-transfers', roles: ['admin', 'staff'] },
-      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] }
     ]
   },
   {
