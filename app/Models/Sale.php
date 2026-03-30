@@ -24,6 +24,7 @@ class Sale extends Model
         'grand_total',
         'status',
         'sales_person_id',
+        'warehouse_id',
         'user_id',
         'sale_date',
         'notes'
@@ -53,6 +54,14 @@ class Sale extends Model
     public function salesPerson()
     {
         return $this->belongsTo(SalesPerson::class, 'sales_person_id');
+    }
+
+    /**
+     * Get the warehouse for this sale (stock source)
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**
@@ -123,6 +132,14 @@ class Sale extends Model
     }
 
     /**
+     * Payments for this sale
+     */
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
+
+    /**
      * Calculate subtotal from items
      */
     public function calculateSubtotal()
@@ -173,4 +190,3 @@ class Sale extends Model
         return $this;
     }
 }
-

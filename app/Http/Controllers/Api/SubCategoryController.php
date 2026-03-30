@@ -15,7 +15,7 @@ class SubCategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SubCategory::with('category');
+        $query = SubCategory::with(['category', 'parent', 'children']);
 
         // Filter by category
         if ($request->has('category_id') && $request->category_id) {
@@ -52,10 +52,12 @@ class SubCategoryController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:sub_categories,id',
         ]);
 
         // Check for unique name within category
         $exists = SubCategory::where('category_id', $validated['category_id'])
+            ->where('parent_id', $validated['parent_id'] ?? null)
             ->where('name', $validated['name'])
             ->exists();
 
@@ -100,11 +102,20 @@ class SubCategoryController extends Controller
             'category_id' => 'sometimes|required|exists:categories,id',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:sub_categories,id',
         ]);
+
+        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === (int) $subCategory->id) {
+            return response()->json([
+                'message' => 'Subcategory cannot be its own parent.'
+            ], 422);
+        }
 
         // Check for unique name within category (excluding current)
         $categoryId = $validated['category_id'] ?? $subCategory->category_id;
+        $parentId = $validated['parent_id'] ?? $subCategory->parent_id;
         $exists = SubCategory::where('category_id', $categoryId)
+            ->where('parent_id', $parentId)
             ->where('name', $validated['name'])
             ->where('id', '!=', $id)
             ->exists();
@@ -127,6 +138,12 @@ class SubCategoryController extends Controller
     public function destroy($id)
     {
         $subCategory = SubCategory::findOrFail($id);
+
+        if ($subCategory->children()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete subcategory that has child subcategories. Reassign or delete child subcategories first.'
+            ], 422);
+        }
 
         // Check if subcategory is used by products
         $productsCount = DB::table('product_category')

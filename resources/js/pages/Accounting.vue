@@ -4,8 +4,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2
-                    class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent"
-                >
+                    class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                     Accounting
                 </h2>
                 <p class="text-sm text-gray-600 mt-1">
@@ -16,13 +15,10 @@
                 <button @click="showTaxModal = true" class="btn-secondary">
                     ⚙️ Tax Settings
                 </button>
-                <button
-                    @click="
-                        showModal = true;
-                        resetForm();
-                    "
-                    class="btn-primary"
-                >
+                <button @click="
+                    showModal = true;
+                resetForm();
+                " class="btn-primary">
                     + Create Invoice
                 </button>
             </div>
@@ -31,37 +27,28 @@
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200">
             <nav class="flex space-x-8">
-                <button
-                    @click="activeTab = 'invoices'"
-                    :class="[
-                        'py-2 px-1 border-b-2 font-medium text-sm',
-                        activeTab === 'invoices'
-                            ? 'border-emerald-500 text-emerald-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700',
-                    ]"
-                >
+                <button @click="activeTab = 'invoices'" :class="[
+                    'py-2 px-1 border-b-2 font-medium text-sm',
+                    activeTab === 'invoices'
+                        ? 'border-emerald-500 text-emerald-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700',
+                ]">
                     Invoices
                 </button>
-                <button
-                    @click="activeTab = 'reports'"
-                    :class="[
-                        'py-2 px-1 border-b-2 font-medium text-sm',
-                        activeTab === 'reports'
-                            ? 'border-emerald-500 text-emerald-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700',
-                    ]"
-                >
+                <button @click="activeTab = 'reports'" :class="[
+                    'py-2 px-1 border-b-2 font-medium text-sm',
+                    activeTab === 'reports'
+                        ? 'border-emerald-500 text-emerald-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700',
+                ]">
                     Tax Reports
                 </button>
-                <button
-                    @click="activeTab = 'summary'"
-                    :class="[
-                        'py-2 px-1 border-b-2 font-medium text-sm',
-                        activeTab === 'summary'
-                            ? 'border-emerald-500 text-emerald-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700',
-                    ]"
-                >
+                <button @click="activeTab = 'summary'" :class="[
+                    'py-2 px-1 border-b-2 font-medium text-sm',
+                    activeTab === 'summary'
+                        ? 'border-emerald-500 text-emerald-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700',
+                ]">
                     Monthly Summary
                 </button>
             </nav>
@@ -72,36 +59,17 @@
             <!-- Filters -->
             <div class="card p-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input
-                        v-model="filters.search"
-                        @input="loadInvoices"
-                        type="text"
-                        placeholder="Search invoices..."
-                        class="input"
-                    />
-                    <select
-                        v-model="filters.status"
-                        @change="loadInvoices"
-                        class="input"
-                    >
+                    <input v-model="filters.search" @input="loadInvoices" type="text" placeholder="Search invoices..."
+                        class="input" />
+                    <select v-model="filters.status" @change="loadInvoices" class="input">
                         <option value="">All Status</option>
                         <option value="draft">Draft</option>
                         <option value="sent">Sent</option>
                         <option value="paid">Paid</option>
                         <option value="overdue">Overdue</option>
                     </select>
-                    <input
-                        v-model="filters.start_date"
-                        @change="loadInvoices"
-                        type="date"
-                        class="input"
-                    />
-                    <input
-                        v-model="filters.end_date"
-                        @change="loadInvoices"
-                        type="date"
-                        class="input"
-                    />
+                    <input v-model="filters.start_date" @change="loadInvoices" type="date" class="input" />
+                    <input v-model="filters.end_date" @change="loadInvoices" type="date" class="input" />
                 </div>
             </div>
 
@@ -120,57 +88,35 @@
                 <table v-else class="min-w-full">
                     <thead class="table-header">
                         <tr>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 Invoice #
                             </th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 Customer
                             </th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 Date
                             </th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                                 Subtotal
                             </th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                                 Tax
                             </th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                                 Total
                             </th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                 Status
                             </th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
-                            >
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                                 Actions
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr
-                            v-for="invoice in invoices.data"
-                            :key="invoice.id"
-                            class="hover:bg-gray-50"
-                        >
-                            <td
-                                class="px-6 py-4 text-sm font-medium text-gray-900"
-                            >
+                        <tr v-for="invoice in invoices.data" :key="invoice.id" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
                                 {{ invoice.invoice_number }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
@@ -179,59 +125,38 @@
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 {{ formatDate(invoice.invoice_date) }}
                             </td>
-                            <td
-                                class="px-6 py-4 text-sm text-gray-900 text-right"
-                            >
+                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
                                 {{ formatCurrency(invoice.subtotal) }}
                             </td>
-                            <td
-                                class="px-6 py-4 text-sm text-gray-500 text-right"
-                            >
-                                <span class="text-xs text-gray-400"
-                                    >{{ invoice.tax_type?.toUpperCase() }}
-                                    {{ invoice.tax_rate }}%</span
-                                >
+                            <td class="px-6 py-4 text-sm text-gray-500 text-right">
+                                <span class="text-xs text-gray-400">{{ invoice.tax_type?.toUpperCase() }}
+                                    {{ invoice.tax_rate }}%</span>
                                 <br />{{ formatCurrency(invoice.tax_amount) }}
                             </td>
-                            <td
-                                class="px-6 py-4 text-sm font-bold text-gray-900 text-right"
-                            >
+                            <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
                                 {{ formatCurrency(invoice.total) }}
                             </td>
                             <td class="px-6 py-4">
                                 <span :class="getStatusBadge(invoice.status)">{{
                                     invoice.status
-                                }}</span>
+                                    }}</span>
                             </td>
                             <td class="px-6 py-4 text-right text-sm space-x-2">
-                                <button
-                                    v-if="invoice.status === 'draft'"
-                                    @click="markSent(invoice)"
-                                    class="text-blue-600 hover:text-blue-900"
-                                >
+                                <button v-if="invoice.status === 'draft'" @click="markSent(invoice)"
+                                    class="text-blue-600 hover:text-blue-900">
                                     Send
                                 </button>
-                                <button
-                                    v-if="
-                                        ['sent', 'overdue'].includes(
-                                            invoice.status
-                                        )
-                                    "
-                                    @click="markPaid(invoice)"
-                                    class="text-green-600 hover:text-green-900"
-                                >
+                                <button v-if="
+                                    ['sent', 'overdue'].includes(
+                                        invoice.status
+                                    )
+                                " @click="markPaid(invoice)" class="text-green-600 hover:text-green-900">
                                     Mark Paid
                                 </button>
-                                <button
-                                    @click="downloadPdf(invoice)"
-                                    class="text-red-600 hover:text-red-900"
-                                >
+                                <button @click="downloadPdf(invoice)" class="text-red-600 hover:text-red-900">
                                     PDF
                                 </button>
-                                <button
-                                    @click="deleteInvoice(invoice.id)"
-                                    class="text-red-600 hover:text-red-900"
-                                >
+                                <button @click="deleteInvoice(invoice.id)" class="text-red-600 hover:text-red-900">
                                     Delete
                                 </button>
                             </td>
@@ -240,27 +165,18 @@
                 </table>
 
                 <!-- Pagination -->
-                <div
-                    v-if="invoices.data?.length"
-                    class="px-6 py-4 bg-gray-50 flex justify-between"
-                >
+                <div v-if="invoices.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between">
                     <p class="text-sm text-gray-700">
                         Showing {{ invoices.from }} to {{ invoices.to }} of
                         {{ invoices.total }}
                     </p>
                     <div class="flex space-x-2">
-                        <button
-                            @click="loadInvoices(invoices.current_page - 1)"
-                            :disabled="!invoices.prev_page_url"
-                            class="btn-secondary disabled:opacity-50"
-                        >
+                        <button @click="loadInvoices(invoices.current_page - 1)" :disabled="!invoices.prev_page_url"
+                            class="btn-secondary disabled:opacity-50">
                             Previous
                         </button>
-                        <button
-                            @click="loadInvoices(invoices.current_page + 1)"
-                            :disabled="!invoices.next_page_url"
-                            class="btn-secondary disabled:opacity-50"
-                        >
+                        <button @click="loadInvoices(invoices.current_page + 1)" :disabled="!invoices.next_page_url"
+                            class="btn-secondary disabled:opacity-50">
                             Next
                         </button>
                     </div>
@@ -272,17 +188,9 @@
         <div v-if="activeTab === 'reports'" class="space-y-4">
             <div class="card p-4">
                 <div class="flex items-center gap-4">
-                    <input
-                        v-model="reportFilters.start_date"
-                        type="date"
-                        class="input w-48"
-                    />
+                    <input v-model="reportFilters.start_date" type="date" class="input w-48" />
                     <span>to</span>
-                    <input
-                        v-model="reportFilters.end_date"
-                        type="date"
-                        class="input w-48"
-                    />
+                    <input v-model="reportFilters.end_date" type="date" class="input w-48" />
                     <button @click="loadTaxReport" class="btn-primary">
                         Generate Report
                     </button>
@@ -292,9 +200,7 @@
             <div v-if="taxReport" class="space-y-4">
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div
-                        class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100">
                         <p class="text-sm text-blue-600 font-medium">
                             Total Invoices
                         </p>
@@ -302,9 +208,7 @@
                             {{ taxReport.summary.total_invoices }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-gray-50 to-gray-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-gray-50 to-gray-100">
                         <p class="text-sm text-gray-600 font-medium">
                             Subtotal
                         </p>
@@ -314,9 +218,7 @@
                             }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-yellow-50 to-yellow-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-yellow-50 to-yellow-100">
                         <p class="text-sm text-yellow-600 font-medium">
                             Total Tax (PPN)
                         </p>
@@ -324,9 +226,7 @@
                             {{ formatCurrency(taxReport.summary.total_tax) }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-green-50 to-green-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-green-50 to-green-100">
                         <p class="text-sm text-green-600 font-medium">
                             Total Revenue
                         </p>
@@ -354,11 +254,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="item in taxReport.by_tax_type"
-                                :key="item.tax_type"
-                                class="border-b"
-                            >
+                            <tr v-for="item in taxReport.by_tax_type" :key="item.tax_type" class="border-b">
                                 <td class="px-4 py-2">{{ item.tax_type }}</td>
                                 <td class="px-4 py-2 text-right">
                                     {{ item.count }}
@@ -383,16 +279,8 @@
         <div v-if="activeTab === 'summary'" class="space-y-4">
             <div class="card p-4">
                 <div class="flex items-center gap-4">
-                    <select
-                        v-model="summaryYear"
-                        @change="loadMonthlySummary"
-                        class="input w-32"
-                    >
-                        <option
-                            v-for="year in availableYears"
-                            :key="year"
-                            :value="year"
-                        >
+                    <select v-model="summaryYear" @change="loadMonthlySummary" class="input w-32">
+                        <option v-for="year in availableYears" :key="year" :value="year">
                             {{ year }}
                         </option>
                     </select>
@@ -402,9 +290,7 @@
             <div v-if="monthlySummary" class="space-y-4">
                 <!-- Totals -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div
-                        class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100">
                         <p class="text-sm text-blue-600 font-medium">
                             Total Invoices
                         </p>
@@ -412,9 +298,7 @@
                             {{ monthlySummary.totals.total_invoices }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-yellow-50 to-yellow-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-yellow-50 to-yellow-100">
                         <p class="text-sm text-yellow-600 font-medium">
                             Total Tax
                         </p>
@@ -424,17 +308,13 @@
                             }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-green-50 to-green-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-green-50 to-green-100">
                         <p class="text-sm text-green-600 font-medium">Paid</p>
                         <p class="text-2xl font-bold text-green-800">
                             {{ formatCurrency(monthlySummary.totals.paid) }}
                         </p>
                     </div>
-                    <div
-                        class="card p-4 bg-gradient-to-br from-red-50 to-red-100"
-                    >
+                    <div class="card p-4 bg-gradient-to-br from-red-50 to-red-100">
                         <p class="text-sm text-red-600 font-medium">Unpaid</p>
                         <p class="text-2xl font-bold text-red-800">
                             {{ formatCurrency(monthlySummary.totals.unpaid) }}
@@ -460,11 +340,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="row in monthlySummary.data"
-                                :key="row.month"
-                                class="border-b"
-                            >
+                            <tr v-for="row in monthlySummary.data" :key="row.month" class="border-b">
                                 <td class="px-4 py-2">{{ row.month_name }}</td>
                                 <td class="px-4 py-2 text-right">
                                     {{ row.total_invoices }}
@@ -492,26 +368,16 @@
         </div>
 
         <!-- Create Invoice Modal -->
-        <div
-            v-if="showModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        >
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-xl p-6 w-full max-w-md">
                 <h3 class="text-xl font-bold mb-4">Create Invoice from Sale</h3>
 
                 <form @submit.prevent="createInvoice" class="space-y-4">
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Select Sale *</label
-                        >
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Sale *</label>
                         <select v-model="form.sale_id" required class="input">
                             <option value="">Select a sale</option>
-                            <option
-                                v-for="sale in availableSales"
-                                :key="sale.id"
-                                :value="sale.id"
-                            >
+                            <option v-for="sale in availableSales" :key="sale.id" :value="sale.id">
                                 {{ sale.invoice_number }} -
                                 {{ sale.customer_name }} ({{
                                     formatCurrency(sale.total_amount)
@@ -520,88 +386,40 @@
                         </select>
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Invoice Date *</label
-                        >
-                        <input
-                            v-model="form.invoice_date"
-                            type="date"
-                            required
-                            class="input"
-                        />
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Date *</label>
+                        <input v-model="form.invoice_date" type="date" required class="input" />
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Due Date</label
-                        >
-                        <input
-                            v-model="form.due_date"
-                            type="date"
-                            class="input"
-                        />
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                        <input v-model="form.due_date" type="date" class="input" />
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Tax Type</label
-                        >
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tax Type</label>
                         <select v-model="form.tax_type" class="input">
-                            <option
-                                v-for="tr in taxRates"
-                                :key="tr.id"
-                                :value="tr.code"
-                            >
+                            <option v-for="tr in taxRates" :key="tr.id" :value="tr.code">
                                 {{ tr.name }} ({{ tr.rate }}%)
                             </option>
                         </select>
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Discount</label
-                        >
-                        <input
-                            v-model.number="form.discount_amount"
-                            type="number"
-                            step="0.01"
-                            class="input"
-                            placeholder="0"
-                        />
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Discount</label>
+                        <input v-model.number="form.discount_amount" type="number" step="0.01" class="input"
+                            placeholder="0" />
                     </div>
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Notes</label
-                        >
-                        <textarea
-                            v-model="form.notes"
-                            rows="2"
-                            class="input"
-                        ></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea v-model="form.notes" rows="2" class="input"></textarea>
                     </div>
 
-                    <div
-                        v-if="error"
-                        class="bg-red-50 text-red-600 p-2 rounded text-sm"
-                    >
+                    <div v-if="error" class="bg-red-50 text-red-600 p-2 rounded text-sm">
                         {{ error }}
                     </div>
 
                     <div class="flex justify-end space-x-2 pt-3">
-                        <button
-                            type="button"
-                            @click="showModal = false"
-                            class="btn-secondary"
-                        >
+                        <button type="button" @click="showModal = false" class="btn-secondary">
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            :disabled="saving"
-                            class="btn-primary"
-                        >
+                        <button type="submit" :disabled="saving" class="btn-primary">
                             {{ saving ? "Creating..." : "Create Invoice" }}
                         </button>
                     </div>
@@ -610,10 +428,7 @@
         </div>
 
         <!-- Tax Settings Modal -->
-        <div
-            v-if="showTaxModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        >
+        <div v-if="showTaxModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-xl p-6 w-full max-w-lg">
                 <h3 class="text-xl font-bold mb-4">Tax Settings</h3>
 
@@ -628,30 +443,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr
-                            v-for="tr in taxRates"
-                            :key="tr.id"
-                            class="border-b"
-                        >
+                        <tr v-for="tr in taxRates" :key="tr.id" class="border-b">
                             <td class="px-4 py-2">{{ tr.name }}</td>
                             <td class="px-4 py-2">{{ tr.code }}</td>
                             <td class="px-4 py-2 text-right">{{ tr.rate }}%</td>
                             <td class="px-4 py-2 text-center">
-                                <span
-                                    :class="
-                                        tr.is_active
-                                            ? 'text-green-600'
-                                            : 'text-gray-400'
-                                    "
-                                >
+                                <span :class="tr.is_active
+                                        ? 'text-green-600'
+                                        : 'text-gray-400'
+                                    ">
                                     {{ tr.is_active ? "✓" : "○" }}
                                 </span>
                             </td>
                             <td class="px-4 py-2 text-right">
-                                <button
-                                    @click="toggleTaxRate(tr)"
-                                    class="text-blue-600 hover:text-blue-900 text-xs"
-                                >
+                                <button @click="toggleTaxRate(tr)" class="text-blue-600 hover:text-blue-900 text-xs">
                                     {{ tr.is_active ? "Disable" : "Enable" }}
                                 </button>
                             </td>

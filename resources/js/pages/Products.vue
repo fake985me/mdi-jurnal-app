@@ -65,14 +65,22 @@
         <div v-if="activeTab === 'products'">
             <!-- Search & Filter -->
             <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <input v-model="filters.search" @input="loadProducts" type="text"
                         placeholder="Search by title, brand..."
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
-                    <select v-model="filters.category_id" @change="loadProducts"
+                    <select v-model="filters.category_id" @change="onFilterCategoryChange"
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                         <option value="">All Categories</option>
-                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                        <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
+                    </select>
+                    <select v-model="filters.sub_category_id" @change="loadProducts"
+                        :disabled="!filters.category_id"
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100">
+                        <option value="">All Subcategories</option>
+                        <option v-for="sub in getSubcategoryOptions(filters.category_id)" :key="sub.id" :value="sub.id">
+                            {{ sub.label }}
+                        </option>
                     </select>
                     <select v-model="filters.brand" @change="loadProducts"
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
@@ -94,14 +102,14 @@
             <table v-else class="min-w-full">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categories</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min Stock</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">No</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">SKU</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">Product</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">Categories / SubCategory</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">Brand</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">Stock</th>
+                        <th class="px-6 py-3 text-left text-base font-medium text-gray-400">Min Stock</th>
+                        <th class="px-6 py-3 text-right text-base font-medium text-gray-400">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -117,9 +125,9 @@
                                 <template v-if="product.category_pairs && product.category_pairs.length > 0">
                                     <span v-for="(pair, idx) in product.category_pairs" :key="idx"
                                         class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
-                                        {{ pair.category_name }}
-                                        <span v-if="pair.sub_category_name" class="ml-1 text-indigo-600">
-                                            / {{ pair.sub_category_name }}
+                                        {{ getCategoryPath(pair.category_id) || pair.category_name || '-' }}
+                                        <span v-if="pair.sub_category_id || pair.sub_category_name" class="ml-1 text-indigo-600">
+                                            / {{ getSubcategoryPath(pair.sub_category_id) || pair.sub_category_name || '-' }}
                                         </span>
                                     </span>
                                 </template>
@@ -147,6 +155,8 @@
                         <td class="px-6 py-4 text-right text-sm space-x-2">
                             <button @click="openAdjustModal(product)"
                                 class="text-orange-600 hover:text-orange-900">Adjust</button>
+                            <button @click="openStockModal(product)"
+                                class="text-emerald-600 hover:text-emerald-900">Warehouses</button>
                             <button @click="editProduct(product)"
                                 class="text-indigo-600 hover:text-indigo-900">Edit</button>
                             <button @click="deleteProduct(product.id)"
@@ -233,8 +243,8 @@
                                     <select v-model="catPair.category_id" @change="onCategoryChange(index)"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                                         <option value="">Select Category</option>
-                                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                            {{ cat.name }}
+                                        <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">
+                                            {{ cat.label }}
                                         </option>
                                     </select>
                                 </div>
@@ -244,9 +254,9 @@
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                                         :disabled="!catPair.category_id">
                                         <option value="">Select Subcategory</option>
-                                        <option v-for="sub in getSubcategoriesForCategory(catPair.category_id)" 
+                                        <option v-for="sub in getSubcategoryOptions(catPair.category_id)" 
                                             :key="sub.id" :value="sub.id">
-                                            {{ sub.name }}
+                                            {{ sub.label }}
                                         </option>
                                     </select>
                                 </div>
@@ -411,6 +421,65 @@
             </div>
         </div>
 
+        <!-- Stock Breakdown Modal -->
+        <div v-if="showStockModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            @click.self="closeStockModal">
+            <div class="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Stock Breakdown</h3>
+                        <p class="text-sm text-gray-600">{{ stockProduct?.title || '-' }}</p>
+                    </div>
+                    <button @click="closeStockModal"
+                        class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-sm">
+                    <div class="p-3 bg-gray-50 rounded">
+                        <div class="text-gray-500">Product Stock (Default)</div>
+                        <div class="font-semibold text-gray-800">{{ stockProduct?.stock || 0 }}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded">
+                        <div class="text-gray-500">Total Across Warehouses</div>
+                        <div class="font-semibold text-emerald-600">{{ totalWarehouseStock }}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded">
+                        <div class="text-gray-500">Warehouses</div>
+                        <div class="font-semibold text-gray-800">{{ productStocks.length }}</div>
+                    </div>
+                </div>
+
+                <div v-if="stockLoading" class="text-center py-6 text-gray-500">Loading stock data...</div>
+                <table v-else-if="productStocks.length" class="min-w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Warehouse</th>
+                            <th class="px-4 py-2 text-left">Location</th>
+                            <th class="px-4 py-2 text-right">Quantity</th>
+                            <th class="px-4 py-2 text-right">Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="stock in productStocks" :key="stock.id">
+                            <td class="px-4 py-2 font-medium">{{ stock.warehouse?.name || '-' }}</td>
+                            <td class="px-4 py-2 text-gray-600">{{ stock.location?.name || 'No Location' }}</td>
+                            <td class="px-4 py-2 text-right font-semibold">{{ stock.quantity }}</td>
+                            <td class="px-4 py-2 text-right text-gray-500">
+                                {{ stock.last_updated ? new Date(stock.last_updated).toLocaleDateString() : '-' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p v-else class="text-center text-gray-500 py-6">No warehouse stock data found.</p>
+
+                <div class="flex justify-end mt-4">
+                    <button @click="closeStockModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Upload Progress/Error Message -->
         <div v-if="uploadMessage" class="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-md">
             <div class="flex items-start gap-3">
@@ -445,8 +514,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import api from '../services/api';
+
+const route = useRoute();
 
 const products = ref({ data: [] });
 const loading = ref(true);
@@ -461,6 +533,64 @@ const uploadMessage = ref(null);
 const categories = ref([]);
 const brands = ref([]);
 
+const buildHierarchyOptions = (items, parentKey = 'parent_id') => {
+    const childrenMap = new Map();
+    items.forEach((item) => {
+        const parentId = item[parentKey] || null;
+        if (!childrenMap.has(parentId)) childrenMap.set(parentId, []);
+        childrenMap.get(parentId).push(item);
+    });
+
+    const result = [];
+    const walk = (parentId, depth) => {
+        const children = (childrenMap.get(parentId) || [])
+            .slice()
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        children.forEach((child) => {
+            const prefix = depth > 0 ? `${'--'.repeat(depth)} ` : '';
+            result.push({
+                id: child.id,
+                label: `${prefix}${child.name}`,
+                raw: child,
+                depth
+            });
+            walk(child.id, depth + 1);
+        });
+    };
+
+    walk(null, 0);
+    return result;
+};
+
+const categoryOptions = computed(() => buildHierarchyOptions(categories.value, 'parent_id'));
+
+const categoryMap = computed(() => {
+    const map = new Map();
+    categories.value.forEach((cat) => map.set(cat.id, cat));
+    return map;
+});
+
+const subcategoryMap = computed(() => {
+    const map = new Map();
+    categories.value.forEach((cat) => {
+        const subcategories = cat.sub_categories || cat.subCategories || [];
+        subcategories.forEach((sub) => map.set(sub.id, sub));
+    });
+    return map;
+});
+
+const buildPath = (id, map, parentKey = 'parent_id') => {
+    if (!id || !map.has(id)) return '';
+    const parts = [];
+    let currentId = id;
+    while (currentId && map.has(currentId)) {
+        const current = map.get(currentId);
+        parts.unshift(current.name);
+        currentId = current[parentKey];
+    }
+    return parts.join(' / ');
+};
+
 // Tab state
 const activeTab = ref('products');
 
@@ -471,6 +601,14 @@ const showAdjustModal = ref(false);
 const adjustingProduct = ref(null);
 const adjustSaving = ref(false);
 const adjustmentReasons = ref({});
+const showStockModal = ref(false);
+const stockProduct = ref(null);
+const productStocks = ref([]);
+const stockLoading = ref(false);
+
+const totalWarehouseStock = computed(() => {
+    return productStocks.value.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+});
 
 const adjustForm = ref({
     adjustment_type: 'out',
@@ -482,6 +620,7 @@ const adjustForm = ref({
 const filters = ref({
     search: '',
     category_id: '',
+    sub_category_id: '',
     brand: ''
 });
 
@@ -523,17 +662,24 @@ const onCategoryChange = (index) => {
     form.value.categories[index].sub_category_id = '';
 };
 
-const getSubcategoriesForCategory = (categoryId) => {
+const getSubcategoryOptions = (categoryId) => {
     if (!categoryId) return [];
     const category = categories.value.find(c => c.id === categoryId);
-    return category?.sub_categories || [];
+    const subcategories = category?.sub_categories || category?.subCategories || [];
+    return buildHierarchyOptions(subcategories, 'parent_id');
 };
+
+const getCategoryPath = (categoryId) => buildPath(categoryId, categoryMap.value, 'parent_id');
+const getSubcategoryPath = (subCategoryId) => buildPath(subCategoryId, subcategoryMap.value, 'parent_id');
 
 const loadFilterOptions = async () => {
     try {
-        const response = await api.get('/products/filter-options');
-        categories.value = response.data.categories || [];
-        brands.value = response.data.brands || [];
+        const [categoriesResponse, filterResponse] = await Promise.all([
+            api.get('/categories'),
+            api.get('/products/filter-options')
+        ]);
+        categories.value = categoriesResponse.data || [];
+        brands.value = filterResponse.data.brands || [];
     } catch (error) {
         console.error('Failed to load filter options:', error);
     }
@@ -557,7 +703,12 @@ const loadProducts = async (page = 1) => {
 };
 
 const resetFilters = () => {
-    filters.value = { search: '', category_id: '', brand: '' };
+    filters.value = { search: '', category_id: '', sub_category_id: '', brand: '' };
+    loadProducts();
+};
+
+const onFilterCategoryChange = () => {
+    filters.value.sub_category_id = '';
     loadProducts();
 };
 
@@ -792,8 +943,49 @@ const submitAdjustment = async () => {
     }
 };
 
+const openStockModal = async (product) => {
+    stockProduct.value = product;
+    showStockModal.value = true;
+    await loadProductStocks(product.id);
+};
+
+const closeStockModal = () => {
+    showStockModal.value = false;
+    stockProduct.value = null;
+    productStocks.value = [];
+};
+
+const loadProductStocks = async (productId) => {
+    stockLoading.value = true;
+    try {
+        const response = await api.get('/stock', {
+            params: { product_id: productId, per_page: 200 }
+        });
+        productStocks.value = response.data.data || response.data || [];
+    } catch (error) {
+        console.error('Failed to load product stocks:', error);
+        productStocks.value = [];
+    } finally {
+        stockLoading.value = false;
+    }
+};
+
 onMounted(() => {
-    loadFilterOptions();
+    const editId = Array.isArray(route.query.edit) ? route.query.edit[0] : route.query.edit;
+
+    const openEditFromRoute = async () => {
+        if (!editId) return;
+        try {
+            const response = await api.get(`/products/${editId}`);
+            editProduct(response.data);
+        } catch (error) {
+            console.error('Failed to load product for edit:', error);
+        }
+    };
+
+    loadFilterOptions().then(() => {
+        openEditFromRoute();
+    });
     loadProducts();
     loadAdjustmentReasons();
 });

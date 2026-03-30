@@ -319,7 +319,7 @@ const loadStockReports = async () => {
     
     stockReports.value = stocks
       .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 5)
+      .slice(1, 10000)
       .map(stock => {
         // Get all category pairs
         const categoryPairs = stock.product?.category_pairs || [];

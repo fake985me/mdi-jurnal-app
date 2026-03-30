@@ -1,0 +1,25 @@
+flowchart TB
+  MD[Master Data Produk] --> Stock[Stock Management]
+  MD --> Purchase[Pembelian]
+  MD --> Sales[Penjualan]
+
+  Supplier[Supplier] --> Purchase
+  Purchase --> DefaultWH[Default Warehouse]
+  Purchase --> Finance[Finance]
+
+  Sales --> Shipping[Pengiriman]
+  Sales --> Finance
+  DefaultWH --> Shipping
+
+  Project[Project Investasi] --> Contract[Kontrak]
+  Contract --> InvestWH[Invest Warehouse]
+  DefaultWH -->|Transfer Stock| InvestWH
+  InvestWH --> Shipping
+
+  Project --> DesignBuild[Design dan Build]
+  DesignBuild --> BAST[BAST atau Serah Terima]
+  BAST --> Warranty[RMA dan Garansi]
+
+  MSA[MSA] --> Finance
+  Finance --> Reports[Laporan dan History]
+  Shipping --> Customer[Customer]

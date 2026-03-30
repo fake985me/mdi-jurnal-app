@@ -14,6 +14,7 @@ class Purchase extends Model
         'supplier_name',
         'supplier_address',
         'supplier_phone',
+        'warehouse_id',
         'total_amount',
         'status',
         'is_for_asset',
@@ -38,6 +39,14 @@ class Purchase extends Model
     }
 
     /**
+     * Get the warehouse for this purchase (stock destination)
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    /**
      * Get purchase items
      */
     public function items()
@@ -51,5 +60,13 @@ class Purchase extends Model
     public function stockTransactions()
     {
         return $this->morphMany(StockTransaction::class, 'reference');
+    }
+
+    /**
+     * Payments for this purchase
+     */
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

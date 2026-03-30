@@ -30,6 +30,14 @@ class Warehouse extends Model
         return $this->hasMany(WarehouseLocation::class);
     }
 
+    /**
+     * Project investment that owns this warehouse (if any)
+     */
+    public function projectInvestment()
+    {
+        return $this->hasOne(ProjectInvestment::class);
+    }
+
     public function stocks()
     {
         return $this->hasMany(CurrentStock::class);

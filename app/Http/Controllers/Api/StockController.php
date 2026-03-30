@@ -29,6 +29,11 @@ class StockController extends Controller
                 $query->where('warehouse_id', $request->warehouse_id);
             }
 
+            // Filter by product
+            if ($request->filled('product_id')) {
+                $query->where('product_id', $request->product_id);
+            }
+
             // Filter by low stock (using default threshold since min_stock removed)
             if ($request->has('low_stock') && $request->low_stock == 'true') {
                 $query->where('quantity', '<=', 10); // Default low stock threshold

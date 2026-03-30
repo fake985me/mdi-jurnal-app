@@ -1,0 +1,120 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Enterprise ERP ERD">
+    <mxGraphModel dx="1420" dy="794" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- COMPANY -->
+        <mxCell id="company" value="Company
+--------------------------------
+id (PK)
+name
+code
+status" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="200" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- BRANCH -->
+        <mxCell id="branch" value="Branch
+--------------------------------
+id (PK)
+company_id (FK)
+name
+code
+address" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="40" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- WAREHOUSE -->
+        <mxCell id="warehouse" value="Warehouse
+--------------------------------
+id (PK)
+branch_id (FK)
+name
+type" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="40" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- PRODUCT -->
+        <mxCell id="product" value="Product
+--------------------------------
+id (PK)
+company_id (FK)
+name
+is_asset
+sku" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- STOCK -->
+        <mxCell id="stock" value="Stock
+--------------------------------
+id (PK)
+warehouse_id (FK)
+product_id (FK)
+quantity" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="240" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- PROJECT -->
+        <mxCell id="project" value="Project
+--------------------------------
+id (PK)
+branch_id (FK)
+customer_id (FK)
+type
+status" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="240" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- PAYMENT -->
+        <mxCell id="payment" value="Payment
+--------------------------------
+id (PK)
+branch_id (FK)
+reference_type
+reference_id
+amount
+type" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="420" width="240" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- COA -->
+        <mxCell id="coa" value="ChartOfAccounts
+--------------------------------
+id (PK)
+company_id (FK)
+code
+name
+type
+parent_id" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="420" width="260" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- JOURNAL -->
+        <mxCell id="journal" value="JournalEntry
+--------------------------------
+id (PK)
+branch_id (FK)
+date
+reference_type
+reference_id" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="420" width="260" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- JOURNAL DETAIL -->
+        <mxCell id="journal_detail" value="JournalDetail
+--------------------------------
+id (PK)
+journal_id (FK)
+account_id (FK)
+debit
+credit" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="600" width="260" height="140" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

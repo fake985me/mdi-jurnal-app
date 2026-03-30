@@ -12,6 +12,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
+        'parent_id',
     ];
 
     /**
@@ -34,6 +35,22 @@ class Category extends Model
     }
 
     /**
+     * Parent category (for multi-level category tree)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * Child categories (for multi-level category tree)
+     */
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    /**
      * Get products through pivot table
      */
     public function products()
@@ -53,4 +70,3 @@ class Category extends Model
             ->withTimestamps();
     }
 }
-

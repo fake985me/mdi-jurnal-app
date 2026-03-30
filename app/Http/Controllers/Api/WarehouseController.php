@@ -15,6 +15,7 @@ class WarehouseController extends Controller
     public function index(Request $request)
     {
         $query = Warehouse::query()
+            ->with(['projectInvestment'])
             ->withCount(['locations', 'stocks'])
             ->withSum('stocks', 'quantity');
 
@@ -71,9 +72,12 @@ class WarehouseController extends Controller
      */
     public function show(Warehouse $warehouse)
     {
-        $warehouse->load(['locations' => function ($q) {
+        $warehouse->load([
+            'projectInvestment.contract',
+            'locations' => function ($q) {
             $q->withSum('stocks', 'quantity');
-        }]);
+            }
+        ]);
         
         $warehouse->loadCount(['locations', 'stocks']);
         $warehouse->loadSum('stocks', 'quantity');

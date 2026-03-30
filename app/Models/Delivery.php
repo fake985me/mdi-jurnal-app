@@ -11,9 +11,11 @@ class Delivery extends Model
 
     protected $fillable = [
         'sale_id',
+        'from_warehouse_id',
         'status',
         'tracking_number',
         'courier',
+        'destination',
         'shipped_date',
         'delivered_date',
         'user_id',
@@ -31,6 +33,14 @@ class Delivery extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    /**
+     * Get the warehouse this delivery ships from
+     */
+    public function fromWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'from_warehouse_id');
     }
 
     /**

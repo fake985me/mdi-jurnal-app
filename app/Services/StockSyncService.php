@@ -20,6 +20,26 @@ class StockSyncService
     }
 
     /**
+     * Determine if Product stock should be synced for a warehouse
+     */
+    protected function shouldSyncProductStockForWarehouse($warehouseId)
+    {
+        $defaultWarehouseId = $this->getDefaultWarehouseId();
+
+        // If no default warehouse configured, treat any warehouse as default
+        if (!$defaultWarehouseId) {
+            return true;
+        }
+
+        // If warehouseId not provided, assume default
+        if (!$warehouseId) {
+            return true;
+        }
+
+        return (int) $warehouseId === (int) $defaultWarehouseId;
+    }
+
+    /**
      * Deduct stock from both Product and CurrentStock tables
      * 
      * @param int $productId
@@ -42,9 +62,12 @@ class StockSyncService
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();
             
             // Get or create current stock for this warehouse
+            $initialQty = $this->shouldSyncProductStockForWarehouse($warehouseId)
+                ? ($product->stock ?? 0)
+                : 0;
             $currentStock = CurrentStock::firstOrCreate(
                 ['product_id' => $productId, 'warehouse_id' => $warehouseId],
-                ['quantity' => $product->stock ?? 0, 'last_updated' => now()]
+                ['quantity' => $initialQty, 'last_updated' => now()]
             );
             
             // Check if enough stock available
@@ -53,7 +76,9 @@ class StockSyncService
             }
             
             // Deduct from both tables
-            $product->decrement('stock', $quantity);
+            if ($this->shouldSyncProductStockForWarehouse($warehouseId)) {
+                $product->decrement('stock', $quantity);
+            }
             $currentStock->quantity -= $quantity;
             $currentStock->last_updated = now();
             $currentStock->save();
@@ -99,13 +124,18 @@ class StockSyncService
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();
             
             // Get or create current stock for this warehouse
+            $initialQty = $this->shouldSyncProductStockForWarehouse($warehouseId)
+                ? ($product->stock ?? 0)
+                : 0;
             $currentStock = CurrentStock::firstOrCreate(
                 ['product_id' => $productId, 'warehouse_id' => $warehouseId],
-                ['quantity' => 0, 'last_updated' => now()]
+                ['quantity' => $initialQty, 'last_updated' => now()]
             );
             
             // Add to both tables
-            $product->increment('stock', $quantity);
+            if ($this->shouldSyncProductStockForWarehouse($warehouseId)) {
+                $product->increment('stock', $quantity);
+            }
             $currentStock->quantity += $quantity;
             $currentStock->last_updated = now();
             $currentStock->save();
@@ -148,12 +178,13 @@ class StockSyncService
         $synced = 0;
         
         foreach ($products as $product) {
+            $warehouseId = $this->getDefaultWarehouseId();
             $currentStock = CurrentStock::firstOrCreate(
-                ['product_id' => $product->id],
+                ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
                 ['quantity' => 0, 'last_updated' => now()]
             );
-            
-            // Sync CurrentStock quantity with Product stock
+
+            // Sync CurrentStock quantity with Product stock (default warehouse only)
             $currentStock->quantity = $product->stock ?? 0;
             $currentStock->last_updated = now();
             $currentStock->save();
@@ -173,7 +204,12 @@ class StockSyncService
      */
     public function hasStock($productId, $quantity)
     {
-        $currentStock = CurrentStock::where('product_id', $productId)->first();
+        $warehouseId = $this->getDefaultWarehouseId();
+        $currentStock = CurrentStock::where('product_id', $productId)
+            ->when($warehouseId, function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId);
+            })
+            ->first();
         
         if (!$currentStock) {
             return false;
@@ -190,7 +226,12 @@ class StockSyncService
      */
     public function getStockQuantity($productId)
     {
-        $currentStock = CurrentStock::where('product_id', $productId)->first();
+        $warehouseId = $this->getDefaultWarehouseId();
+        $currentStock = CurrentStock::where('product_id', $productId)
+            ->when($warehouseId, function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId);
+            })
+            ->first();
         return $currentStock ? $currentStock->quantity : 0;
     }
     
@@ -218,9 +259,12 @@ class StockSyncService
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();
             
             // Get or create current stock for this warehouse
+            $initialQty = $this->shouldSyncProductStockForWarehouse($warehouseId)
+                ? ($product->stock ?? 0)
+                : 0;
             $currentStock = CurrentStock::firstOrCreate(
                 ['product_id' => $productId, 'warehouse_id' => $warehouseId],
-                ['quantity' => $product->stock ?? 0, 'last_updated' => now()]
+                ['quantity' => $initialQty, 'last_updated' => now()]
             );
             
             $beforeQty = $currentStock->quantity;
@@ -237,10 +281,14 @@ class StockSyncService
             
             // Update stock
             if ($adjustmentType === 'in') {
-                $product->increment('stock', $quantity);
+                if ($this->shouldSyncProductStockForWarehouse($warehouseId)) {
+                    $product->increment('stock', $quantity);
+                }
                 $currentStock->quantity += $quantity;
             } else {
-                $product->decrement('stock', $quantity);
+                if ($this->shouldSyncProductStockForWarehouse($warehouseId)) {
+                    $product->decrement('stock', $quantity);
+                }
                 $currentStock->quantity -= $quantity;
             }
             $currentStock->last_updated = now();
@@ -280,4 +328,3 @@ class StockSyncService
         }
     }
 }
-

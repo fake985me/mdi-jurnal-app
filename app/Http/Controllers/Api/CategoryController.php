@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::with('subCategories');
+        $query = Category::with(['subCategories', 'children']);
 
         // Search
         if ($request->has('search')) {
@@ -74,6 +74,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:categories,name',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
         ]);
 
         $category = Category::create($validated);
@@ -100,7 +101,14 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:categories,name,' . $id,
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
         ]);
+
+        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === (int) $category->id) {
+            return response()->json([
+                'message' => 'Category cannot be its own parent.'
+            ], 422);
+        }
 
         $category->update($validated);
 
@@ -110,6 +118,13 @@ class CategoryController extends Controller
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
+
+        // Prevent deletion if category has children
+        if ($category->children()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete category that has child categories. Reassign or delete child categories first.'
+            ], 422);
+        }
 
         // Check if category is used by products (legacy VARCHAR field)
         $legacyCount = DB::table('products')

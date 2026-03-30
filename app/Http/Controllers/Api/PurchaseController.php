@@ -8,6 +8,7 @@ use App\Models\PurchaseItem;
 use App\Models\Product;
 use App\Models\CurrentStock;
 use App\Models\StockTransaction;
+use App\Models\Warehouse;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class PurchaseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Purchase::with(['user', 'items.product']);
+            $query = Purchase::with(['user', 'items.product', 'warehouse']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -63,6 +64,7 @@ class PurchaseController extends Controller
             'supplier_name' => 'required|string|max:255',
             'supplier_address' => 'nullable|string',
             'supplier_phone' => 'nullable|string',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
             'order_date' => 'required|date',
             'status' => 'required|in:pending,received,cancelled',
             'is_for_asset' => 'boolean',
@@ -75,6 +77,7 @@ class PurchaseController extends Controller
         ]);
 
         $isForAsset = $validated['is_for_asset'] ?? false;
+        $warehouseId = $validated['warehouse_id'] ?? Warehouse::getDefault()?->id;
 
         DB::beginTransaction();
         try {
@@ -84,6 +87,7 @@ class PurchaseController extends Controller
                 'supplier_name' => $validated['supplier_name'],
                 'supplier_address' => $validated['supplier_address'] ?? null,
                 'supplier_phone' => $validated['supplier_phone'] ?? null,
+                'warehouse_id' => $warehouseId,
                 'order_date' => $validated['order_date'],
                 'status' => $validated['status'],
                 'is_for_asset' => $isForAsset,
@@ -139,7 +143,8 @@ class PurchaseController extends Controller
                             $item['quantity'],
                             'purchase',
                             $purchase->id,
-                            "Purchase #{$purchase->po_number}"
+                            "Purchase #{$purchase->po_number}",
+                            $warehouseId
                         );
                     }
                 }
@@ -158,7 +163,7 @@ class PurchaseController extends Controller
 
     public function show($id)
     {
-        $purchase = Purchase::with(['items.product', 'user'])->findOrFail($id);
+        $purchase = Purchase::with(['items.product', 'user', 'warehouse'])->findOrFail($id);
         return response()->json($purchase);
     }
 
@@ -166,6 +171,7 @@ class PurchaseController extends Controller
     {
         $purchase = Purchase::with('items')->findOrFail($id);
         $oldStatus = $purchase->status;
+        $warehouseId = $purchase->warehouse_id ?? Warehouse::getDefault()?->id;
 
         $validated = $request->validate([
             'status' => 'required|in:pending,received,cancelled',
@@ -186,7 +192,8 @@ class PurchaseController extends Controller
                         $item->quantity,
                         'purchase',
                         $purchase->id,
-                        "Purchase #{$purchase->po_number} received"
+                        "Purchase #{$purchase->po_number} received",
+                        $warehouseId
                     );
                 }
                 $purchase->received_date = now();
@@ -200,7 +207,8 @@ class PurchaseController extends Controller
                         $item->quantity,
                         'purchase_cancelled',
                         $purchase->id,
-                        "Purchase #{$purchase->po_number} cancelled"
+                        "Purchase #{$purchase->po_number} cancelled",
+                        $warehouseId
                     );
                 }
             }
@@ -230,7 +238,8 @@ class PurchaseController extends Controller
                         $item->quantity,
                         'purchase_deleted',
                         $purchase->id,
-                        "Purchase #{$purchase->po_number} deleted - stock deducted"
+                        "Purchase #{$purchase->po_number} deleted - stock deducted",
+                        $purchase->warehouse_id ?? Warehouse::getDefault()?->id
                     );
                 }
             }

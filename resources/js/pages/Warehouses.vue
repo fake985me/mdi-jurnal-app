@@ -95,6 +95,7 @@
             ]">
             <span>{{ warehouse.name }}</span>
             <span v-if="warehouse.is_default" class="px-1.5 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700">Default</span>
+            <span v-if="warehouse.project_investment" class="px-1.5 py-0.5 text-xs rounded bg-indigo-100 text-indigo-700">Project</span>
             <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600">{{ warehouse.stocks_sum_quantity || 0 }}</span>
           </button>
         </nav>
@@ -125,6 +126,160 @@
           <div><span class="text-gray-500">Phone:</span> {{ selectedWarehouse.phone || '-' }}</div>
           <div><span class="text-gray-500">Email:</span> {{ selectedWarehouse.email || '-' }}</div>
           <div><span class="text-gray-500">Total Stock:</span> <strong class="text-emerald-600">{{ selectedWarehouse.stocks_sum_quantity || 0 }}</strong></div>
+        </div>
+
+        <!-- Project & Contract Section -->
+        <div v-if="selectedWarehouse.project_investment" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-semibold text-indigo-900">Project Investment</h4>
+              <p class="text-sm text-indigo-700">
+                {{ selectedWarehouse.project_investment.project_name }} ({{ selectedWarehouse.project_investment.project_code }})
+              </p>
+              <p class="text-xs text-indigo-600">
+                Type: {{ selectedWarehouse.project_investment.type || '-' }} |
+                Status: {{ selectedWarehouse.project_investment.status || '-' }}
+              </p>
+            </div>
+            <span class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700">Project Warehouse</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-sm">
+            <div><span class="text-gray-500">Client:</span> {{ selectedWarehouse.project_investment.client_name || '-' }}</div>
+            <div><span class="text-gray-500">Start:</span> {{ formatDate(selectedWarehouse.project_investment.start_date) }}</div>
+            <div><span class="text-gray-500">Expected End:</span> {{ formatDate(selectedWarehouse.project_investment.expected_end_date) }}</div>
+          </div>
+
+          <div v-if="selectedContract" class="mt-4 p-3 bg-white rounded-lg border border-indigo-100">
+            <div class="flex justify-between items-center mb-2">
+              <h5 class="font-semibold text-gray-800">Contract</h5>
+              <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">{{ selectedContract.status || '-' }}</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div><span class="text-gray-500">Contract No:</span> {{ selectedContract.contract_number || '-' }}</div>
+              <div><span class="text-gray-500">Contract Date:</span> {{ formatDate(selectedContract.contract_date) }}</div>
+              <div><span class="text-gray-500">Value:</span> {{ formatCurrency(selectedContract.contract_value || 0) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contract Payments -->
+        <div v-if="selectedContract" class="border-t pt-4 mt-4">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-semibold text-gray-800">Contract Payments</h4>
+            <button @click="togglePaymentForm" class="text-sm text-indigo-600 hover:text-indigo-800">
+              {{ showPaymentForm ? 'Hide Form' : '+ Add Payment' }}
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-4">
+            <div class="p-3 bg-gray-50 rounded">
+              <div class="text-gray-500">Contract Total</div>
+              <div class="font-semibold text-gray-800">{{ formatCurrency(contractTotal) }}</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+              <div class="text-gray-500">Paid</div>
+              <div class="font-semibold text-emerald-600">{{ formatCurrency(totalPaid) }}</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+              <div class="text-gray-500">Remaining</div>
+              <div class="font-semibold text-orange-600">{{ formatCurrency(remainingAmount) }}</div>
+            </div>
+          </div>
+
+          <div v-if="showPaymentForm" class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="font-semibold text-gray-800">{{ editingPaymentId ? 'Edit Payment' : 'Add Payment' }}</h4>
+              <button v-if="editingPaymentId" @click="resetPaymentForm" type="button" class="text-sm text-gray-500 hover:text-gray-700">
+                Cancel Edit
+              </button>
+            </div>
+            <form @submit.prevent="submitPayment" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                <select v-model="paymentForm.payment_type" required class="input">
+                  <option value="dp">DP</option>
+                  <option value="termin">Termin</option>
+                  <option value="full">Full Payment</option>
+                  <option value="sharing_profit">Sharing Profit</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                <input v-model.number="paymentForm.amount" type="number" min="0.01" step="0.01" required class="input" />
+                <p v-if="paymentForm.amount && contractTotal > 0 && paymentForm.amount > remainingAvailable"
+                  class="text-xs text-red-600 mt-1">
+                  Amount exceeds remaining balance.
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                <input v-model="paymentForm.payment_date" type="date" class="input" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
+                <input v-model="paymentForm.method" class="input" placeholder="Transfer/Cash/..." />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
+                <input v-model="paymentForm.reference_number" class="input" placeholder="Optional" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select v-model="paymentForm.status" class="input">
+                  <option value="paid">Paid</option>
+                  <option value="pending">Pending</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea v-model="paymentForm.notes" rows="2" class="input" placeholder="Optional notes"></textarea>
+              </div>
+
+              <div v-if="paymentError" class="md:col-span-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ paymentError }}</div>
+
+              <div class="md:col-span-3 flex justify-end gap-3">
+                <button type="button" @click="togglePaymentForm" class="btn-secondary">Cancel</button>
+                <button type="submit" :disabled="paymentSaving" class="btn-primary">
+                  {{ paymentSaving ? 'Saving...' : 'Save Payment' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div v-if="paymentsLoading" class="text-center py-4 text-gray-500">Loading payments...</div>
+          <table v-else-if="contractPayments.length" class="min-w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left">Date</th>
+                <th class="px-4 py-2 text-left">Type</th>
+                <th class="px-4 py-2 text-left">Method</th>
+                <th class="px-4 py-2 text-left">Ref</th>
+                <th class="px-4 py-2 text-right">Amount</th>
+              <th class="px-4 py-2 text-right">Status</th>
+              <th class="px-4 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr v-for="payment in contractPayments" :key="payment.id">
+                <td class="px-4 py-2">{{ formatDate(payment.payment_date) }}</td>
+                <td class="px-4 py-2 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
+                <td class="px-4 py-2">{{ payment.method || '-' }}</td>
+                <td class="px-4 py-2">{{ payment.reference_number || '-' }}</td>
+                <td class="px-4 py-2 text-right font-semibold">{{ formatCurrency(payment.amount || 0) }}</td>
+              <td class="px-4 py-2 text-right">
+                <span :class="payment.status === 'paid' ? 'text-emerald-600' : payment.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'">
+                  {{ payment.status }}
+                </span>
+              </td>
+              <td class="px-4 py-2 text-right space-x-2">
+                <button @click="editPayment(payment)" class="text-blue-600 hover:text-blue-900">Edit</button>
+                <button @click="deletePayment(payment)" class="text-red-600 hover:text-red-900">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+          <p v-else class="text-center text-gray-500 py-4">No payments recorded</p>
         </div>
 
         <!-- Product Stocks Section -->
@@ -505,7 +660,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../services/api';
+
+const router = useRouter();
 
 const warehouses = ref({ data: [] });
 const stats = ref({});
@@ -523,6 +681,13 @@ const saving = ref(false);
 const savingLocation = ref(false);
 const error = ref('');
 const locationError = ref('');
+const contractPayments = ref([]);
+const paymentsLoading = ref(false);
+const showPaymentForm = ref(false);
+const paymentSaving = ref(false);
+const paymentError = ref('');
+const editingPaymentId = ref(null);
+const editingPaymentAmount = ref(0);
 
 const filters = ref({ search: '', is_active: '' });
 
@@ -546,6 +711,28 @@ const locationForm = ref({
   shelf: '',
   capacity: null,
   is_active: true,
+});
+
+const paymentForm = ref({
+  payment_type: 'dp',
+  amount: null,
+  payment_date: new Date().toISOString().split('T')[0],
+  method: '',
+  status: 'paid',
+  reference_number: '',
+  notes: ''
+});
+
+const selectedContract = computed(() => selectedWarehouse.value?.project_investment?.contract || null);
+const contractTotal = computed(() => Number(selectedContract.value?.contract_value || 0));
+const totalPaid = computed(() => contractPayments.value.reduce((sum, p) => {
+  if (p.status === 'cancelled') return sum;
+  return sum + Number(p.amount || 0);
+}, 0));
+const remainingAmount = computed(() => Math.max(0, contractTotal.value - totalPaid.value));
+const remainingAvailable = computed(() => {
+  if (!editingPaymentId.value) return remainingAmount.value;
+  return Math.max(0, remainingAmount.value + Number(editingPaymentAmount.value || 0));
 });
 
 const loadWarehouses = async (page = 1) => {
@@ -573,6 +760,9 @@ const selectWarehouseTab = async (warehouse) => {
     const response = await api.get(`/warehouses/${warehouse.id}`);
     selectedWarehouse.value = response.data;
     loadWarehouseStocks(warehouse.id);
+    showPaymentForm.value = false;
+    resetPaymentForm();
+    await loadContractPayments(response.data?.project_investment?.contract?.id);
   } catch (err) {
     console.error('Failed to load warehouse details:', err);
   }
@@ -660,6 +850,7 @@ const viewWarehouse = async (warehouse) => {
     showViewModal.value = true;
     // Load stocks for this warehouse
     loadWarehouseStocks(warehouse.id);
+    await loadContractPayments(response.data?.project_investment?.contract?.id);
   } catch (err) {
     alert('Failed to load warehouse details');
   }
@@ -723,30 +914,12 @@ const deleteLocation = async (location) => {
 };
 
 const editProduct = (product) => {
-    if (!product) {
+    if (!product?.id) {
         console.warn('editProduct called without product');
         return;
     }
 
-    editingProduct.value = product;
-    
-    // Convert category_pairs to form.categories format
-    const categoryPairs = product.category_pairs || [];
-    const formCategories = categoryPairs.map(pair => ({
-        category_id: pair.category_id || '',
-        sub_category_id: pair.sub_category_id || ''
-    }));
-
-    form.value = {
-        title: product.title || '',
-        sku: product.sku || '',
-        brand: product.brand || '',
-        image: product.image || '',
-        stock: product.stock || 0,
-        minimum_stock: product.minimum_stock || 0,
-        categories: formCategories.length > 0 ? formCategories : []
-    };
-    showModal.value = true;
+    router.push({ name: 'Products', query: { edit: product.id } });
 };
 
 const saveProduct = async () => {
@@ -793,7 +966,7 @@ const defaultWarehouse = ref(null);
 const productSearch = ref('');
 const productSearchResults = ref([]);
 const selectedProduct = ref(null);
-const products = ref([]);
+const products = ref({ data: [] });
 const addingProduct = ref(false);
 const addProductError = ref('');
 const addProductForm = ref({
@@ -906,6 +1079,135 @@ const submitAddProduct = async () => {
   } finally {
     addingProduct.value = false;
   }
+};
+
+const loadContractPayments = async (contractId) => {
+  if (!contractId) {
+    contractPayments.value = [];
+    return;
+  }
+
+  paymentsLoading.value = true;
+  try {
+    const response = await api.get('/payments', {
+      params: { payable_type: 'project_contract', payable_id: contractId, per_page: 100 }
+    });
+    contractPayments.value = response.data.data || response.data || [];
+  } catch (err) {
+    console.error('Failed to load contract payments:', err);
+    contractPayments.value = [];
+  } finally {
+    paymentsLoading.value = false;
+  }
+};
+
+const resetPaymentForm = () => {
+  paymentForm.value = {
+    payment_type: 'dp',
+    amount: null,
+    payment_date: new Date().toISOString().split('T')[0],
+    method: '',
+    status: 'paid',
+    reference_number: '',
+    notes: ''
+  };
+  paymentError.value = '';
+  editingPaymentId.value = null;
+  editingPaymentAmount.value = 0;
+};
+
+const togglePaymentForm = () => {
+  if (showPaymentForm.value) {
+    showPaymentForm.value = false;
+    resetPaymentForm();
+    return;
+  }
+  showPaymentForm.value = true;
+  resetPaymentForm();
+};
+
+const submitPayment = async () => {
+  if (!selectedContract.value) return;
+  paymentError.value = '';
+
+  const amount = Number(paymentForm.value.amount || 0);
+  if (amount <= 0) {
+    paymentError.value = 'Amount must be greater than 0.';
+    return;
+  }
+  if (contractTotal.value > 0 && amount > remainingAvailable.value + 0.0001) {
+    paymentError.value = 'Payment exceeds remaining balance.';
+    return;
+  }
+
+  paymentSaving.value = true;
+  try {
+    const payload = {
+      payment_type: paymentForm.value.payment_type,
+      amount: amount,
+      payment_date: paymentForm.value.payment_date,
+      method: paymentForm.value.method,
+      status: paymentForm.value.status,
+      reference_number: paymentForm.value.reference_number,
+      notes: paymentForm.value.notes
+    };
+
+    if (editingPaymentId.value) {
+      await api.put(`/payments/${editingPaymentId.value}`, payload);
+    } else {
+      await api.post('/payments', {
+        payable_type: 'project_contract',
+        payable_id: selectedContract.value.id,
+        ...payload
+      });
+    }
+    showPaymentForm.value = false;
+    resetPaymentForm();
+    await loadContractPayments(selectedContract.value.id);
+  } catch (err) {
+    paymentError.value = err.response?.data?.message || 'Failed to save payment';
+  } finally {
+    paymentSaving.value = false;
+  }
+};
+
+const editPayment = (payment) => {
+  editingPaymentId.value = payment.id;
+  editingPaymentAmount.value = Number(payment.amount || 0);
+  paymentForm.value = {
+    payment_type: payment.payment_type || 'dp',
+    amount: Number(payment.amount || 0),
+    payment_date: payment.payment_date || new Date().toISOString().split('T')[0],
+    method: payment.method || '',
+    status: payment.status || 'paid',
+    reference_number: payment.reference_number || '',
+    notes: payment.notes || ''
+  };
+  paymentError.value = '';
+  showPaymentForm.value = true;
+};
+
+const deletePayment = async (payment) => {
+  if (!confirm('Delete this payment?')) return;
+  try {
+    await api.delete(`/payments/${payment.id}`);
+    await loadContractPayments(selectedContract.value?.id);
+    if (editingPaymentId.value === payment.id) {
+      resetPaymentForm();
+    }
+  } catch (err) {
+    paymentError.value = err.response?.data?.message || 'Failed to delete payment';
+  }
+};
+
+const formatCurrency = (value) => {
+  const num = Number(value || 0);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+};
+
+const formatDate = (value) => {
+  if (!value) return '-';
+  return new Date(value).toLocaleDateString();
 };
 
 onMounted(() => {

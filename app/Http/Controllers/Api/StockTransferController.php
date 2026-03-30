@@ -116,6 +116,7 @@ class StockTransferController extends Controller
         DB::transaction(function () use ($stockTransfer, $sourceStock) {
             // Deduct from source warehouse
             $sourceStock->quantity -= $stockTransfer->quantity;
+            $sourceStock->last_updated = now();
             $sourceStock->save();
 
             // If source is default warehouse, also deduct from products.stock

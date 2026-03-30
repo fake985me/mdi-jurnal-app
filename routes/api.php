@@ -127,6 +127,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/project-investments/{id}/cancel', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'cancel']);
     Route::apiResource('project-investments', App\Http\Controllers\Api\ProjectInvestmentController::class);
 
+    // Project Contracts
+    Route::apiResource('project-contracts', App\Http\Controllers\Api\ProjectContractController::class);
+
     // Project Tasks
     Route::prefix('project-investments/{project}')->group(function () {
         Route::get('/tasks', [App\Http\Controllers\Api\ProjectTaskController::class, 'index']);
@@ -155,6 +158,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/msa-projects/{id}/replace', [App\Http\Controllers\Api\MSAProjectController::class, 'replaceItem']);
     Route::post('/msa-projects/{id}/close', [App\Http\Controllers\Api\MSAProjectController::class, 'close']);
     Route::apiResource('msa-projects', App\Http\Controllers\Api\MSAProjectController::class);
+
+    // MSA Contracts
+    Route::apiResource('msa-contracts', App\Http\Controllers\Api\MsaContractController::class);
 
     // Warehouse Management
     Route::prefix('warehouses')->group(function () {
@@ -191,6 +197,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/invoices/{invoice}/mark-paid', [App\Http\Controllers\Api\InvoiceController::class, 'markAsPaid']);
     Route::post('/invoices/{invoice}/mark-sent', [App\Http\Controllers\Api\InvoiceController::class, 'markAsSent']);
     Route::apiResource('invoices', App\Http\Controllers\Api\InvoiceController::class);
+
+    // Payments
+    Route::apiResource('payments', App\Http\Controllers\Api\PaymentController::class);
 
     // Deliveries
     Route::apiResource('deliveries', App\Http\Controllers\Api\DeliveryController::class);

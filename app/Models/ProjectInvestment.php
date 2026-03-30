@@ -58,32 +58,6 @@ class ProjectInvestment extends Model
     protected static function boot()
     {
         parent::boot();
-
-        static::created(function ($project) {
-            // Auto-create dedicated warehouse for this project
-            $warehouse = Warehouse::create([
-                'code' => 'WH-' . $project->project_code,
-                'name' => $project->project_name,
-                'description' => 'Gudang khusus untuk project: ' . $project->project_name,
-                'is_active' => true,
-                'is_default' => false,
-            ]);
-            
-            // Link warehouse to project
-            $project->warehouse_id = $warehouse->id;
-            $project->saveQuietly();
-
-            // Auto-create MSA for invest type projects
-            if ($project->type === self::TYPE_INVEST) {
-                MSAProject::create([
-                    'msa_code' => 'MSA-' . $project->project_code,
-                    'project_investment_id' => $project->id,
-                    'status' => 'active',
-                    'reported_date' => now(),
-                    'user_id' => $project->user_id,
-                ]);
-            }
-        });
     }
 
     /**
@@ -92,6 +66,16 @@ class ProjectInvestment extends Model
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function contract()
+    {
+        return $this->hasOne(ProjectContract::class, 'project_investment_id');
+    }
+
+    public function msaContracts()
+    {
+        return $this->hasMany(MsaContract::class, 'project_investment_id');
     }
 
     public function items()
@@ -206,4 +190,3 @@ class ProjectInvestment extends Model
         );
     }
 }
-

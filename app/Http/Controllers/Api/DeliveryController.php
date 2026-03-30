@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\Sale;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -81,6 +82,8 @@ class DeliveryController extends Controller
             'sale_id' => 'required|exists:sales,id',
             'tracking_number' => 'nullable|string',
             'courier' => 'required|string',
+            'from_warehouse_id' => 'nullable|exists:warehouses,id',
+            'destination' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
@@ -100,11 +103,17 @@ class DeliveryController extends Controller
 
             // Auto-generate tracking number if not provided
             $trackingNumber = $validated['tracking_number'] ?? $this->generateTrackingNumber();
+            $fromWarehouseId = $validated['from_warehouse_id']
+                ?? $sale->warehouse_id
+                ?? Warehouse::getDefault()?->id;
+            $destination = $validated['destination'] ?? $sale->customer_address;
 
             $delivery = Delivery::create([
                 'sale_id' => $validated['sale_id'],
+                'from_warehouse_id' => $fromWarehouseId,
                 'tracking_number' => $trackingNumber,
                 'courier' => $validated['courier'],
+                'destination' => $destination,
                 'status' => 'preparing',
                 'user_id' => auth()->id(),
                 'notes' => $validated['notes'],
@@ -135,6 +144,8 @@ class DeliveryController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:preparing,shipped,in_transit,delivered,cancelled',
             'tracking_number' => 'nullable|string',
+            'from_warehouse_id' => 'nullable|exists:warehouses,id',
+            'destination' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 

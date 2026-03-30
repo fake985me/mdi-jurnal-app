@@ -8,6 +8,7 @@ use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\CurrentStock;
 use App\Models\StockTransaction;
+use App\Models\Warehouse;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery']);
+            $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery', 'warehouse']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -91,6 +92,7 @@ class SaleController extends Controller
             'customer_phone' => 'nullable|string',
             'customer_address' => 'nullable|string',
             'sales_person_id' => 'nullable|exists:sales_people,id',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
             'sale_date' => 'required|date',
             'status' => 'required|in:pending,completed,cancelled',
             'notes' => 'nullable|string',
@@ -104,6 +106,7 @@ class SaleController extends Controller
         try {
             // Auto-generate invoice number if not provided
             $invoiceNumber = $validated['invoice_number'] ?? $this->generateInvoiceNumber();
+            $warehouseId = $validated['warehouse_id'] ?? Warehouse::getDefault()?->id;
 
             // Create sale
             $sale = Sale::create([
@@ -113,6 +116,7 @@ class SaleController extends Controller
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'customer_address' => $validated['customer_address'] ?? null,
                 'sales_person_id' => $validated['sales_person_id'] ?? null,
+                'warehouse_id' => $warehouseId,
                 'sale_date' => $validated['sale_date'],
                 'status' => $validated['status'],
                 'notes' => $validated['notes'] ?? null,
@@ -142,7 +146,8 @@ class SaleController extends Controller
                     $item['quantity'],
                     'sale',
                     $sale->id,
-                    "Sale #{$sale->invoice_number} - Status: {$validated['status']}"
+                    "Sale #{$sale->invoice_number} - Status: {$validated['status']}",
+                    $warehouseId
                 );
             }
 
@@ -159,7 +164,7 @@ class SaleController extends Controller
 
     public function show($id)
     {
-        $sale = Sale::with(['items.product', 'salesPerson', 'user'])->findOrFail($id);
+        $sale = Sale::with(['items.product', 'salesPerson', 'user', 'warehouse'])->findOrFail($id);
         return response()->json($sale);
     }
 
@@ -167,6 +172,7 @@ class SaleController extends Controller
     {
         $sale = Sale::with('items')->findOrFail($id);
         $oldStatus = $sale->status;
+        $warehouseId = $sale->warehouse_id ?? Warehouse::getDefault()?->id;
 
         $validated = $request->validate([
             'status' => 'required|in:pending,completed,cancelled',
@@ -179,28 +185,17 @@ class SaleController extends Controller
         try {
             $stockService = new StockSyncService();
 
-            // Handle status change: pending -> completed (deduct stock)
-            if ($oldStatus === 'pending' && $newStatus === 'completed') {
-                foreach ($sale->items as $item) {
-                    $stockService->deductStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'sale',
-                        $sale->id,
-                        "Sale #{$sale->invoice_number} completed"
-                    );
-                }
-            }
-
+            // Stock already deducted on create. Only restore when cancelling.
             // Handle status change: completed -> cancelled (restore stock)
-            if ($oldStatus === 'completed' && $newStatus === 'cancelled') {
+            if (in_array($oldStatus, ['completed', 'pending']) && $newStatus === 'cancelled') {
                 foreach ($sale->items as $item) {
                     $stockService->addStock(
                         $item->product_id,
                         $item->quantity,
                         'sale_cancelled',
                         $sale->id,
-                        "Sale #{$sale->invoice_number} cancelled"
+                        "Sale #{$sale->invoice_number} cancelled",
+                        $warehouseId
                     );
                 }
             }
@@ -222,7 +217,7 @@ class SaleController extends Controller
         DB::beginTransaction();
         try {
             // If sale was completed, restore stock before deletion
-            if ($sale->status === 'completed') {
+            if (in_array($sale->status, ['completed', 'pending'])) {
                 $stockService = new StockSyncService();
                 foreach ($sale->items as $item) {
                     $stockService->addStock(
@@ -230,7 +225,8 @@ class SaleController extends Controller
                         $item->quantity,
                         'sale_deleted',
                         $sale->id,
-                        "Sale #{$sale->invoice_number} deleted - stock restored"
+                        "Sale #{$sale->invoice_number} deleted - stock restored",
+                        $sale->warehouse_id ?? Warehouse::getDefault()?->id
                     );
                 }
             }

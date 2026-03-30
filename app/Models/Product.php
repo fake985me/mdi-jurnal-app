@@ -19,8 +19,9 @@ class Product extends Model
         // Auto-sync CurrentStock when Product is created (only for non-asset products)
         static::created(function ($product) {
             if (!$product->is_asset) {
+                $defaultWarehouseId = \App\Models\Warehouse::getDefault()?->id;
                 \App\Models\CurrentStock::firstOrCreate(
-                    ['product_id' => $product->id],
+                    ['product_id' => $product->id, 'warehouse_id' => $defaultWarehouseId],
                     ['quantity' => $product->stock ?? 0, 'last_updated' => now()]
                 );
             }
@@ -29,8 +30,9 @@ class Product extends Model
         // Auto-sync CurrentStock when Product stock is updated (only for non-asset products)
         static::updated(function ($product) {
             if (!$product->is_asset && $product->isDirty('stock')) {
+                $defaultWarehouseId = \App\Models\Warehouse::getDefault()?->id;
                 $currentStock = \App\Models\CurrentStock::firstOrCreate(
-                    ['product_id' => $product->id],
+                    ['product_id' => $product->id, 'warehouse_id' => $defaultWarehouseId],
                     ['quantity' => 0, 'last_updated' => now()]
                 );
                 $currentStock->quantity = $product->stock ?? 0;
@@ -99,6 +101,14 @@ class Product extends Model
     }
 
     /**
+     * Get all current stocks across warehouses
+     */
+    public function currentStocks()
+    {
+        return $this->hasMany(CurrentStock::class);
+    }
+
+    /**
      * Get all category-subcategory pairs for this product
      */
     public function productCategories()
@@ -151,4 +161,3 @@ class Product extends Model
         });
     }
 }
-

@@ -19,7 +19,8 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['productCategories.category', 'productCategories.subCategory']);
+        $query = Product::with(['productCategories.category', 'productCategories.subCategory'])
+            ->withSum('currentStocks', 'quantity');
 
         // Search
         if ($request->has('search')) {
@@ -75,9 +76,10 @@ class ProductController extends Controller
 
         $products = $query->paginate($request->per_page ?? 15);
 
-        // Append category_pairs to each product
+        // Append category_pairs and set stock to total across all warehouses
         $products->getCollection()->transform(function ($product) {
             $product->category_pairs = $product->categoryPairs;
+            $product->stock = (int) ($product->current_stocks_sum_quantity ?? 0);
             return $product;
         });
 

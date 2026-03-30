@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ProjectInvestment;
 use App\Models\ProjectInvestmentItem;
 use App\Services\StockSyncService;
+use App\Services\StockTransferService;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -16,7 +18,7 @@ class ProjectInvestmentController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = ProjectInvestment::with(['items.product', 'user', 'approver']);
+            $query = ProjectInvestment::with(['items.product', 'user', 'approver', 'warehouse', 'contract']);
 
             if ($request->has('status') && !empty($request->status)) {
                 $query->where('status', $request->status);
@@ -44,6 +46,7 @@ class ProjectInvestmentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'type' => 'nullable|in:invest,design_build',
             'project_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
             'client_contact' => 'nullable|string',
@@ -70,6 +73,7 @@ class ProjectInvestmentController extends Controller
 
             $project = ProjectInvestment::create([
                 'project_code' => $projectCode,
+                'type' => $validated['type'] ?? ProjectInvestment::TYPE_INVEST,
                 'po_number' => $validated['po_number'] ?? null,
                 'po_value' => $validated['po_value'] ?? 0,
                 'po_date' => $validated['po_date'] ?? null,
@@ -117,12 +121,14 @@ class ProjectInvestmentController extends Controller
     public function show($id)
     {
         $project = ProjectInvestment::with([
-            'items.product', 
-            'materials', 
-            'tasks.assignee', 
-            'progressLogs.updatedBy', 
-            'user', 
-            'approver'
+            'items.product',
+            'materials',
+            'tasks.assignee',
+            'progressLogs.updatedBy',
+            'user',
+            'approver',
+            'warehouse',
+            'contract',
         ])->findOrFail($id);
         return response()->json($project);
     }
@@ -212,17 +218,32 @@ class ProjectInvestmentController extends Controller
         DB::beginTransaction();
         try {
             $stockService = new StockSyncService();
+            $transferService = new StockTransferService();
+            $defaultWarehouseId = Warehouse::getDefault()?->id;
+            $projectWarehouseId = $project->warehouse_id;
 
             // Deduct stock for all items
             foreach ($project->items as $item) {
                 if (!$item->stock_deducted) {
-                    $stockService->deductStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'project_allocation',
-                        $project->id,
-                        "Project: {$project->project_code} - {$project->project_name}"
-                    );
+                    if ($projectWarehouseId && $defaultWarehouseId) {
+                        $transferService->transferNow(
+                            $defaultWarehouseId,
+                            $projectWarehouseId,
+                            $item->product_id,
+                            $item->quantity,
+                            "Project allocation: {$project->project_code}",
+                            auth()->id()
+                        );
+                    } else {
+                        $stockService->deductStock(
+                            $item->product_id,
+                            $item->quantity,
+                            'project_allocation',
+                            $project->id,
+                            "Project: {$project->project_code} - {$project->project_name}",
+                            $defaultWarehouseId
+                        );
+                    }
                     $item->update(['stock_deducted' => true]);
                 }
             }
@@ -372,16 +393,31 @@ class ProjectInvestmentController extends Controller
     private function returnItemsToStock(ProjectInvestment $project)
     {
         $stockService = new StockSyncService();
+        $transferService = new StockTransferService();
+        $defaultWarehouseId = Warehouse::getDefault()?->id;
+        $projectWarehouseId = $project->warehouse_id;
 
         foreach ($project->items as $item) {
             if ($item->stock_deducted) {
-                $stockService->addStock(
-                    $item->product_id,
-                    $item->quantity,
-                    'project_return',
-                    $project->id,
-                    "Returned from cancelled project: {$project->project_code}"
-                );
+                if ($projectWarehouseId && $defaultWarehouseId) {
+                    $transferService->transferNow(
+                        $projectWarehouseId,
+                        $defaultWarehouseId,
+                        $item->product_id,
+                        $item->quantity,
+                        "Return from project: {$project->project_code}",
+                        auth()->id()
+                    );
+                } else {
+                    $stockService->addStock(
+                        $item->product_id,
+                        $item->quantity,
+                        'project_return',
+                        $project->id,
+                        "Returned from cancelled project: {$project->project_code}",
+                        $defaultWarehouseId
+                    );
+                }
                 $item->update(['stock_deducted' => false]);
             }
         }
