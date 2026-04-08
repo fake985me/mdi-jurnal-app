@@ -26,8 +26,8 @@
         />
         <select v-model="filters.status" @change="loadPurchases" class="input">
           <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="received">Received</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="paid">Paid</option>
           <option value="cancelled">Cancelled</option>
         </select>
         <input v-model="filters.start_date" @change="loadPurchases" type="date" class="input" />
@@ -68,16 +68,23 @@
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(purchase.order_date).toLocaleDateString() }}</td>
             <td class="px-6 py-4 text-sm text-gray-700">{{ purchase.warehouse?.name || '-' }}</td>
-            <td v-for="item in purchase.items" :key="item.id" class="px-6 py-4 text-sm text-gray-700">{{ item.product?.title }}</td>
-            <td v-for="item in purchase.items" :key="item.id" class="px-6 py-4 text-sm text-gray-700">{{ item.quantity }}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">
+              <span v-for="(item, i) in purchase.items" :key="item.id">
+                {{ item.product?.title }}<span v-if="i < purchase.items.length - 1">, </span>
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-700">
+              <span v-for="(item, i) in purchase.items" :key="item.id">
+                {{ item.quantity }}<span v-if="i < purchase.items.length - 1">, </span>
+              </span>
+            </td>
             <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(purchase.total_amount) }}</td>
             <td class="px-6 py-4">
-              <span :class="getStatusBadgeClass(purchase.status)">
+              <span :class="getStatusBadgeClass(purchase.status)" class="text-xs font-medium px-2 py-1 rounded-full">
                 {{ purchase.status }}
               </span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button @click="openPaymentModal(purchase)" class="text-emerald-600 hover:text-emerald-900 font-medium">Payments</button>
               <button @click="viewPurchase(purchase)" class="text-blue-600 hover:text-blue-900 font-medium">View</button>
               <button @click="deletePurchase(purchase.id)" class="text-red-600 hover:text-red-900 font-medium">Delete</button>
             </td>
@@ -198,13 +205,6 @@
           <!-- Additional Info -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
-              <select v-model="form.status" required class="input">
-                <option value="pending">Pending</option>
-                <option value="received">{{ form.is_for_asset ? 'Received (Create Assets)' : 'Received (Add to Stock)' }}</option>
-              </select>
-            </div>
-            <div>
               <label class="flex items-center space-x-2 h-full pt-6">
                 <input v-model="form.is_for_asset" type="checkbox" class="w-5 h-5 text-blue-600 rounded border-gray-300" />
                 <span class="text-sm font-medium text-gray-700">Purchase for Asset (not for sale)</span>
@@ -214,6 +214,10 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
               <textarea v-model="form.notes" rows="2" class="input"></textarea>
             </div>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">
+            <strong>Note:</strong> Purchase akan dibuat dengan status <strong>Unpaid</strong>. Pembayaran dilakukan di halaman <strong>Accounting</strong>. Stock akan ditambahkan otomatis setelah pembayaran di-confirm.
           </div>
 
           <div v-if="form.is_for_asset" class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm text-amber-700">
@@ -268,126 +272,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Payments Modal -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-xl font-bold text-gray-900">Payments</h3>
-            <p class="text-sm text-gray-600">PO: {{ paymentPurchase?.po_number }}</p>
-          </div>
-          <button @click="closePaymentModal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-sm">
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Total</div>
-            <div class="font-semibold text-gray-800">Rp {{ formatPrice(purchaseTotal) }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Paid</div>
-            <div class="font-semibold text-emerald-600">Rp {{ formatPrice(totalPaid) }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Remaining</div>
-            <div class="font-semibold text-orange-600">Rp {{ formatPrice(remainingAmount) }}</div>
-          </div>
-        </div>
-
-        <div class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-          <div class="flex justify-between items-center mb-3">
-            <h4 class="font-semibold text-gray-800">{{ editingPaymentId ? 'Edit Payment' : 'Add Payment' }}</h4>
-            <button v-if="editingPaymentId" @click="resetPaymentForm" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-              Cancel Edit
-            </button>
-          </div>
-          <form @submit.prevent="submitPayment" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-              <select v-model="paymentForm.payment_type" required class="input">
-                <option value="dp">DP</option>
-                <option value="termin">Termin</option>
-                <option value="full">Full Payment</option>
-                <option value="sharing_profit">Sharing Profit</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
-              <input v-model.number="paymentForm.amount" type="number" min="0.01" step="0.01" required class="input" />
-              <p v-if="paymentForm.amount && purchaseTotal > 0 && paymentForm.amount > remainingAvailable" class="text-xs text-red-600 mt-1">
-                Amount exceeds remaining balance.
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-              <input v-model="paymentForm.payment_date" type="date" class="input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
-              <input v-model="paymentForm.method" class="input" placeholder="Transfer/Cash/..." />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
-              <input v-model="paymentForm.reference_number" class="input" placeholder="Optional" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select v-model="paymentForm.status" class="input">
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div class="md:col-span-3">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="paymentForm.notes" rows="2" class="input" placeholder="Optional notes"></textarea>
-            </div>
-            <div v-if="paymentError" class="md:col-span-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ paymentError }}</div>
-            <div class="md:col-span-3 flex justify-end gap-3">
-              <button type="button" @click="closePaymentModal" class="btn-secondary">Close</button>
-              <button type="submit" :disabled="paymentSaving" class="btn-primary">
-                {{ paymentSaving ? 'Saving...' : 'Save Payment' }}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div v-if="paymentsLoading" class="text-center py-4 text-gray-500">Loading payments...</div>
-        <table v-else-if="purchasePayments.length" class="min-w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-2 text-left">Date</th>
-              <th class="px-4 py-2 text-left">Type</th>
-              <th class="px-4 py-2 text-left">Method</th>
-              <th class="px-4 py-2 text-left">Ref</th>
-              <th class="px-4 py-2 text-right">Amount</th>
-              <th class="px-4 py-2 text-right">Status</th>
-              <th class="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr v-for="payment in purchasePayments" :key="payment.id">
-              <td class="px-4 py-2">{{ payment.payment_date || '-' }}</td>
-              <td class="px-4 py-2 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
-              <td class="px-4 py-2">{{ payment.method || '-' }}</td>
-              <td class="px-4 py-2">{{ payment.reference_number || '-' }}</td>
-              <td class="px-4 py-2 text-right font-semibold">Rp {{ formatPrice(payment.amount || 0) }}</td>
-              <td class="px-4 py-2 text-right">
-                <span :class="payment.status === 'paid' ? 'text-emerald-600' : payment.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'">
-                  {{ payment.status }}
-                </span>
-              </td>
-              <td class="px-4 py-2 text-right space-x-2">
-                <button @click="editPayment(payment)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                <button @click="deletePayment(payment)" class="text-red-600 hover:text-red-900">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="text-center text-gray-500 py-4">No payments recorded</p>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -401,19 +285,11 @@ const warehouses = ref([]);
 const loading = ref(true);
 const showModal = ref(false);
 const showProductModal = ref(false);
-const showPaymentModal = ref(false);
 const saving = ref(false);
 const savingProduct = ref(false);
 const error = ref('');
 const productError = ref('');
 const productSearch = ref('');
-const paymentPurchase = ref(null);
-const purchasePayments = ref([]);
-const paymentsLoading = ref(false);
-const paymentSaving = ref(false);
-const paymentError = ref('');
-const editingPaymentId = ref(null);
-const editingPaymentAmount = ref(0);
 
 const filters = ref({
   search: '',
@@ -429,7 +305,6 @@ const form = ref({
   supplier_phone: '',
   warehouse_id: '',
   order_date: new Date().toISOString().split('T')[0],
-  status: 'received',
   is_for_asset: false,
   notes: '',
   items: [{ product_id: '', quantity: 1, unit_price: 0 }],
@@ -441,27 +316,6 @@ const productForm = ref({
   price: 0,
   stock: 0,
   sku: '',
-});
-
-const paymentForm = ref({
-  payment_type: 'dp',
-  amount: null,
-  payment_date: new Date().toISOString().split('T')[0],
-  method: '',
-  status: 'paid',
-  reference_number: '',
-  notes: ''
-});
-
-const purchaseTotal = computed(() => Number(paymentPurchase.value?.total_amount || 0));
-const totalPaid = computed(() => purchasePayments.value.reduce((sum, p) => {
-  if (p.status === 'cancelled') return sum;
-  return sum + Number(p.amount || 0);
-}, 0));
-const remainingAmount = computed(() => Math.max(0, purchaseTotal.value - totalPaid.value));
-const remainingAvailable = computed(() => {
-  if (!editingPaymentId.value) return remainingAmount.value;
-  return Math.max(0, remainingAmount.value + Number(editingPaymentAmount.value || 0));
 });
 
 const filteredProducts = computed(() => {
@@ -481,11 +335,12 @@ const formatPrice = (price) => {
 
 const getStatusBadgeClass = (status) => {
   const classes = {
-    pending: 'badge-warning',
-    received: 'badge-success',
-    cancelled: 'badge-danger',
+    unpaid: 'bg-red-100 text-red-700',
+    paid: 'bg-green-100 text-green-700',
+    partial: 'bg-yellow-100 text-yellow-700',
+    cancelled: 'bg-gray-100 text-gray-500',
   };
-  return classes[status] || 'badge';
+  return classes[status] || 'bg-gray-100 text-gray-700';
 };
 
 const loadPurchases = async (page = 1) => {
@@ -546,7 +401,6 @@ const resetForm = () => {
     supplier_phone: '',
     warehouse_id: '',
     order_date: new Date().toISOString().split('T')[0],
-    status: 'received',
     is_for_asset: false,
     notes: '',
     items: [{ product_id: '', quantity: 1, unit_price: 0 }],
@@ -576,14 +430,10 @@ const saveProduct = async () => {
   
   try {
     productForm.value.sku = `SKU-${Date.now()}`;
-    // Ensure stock is always 0 (not null)
     productForm.value.stock = productForm.value.stock || 0;
     const response = await api.post('/products', productForm.value);
     
-    // Add to products list
     products.value.push(response.data);
-    
-    // Close modal and reset
     showProductModal.value = false;
     productForm.value = { title: '', brand: '', price: 0, stock: 0, sku: '' };
     
@@ -596,7 +446,7 @@ const saveProduct = async () => {
 };
 
 const viewPurchase = (purchase) => {
-  alert(`Purchase Order Details:\nPO: ${purchase.po_number}\nSupplier: ${purchase.supplier_name}\nTotal: Rp ${formatPrice(purchase.total_amount)}`);
+  alert(`Purchase Order Details:\nPO: ${purchase.po_number}\nSupplier: ${purchase.supplier_name}\nTotal: Rp ${formatPrice(purchase.total_amount)}\nStatus: ${purchase.status}`);
 };
 
 const deletePurchase = async (id) => {
@@ -607,126 +457,6 @@ const deletePurchase = async (id) => {
     loadPurchases();
   } catch (err) {
     alert(err.response?.data?.message || 'Failed to delete purchase');
-  }
-};
-
-const resetPaymentForm = () => {
-  paymentForm.value = {
-    payment_type: 'dp',
-    amount: null,
-    payment_date: new Date().toISOString().split('T')[0],
-    method: '',
-    status: 'paid',
-    reference_number: '',
-    notes: ''
-  };
-  paymentError.value = '';
-  editingPaymentId.value = null;
-  editingPaymentAmount.value = 0;
-};
-
-const loadPurchasePayments = async (purchaseId) => {
-  if (!purchaseId) {
-    purchasePayments.value = [];
-    return;
-  }
-
-  paymentsLoading.value = true;
-  try {
-    const response = await api.get('/payments', {
-      params: { payable_type: 'purchase', payable_id: purchaseId, per_page: 100 }
-    });
-    purchasePayments.value = response.data.data || response.data || [];
-  } catch (err) {
-    console.error('Failed to load payments:', err);
-    purchasePayments.value = [];
-  } finally {
-    paymentsLoading.value = false;
-  }
-};
-
-const openPaymentModal = async (purchase) => {
-  paymentPurchase.value = purchase;
-  showPaymentModal.value = true;
-  resetPaymentForm();
-  await loadPurchasePayments(purchase.id);
-};
-
-const closePaymentModal = () => {
-  showPaymentModal.value = false;
-  paymentPurchase.value = null;
-  purchasePayments.value = [];
-  resetPaymentForm();
-};
-
-const submitPayment = async () => {
-  if (!paymentPurchase.value) return;
-  paymentError.value = '';
-
-  const amount = Number(paymentForm.value.amount || 0);
-  if (amount <= 0) {
-    paymentError.value = 'Amount must be greater than 0.';
-    return;
-  }
-  if (purchaseTotal.value > 0 && amount > remainingAvailable.value + 0.0001) {
-    paymentError.value = 'Payment exceeds remaining balance.';
-    return;
-  }
-
-  paymentSaving.value = true;
-  try {
-    const payload = {
-      payment_type: paymentForm.value.payment_type,
-      amount: amount,
-      payment_date: paymentForm.value.payment_date,
-      method: paymentForm.value.method,
-      status: paymentForm.value.status,
-      reference_number: paymentForm.value.reference_number,
-      notes: paymentForm.value.notes
-    };
-
-    if (editingPaymentId.value) {
-      await api.put(`/payments/${editingPaymentId.value}`, payload);
-    } else {
-      await api.post('/payments', {
-        payable_type: 'purchase',
-        payable_id: paymentPurchase.value.id,
-        ...payload
-      });
-    }
-    await loadPurchasePayments(paymentPurchase.value.id);
-    resetPaymentForm();
-  } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to save payment';
-  } finally {
-    paymentSaving.value = false;
-  }
-};
-
-const editPayment = (payment) => {
-  editingPaymentId.value = payment.id;
-  editingPaymentAmount.value = Number(payment.amount || 0);
-  paymentForm.value = {
-    payment_type: payment.payment_type || 'dp',
-    amount: Number(payment.amount || 0),
-    payment_date: payment.payment_date || new Date().toISOString().split('T')[0],
-    method: payment.method || '',
-    status: payment.status || 'paid',
-    reference_number: payment.reference_number || '',
-    notes: payment.notes || ''
-  };
-};
-
-const deletePayment = async (payment) => {
-  if (!confirm('Delete this payment?')) return;
-  try {
-    await api.delete(`/payments/${payment.id}`);
-    await loadPurchasePayments(paymentPurchase.value?.id);
-    if (editingPaymentId.value === payment.id) {
-      resetPaymentForm();
-    }
-  } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to delete payment';
   }
 };
 

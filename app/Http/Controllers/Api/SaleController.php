@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\CurrentStock;
+use App\Models\Payment;
 use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use App\Services\StockSyncService;
@@ -153,6 +154,20 @@ class SaleController extends Controller
 
             // Update total amount
             $sale->update(['total_amount' => $totalAmount]);
+
+            // Auto-create payment record (unpaid)
+            Payment::create([
+                'payable_type' => Sale::class,
+                'payable_id' => $sale->id,
+                'payment_type' => 'full',
+                'amount' => $totalAmount,
+                'payment_date' => $validated['sale_date'],
+                'method' => null,
+                'status' => 'unpaid',
+                'reference_number' => $invoiceNumber,
+                'notes' => "Auto-created from Sale #{$invoiceNumber}",
+                'user_id' => auth()->id(),
+            ]);
 
             DB::commit();
             return response()->json($sale->load(['items.product', 'salesPerson', 'user']), 201);

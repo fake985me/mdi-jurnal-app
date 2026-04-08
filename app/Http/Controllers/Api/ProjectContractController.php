@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ProjectContract;
 use App\Models\ProjectInvestment;
+use App\Models\Payment;
 use App\Models\Warehouse;
 use App\Services\StockTransferService;
 use Illuminate\Http\Request;
@@ -97,6 +98,23 @@ class ProjectContractController extends Controller
                         }
                     }
                 }
+            }
+
+            // Auto-create payment record if contract has a value
+            $contractValue = (float) ($contract->contract_value ?? 0);
+            if ($contractValue > 0) {
+                Payment::create([
+                    'payable_type' => ProjectContract::class,
+                    'payable_id' => $contract->id,
+                    'payment_type' => 'full',
+                    'amount' => $contractValue,
+                    'payment_date' => $validated['contract_date'],
+                    'method' => null,
+                    'status' => 'unpaid',
+                    'reference_number' => $contract->contract_number,
+                    'notes' => "Auto-created from Contract #{$contract->contract_number}",
+                    'user_id' => auth()->id(),
+                ]);
             }
 
             DB::commit();

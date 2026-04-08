@@ -8,6 +8,7 @@ use App\Models\PurchaseItem;
 use App\Models\Product;
 use App\Models\CurrentStock;
 use App\Models\StockTransaction;
+use App\Models\Payment;
 use App\Models\Warehouse;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class PurchaseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Purchase::with(['user', 'items.product', 'warehouse']);
+            $query = Purchase::with(['user', 'items.product', 'warehouse', 'payments']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -45,6 +46,17 @@ class PurchaseController extends Controller
             $purchases = $query->orderBy('created_at', 'desc')
                 ->paginate($request->per_page ?? 15);
 
+            // Append payment summary to each purchase
+            /** @var \Illuminate\Pagination\LengthAwarePaginator $purchases */
+            $purchases->through(function ($purchase) {
+                $paidAmount = $purchase->payments
+                    ->where('status', 'paid')
+                    ->sum('amount');
+                $purchase->setAttribute('paid_amount', (float) $paidAmount);
+                $purchase->setAttribute('payment_status', $this->getPaymentStatus($purchase));
+                return $purchase;
+            });
+
             return response()->json($purchases);
         } catch (\Exception $e) {
             \Log::error('Purchases API Error: ' . $e->getMessage());
@@ -57,6 +69,16 @@ class PurchaseController extends Controller
         }
     }
 
+    protected function getPaymentStatus($purchase): string
+    {
+        $total = (float) ($purchase->total_amount ?? 0);
+        $paid = (float) ($purchase->paid_amount ?? 0);
+        if ($total <= 0) return 'unpaid';
+        if ($paid >= $total - 0.01) return 'paid';
+        if ($paid > 0) return 'partial';
+        return 'unpaid';
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -66,7 +88,6 @@ class PurchaseController extends Controller
             'supplier_phone' => 'nullable|string',
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'order_date' => 'required|date',
-            'status' => 'required|in:pending,received,cancelled',
             'is_for_asset' => 'boolean',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -81,7 +102,7 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
-            // Create purchase
+            // Create purchase with status 'unpaid' (payment determines status)
             $purchase = Purchase::create([
                 'po_number' => $validated['po_number'],
                 'supplier_name' => $validated['supplier_name'],
@@ -89,23 +110,23 @@ class PurchaseController extends Controller
                 'supplier_phone' => $validated['supplier_phone'] ?? null,
                 'warehouse_id' => $warehouseId,
                 'order_date' => $validated['order_date'],
-                'status' => $validated['status'],
+                'status' => 'unpaid',
                 'is_for_asset' => $isForAsset,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
                 'total_amount' => 0,
-                'received_date' => $validated['status'] === 'received' ? now() : null,
+                'received_date' => null,
             ]);
 
             $totalAmount = 0;
 
-            // Create purchase items
+            // Create purchase items (NO stock added here — stock added when payment is marked paid)
             foreach ($validated['items'] as $item) {
                 $subtotal = $item['quantity'] * $item['unit_price'];
                 $totalAmount += $subtotal;
                 $itemIsForAsset = $item['is_for_asset'] ?? $isForAsset;
 
-                $purchaseItem = PurchaseItem::create([
+                PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
@@ -113,45 +134,24 @@ class PurchaseController extends Controller
                     'subtotal' => $subtotal,
                     'is_for_asset' => $itemIsForAsset,
                 ]);
-
-                // If status is received
-                if ($validated['status'] === 'received') {
-                    if ($itemIsForAsset) {
-                        // Create assets for each quantity
-                        $product = Product::find($item['product_id']);
-                        for ($i = 0; $i < $item['quantity']; $i++) {
-                            \App\Models\Asset::create([
-                                'asset_code' => \App\Models\Asset::generateAssetCode(),
-                                'name' => $product->title ?? $product->name ?? 'Asset',
-                                'product_id' => $item['product_id'],
-                                'purchase_item_id' => $purchaseItem->id,
-                                'category' => $product->category ?? null,
-                                'brand' => $product->brand ?? null,
-                                'model' => $product->model ?? null,
-                                'condition' => 'good',
-                                'status' => 'active',
-                                'purchase_date' => $validated['order_date'],
-                                'purchase_price' => $item['unit_price'],
-                                'current_value' => $item['unit_price'],
-                            ]);
-                        }
-                    } else {
-                        // Add to stock (for non-asset items only)
-                        $stockService = new StockSyncService();
-                        $stockService->addStock(
-                            $item['product_id'],
-                            $item['quantity'],
-                            'purchase',
-                            $purchase->id,
-                            "Purchase #{$purchase->po_number}",
-                            $warehouseId
-                        );
-                    }
-                }
             }
 
             // Update total amount
             $purchase->update(['total_amount' => $totalAmount]);
+
+            // Auto-create payment record (unpaid)
+            Payment::create([
+                'payable_type' => Purchase::class,
+                'payable_id' => $purchase->id,
+                'payment_type' => 'full',
+                'amount' => $totalAmount,
+                'payment_date' => $validated['order_date'],
+                'method' => null,
+                'status' => 'unpaid',
+                'reference_number' => $purchase->po_number,
+                'notes' => "Auto-created from Purchase #{$purchase->po_number}",
+                'user_id' => auth()->id(),
+            ]);
 
             DB::commit();
             return response()->json($purchase->load(['items.product', 'user']), 201);
@@ -163,64 +163,21 @@ class PurchaseController extends Controller
 
     public function show($id)
     {
-        $purchase = Purchase::with(['items.product', 'user', 'warehouse'])->findOrFail($id);
+        $purchase = Purchase::with(['items.product', 'user', 'warehouse', 'payments'])->findOrFail($id);
         return response()->json($purchase);
     }
 
     public function update(Request $request, $id)
     {
         $purchase = Purchase::with('items')->findOrFail($id);
-        $oldStatus = $purchase->status;
-        $warehouseId = $purchase->warehouse_id ?? Warehouse::getDefault()?->id;
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,received,cancelled',
             'notes' => 'nullable|string',
         ]);
 
-        $newStatus = $validated['status'];
+        $purchase->update($validated);
 
-        DB::beginTransaction();
-        try {
-            $stockService = new StockSyncService();
-
-            // Handle status change: pending -> received (add stock)
-            if ($oldStatus === 'pending' && $newStatus === 'received') {
-                foreach ($purchase->items as $item) {
-                    $stockService->addStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'purchase',
-                        $purchase->id,
-                        "Purchase #{$purchase->po_number} received",
-                        $warehouseId
-                    );
-                }
-                $purchase->received_date = now();
-            }
-
-            // Handle status change: received -> cancelled (deduct stock)
-            if ($oldStatus === 'received' && $newStatus === 'cancelled') {
-                foreach ($purchase->items as $item) {
-                    $stockService->deductStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'purchase_cancelled',
-                        $purchase->id,
-                        "Purchase #{$purchase->po_number} cancelled",
-                        $warehouseId
-                    );
-                }
-            }
-
-            $purchase->update($validated);
-            DB::commit();
-
-            return response()->json($purchase->load(['items.product', 'user']));
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        return response()->json($purchase->load(['items.product', 'user']));
     }
 
     public function destroy($id)
@@ -229,21 +186,26 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
-            // If purchase was received, deduct stock before deletion
-            if ($purchase->status === 'received') {
+            // If purchase was paid, deduct stock before deletion
+            if ($purchase->status === 'paid') {
                 $stockService = new StockSyncService();
                 foreach ($purchase->items as $item) {
-                    $stockService->deductStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'purchase_deleted',
-                        $purchase->id,
-                        "Purchase #{$purchase->po_number} deleted - stock deducted",
-                        $purchase->warehouse_id ?? Warehouse::getDefault()?->id
-                    );
+                    $itemIsForAsset = $item->is_for_asset ?? $purchase->is_for_asset ?? false;
+                    if (!$itemIsForAsset) {
+                        $stockService->deductStock(
+                            $item->product_id,
+                            $item->quantity,
+                            'purchase_deleted',
+                            $purchase->id,
+                            "Purchase #{$purchase->po_number} deleted - stock deducted",
+                            $purchase->warehouse_id ?? Warehouse::getDefault()?->id
+                        );
+                    }
                 }
             }
 
+            // Delete associated payments
+            $purchase->payments()->delete();
             $purchase->delete();
             DB::commit();
             return response()->json(['message' => 'Purchase deleted successfully']);

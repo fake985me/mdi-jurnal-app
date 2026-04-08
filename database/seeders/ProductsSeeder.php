@@ -70,7 +70,16 @@ class ProductsSeeder extends Seeder
                 'updated_at' => $now,
             ];
             
-            $existingProduct = DB::table('products')->where('sku', $product['sku'])->first();
+            // Match by SKU if not empty, otherwise by title+brand to avoid duplicates
+            if (!empty($product['sku'])) {
+                $existingProduct = DB::table('products')->where('sku', $product['sku'])->first();
+            } else {
+                $existingProduct = DB::table('products')
+                    ->where('title', $product['title'])
+                    ->where('brand', $product['brand'])
+                    ->whereRaw("(sku IS NULL OR sku = '')")
+                    ->first();
+            }
             
             if ($existingProduct) {
                 DB::table('products')->where('id', $existingProduct->id)->update($productData);

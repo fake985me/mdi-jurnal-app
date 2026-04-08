@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stock-chart', [App\Http\Controllers\Api\DashboardController::class, 'stockChart']);
         Route::get('/top-products', [App\Http\Controllers\Api\DashboardController::class, 'topProducts']);
         Route::get('/sales-trend', [App\Http\Controllers\Api\DashboardController::class, 'salesTrend']);
+        Route::get('/stock-report', [App\Http\Controllers\Api\DashboardController::class, 'stockReport']);
+        Route::get('/top-selling-stock', [App\Http\Controllers\Api\DashboardController::class, 'topSellingStock']);
     });
 
     // Categories
@@ -106,6 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assets', App\Http\Controllers\Api\AssetController::class);
 
     // Warranties
+    Route::post('/warranties/batch', [App\Http\Controllers\Api\WarrantyController::class, 'batchStore']);
     Route::apiResource('warranties', App\Http\Controllers\Api\WarrantyController::class);
 
     // Lendings
@@ -199,6 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('invoices', App\Http\Controllers\Api\InvoiceController::class);
 
     // Payments
+    Route::get('/payments/summary', [App\Http\Controllers\Api\PaymentController::class, 'summary']);
     Route::apiResource('payments', App\Http\Controllers\Api\PaymentController::class);
 
     // Deliveries

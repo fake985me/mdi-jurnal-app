@@ -66,8 +66,9 @@ class PublicProductController extends Controller
         $products = $query->paginate($perPage);
 
         // Append category_pairs to each product
-        $products->getCollection()->transform(function ($product) {
-            $product->category_pairs = $product->categoryPairs;
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
+        $products->through(function ($product) {
+            $product->append('category_pairs');
             return $product;
         });
 
@@ -110,7 +111,7 @@ class PublicProductController extends Controller
 
         // Load relationships for response
         $product->load(['productCategories.category', 'productCategories.subCategory']);
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json([
             'message' => 'Product created successfully',
@@ -132,7 +133,7 @@ class PublicProductController extends Controller
             ], 404);
         }
 
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json($product);
     }
@@ -181,7 +182,7 @@ class PublicProductController extends Controller
 
         // Load relationships for response
         $product->load(['productCategories.category', 'productCategories.subCategory']);
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json([
             'message' => 'Product updated successfully',

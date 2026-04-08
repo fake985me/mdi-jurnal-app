@@ -77,8 +77,9 @@ class ProductController extends Controller
         $products = $query->paginate($request->per_page ?? 15);
 
         // Append category_pairs and set stock to total across all warehouses
-        $products->getCollection()->transform(function ($product) {
-            $product->category_pairs = $product->categoryPairs;
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
+        $products->through(function ($product) {
+            $product->append('category_pairs');
             $product->stock = (int) ($product->current_stocks_sum_quantity ?? 0);
             return $product;
         });
@@ -96,9 +97,11 @@ class ProductController extends Controller
             'brand' => 'nullable|string|max:100',
             'image' => 'nullable|string',
             'descriptions' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
-            // New categories array
+            'is_asset' => 'nullable|boolean',
+            // Categories array
             'categories' => 'nullable|array',
             'categories.*.category_id' => 'required_with:categories|exists:categories,id',
             'categories.*.sub_category_id' => 'nullable|exists:sub_categories,id',
@@ -120,7 +123,7 @@ class ProductController extends Controller
 
         // Load relationships for response
         $product->load(['productCategories.category', 'productCategories.subCategory']);
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json($product, 201);
     }
@@ -130,7 +133,7 @@ class ProductController extends Controller
         $product = Product::with(['productCategories.category', 'productCategories.subCategory'])
             ->findOrFail($id);
         
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json($product);
     }
@@ -147,9 +150,11 @@ class ProductController extends Controller
             'brand' => 'nullable|string|max:100',
             'image' => 'nullable|string',
             'descriptions' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
-            // New categories array
+            'is_asset' => 'nullable|boolean',
+            // Categories array
             'categories' => 'nullable|array',
             'categories.*.category_id' => 'required_with:categories|exists:categories,id',
             'categories.*.sub_category_id' => 'nullable|exists:sub_categories,id',
@@ -171,7 +176,7 @@ class ProductController extends Controller
 
         // Load relationships for response
         $product->load(['productCategories.category', 'productCategories.subCategory']);
-        $product->category_pairs = $product->categoryPairs;
+        $product->append('category_pairs');
 
         return response()->json($product);
     }

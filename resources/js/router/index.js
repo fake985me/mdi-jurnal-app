@@ -99,9 +99,24 @@ const routes = [
                 component: () => import("../pages/Purchases.vue"),
             },
             {
+                path: "sales-people",
+                name: "SalesPeople",
+                component: () => import("../pages/SalesPeople.vue"),
+            },
+            {
                 path: "warranties",
                 name: "Warranties",
                 component: () => import("../pages/Warranties.vue"),
+            },
+            {
+                path: "warranties/create",
+                name: "WarrantyCreate",
+                component: () => import("../pages/WarrantyCreate.vue"),
+            },
+            {
+                path: "warranties/:id/edit",
+                name: "WarrantyEdit",
+                component: () => import("../pages/WarrantyCreate.vue"),
             },
             {
                 path: "lendings",

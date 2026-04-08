@@ -89,8 +89,8 @@
               <option v-if="activeTab === 'sales'" value="pending">Pending</option>
               <option v-if="activeTab === 'sales'" value="completed">Completed</option>
               <option v-if="activeTab === 'sales'" value="cancelled">Cancelled</option>
-              <option v-if="activeTab === 'purchases'" value="pending">Pending</option>
-              <option v-if="activeTab === 'purchases'" value="received">Received</option>
+              <option v-if="activeTab === 'purchases'" value="unpaid">Unpaid</option>
+              <option v-if="activeTab === 'purchases'" value="paid">Paid</option>
               <option v-if="activeTab === 'purchases'" value="cancelled">Cancelled</option>
             </select>
           </div>
@@ -419,8 +419,9 @@ const getStatusClass = (status) => {
   const classes = {
     pending: 'px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800',
     completed: 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
-    received: 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
-    cancelled: 'px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'
+    unpaid: 'px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800',
+    paid: 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
+    cancelled: 'px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500'
   }
   return classes[status] || 'px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800'
 }

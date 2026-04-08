@@ -62,16 +62,15 @@ class GuestController extends Controller
         $products = $query->paginate($request->per_page ?? 12);
 
         // Add current_stock object to each product for compatibility
-        $transformedItems = $products->getCollection()->map(function ($product) {
-            $product->current_stock = (object) [
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
+        $products->through(function ($product) {
+            $product->setAttribute('current_stock', (object) [
                 'quantity' => $product->stock_quantity ?? 0,
                 'last_updated' => $product->stock_last_updated
-            ];
+            ]);
             unset($product->stock_quantity, $product->stock_last_updated);
             return $product;
         });
-
-        $products->setCollection($transformedItems);
 
         return response()->json($products);
     }

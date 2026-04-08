@@ -76,7 +76,8 @@ const menuSections = computed(() => [
     items: [
       { name: t('nav.sales'), icon: 'sales', to: '/dashboard/sales', roles: ['admin', 'staff'] },
       { name: t('nav.purchases'), icon: 'purchases', to: '/dashboard/purchases', roles: ['admin', 'staff'] },
-      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] }
+      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] },
+      { name: t('nav.salesPeople'), icon: 'users', to: '/dashboard/sales-people', roles: ['admin', 'staff'] },
     ]
   },
   {

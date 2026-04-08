@@ -7,28 +7,63 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    private function foreignKeyExists(string $table, string $keyName): bool
+    {
+        $result = DB::select("
+            SELECT COUNT(*) as cnt FROM information_schema.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+            AND CONSTRAINT_NAME = ?
+            AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ", [$table, $keyName]);
+
+        return $result[0]->cnt > 0;
+    }
+
+    private function indexExists(string $table, string $keyName): bool
+    {
+        $result = DB::select("
+            SELECT COUNT(*) as cnt FROM information_schema.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+            AND INDEX_NAME = ?
+        ", [$table, $keyName]);
+
+        return $result[0]->cnt > 0;
+    }
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table('current_stocks', function (Blueprint $table) {
-            // Step 1: Drop the foreign key constraint on product_id first
-            $table->dropForeign(['product_id']);
-        });
-        
-        Schema::table('current_stocks', function (Blueprint $table) {
-            // Step 2: Now we can drop the unique index
-            $table->dropUnique(['product_id']);
-        });
-        
-        Schema::table('current_stocks', function (Blueprint $table) {
-            // Step 3: Add composite unique constraint
-            $table->unique(['product_id', 'warehouse_id'], 'current_stocks_product_warehouse_unique');
-            
-            // Step 4: Re-add the foreign key constraint
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-        });
+        // Step 1: Drop the foreign key on product_id if it exists
+        if ($this->foreignKeyExists('current_stocks', 'current_stocks_product_id_foreign')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->dropForeign(['product_id']);
+            });
+        }
+
+        // Step 2: Drop the single-column unique index if it exists
+        if ($this->indexExists('current_stocks', 'current_stocks_product_id_unique')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->dropUnique(['product_id']);
+            });
+        }
+
+        // Step 3: Add composite unique constraint if not already present
+        if (!$this->indexExists('current_stocks', 'current_stocks_product_warehouse_unique')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->unique(['product_id', 'warehouse_id'], 'current_stocks_product_warehouse_unique');
+            });
+        }
+
+        // Step 4: Re-add the foreign key constraint if not present
+        if (!$this->foreignKeyExists('current_stocks', 'current_stocks_product_id_foreign')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            });
+        }
     }
 
     /**
@@ -36,18 +71,39 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('current_stocks', function (Blueprint $table) {
-            // Drop foreign key first
-            $table->dropForeign(['product_id']);
-            
-            // Drop composite unique
-            $table->dropUnique('current_stocks_product_warehouse_unique');
-            
-            // Restore old unique on product_id only
-            $table->unique('product_id');
-            
-            // Re-add foreign key
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-        });
+        // Remove duplicate product_id rows before restoring single-column unique constraint
+        DB::statement('
+            DELETE cs1 FROM current_stocks cs1
+            INNER JOIN current_stocks cs2
+            WHERE cs1.product_id = cs2.product_id AND cs1.id < cs2.id
+        ');
+
+        // Drop foreign key if it exists
+        if ($this->foreignKeyExists('current_stocks', 'current_stocks_product_id_foreign')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->dropForeign(['product_id']);
+            });
+        }
+
+        // Drop composite unique if it exists
+        if ($this->indexExists('current_stocks', 'current_stocks_product_warehouse_unique')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->dropUnique('current_stocks_product_warehouse_unique');
+            });
+        }
+
+        // Restore old unique on product_id only if not already present
+        if (!$this->indexExists('current_stocks', 'current_stocks_product_id_unique')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->unique('product_id');
+            });
+        }
+
+        // Re-add foreign key if not present
+        if (!$this->foreignKeyExists('current_stocks', 'current_stocks_product_id_foreign')) {
+            Schema::table('current_stocks', function (Blueprint $table) {
+                $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            });
+        }
     }
 };

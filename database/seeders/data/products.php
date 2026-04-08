@@ -26,7 +26,7 @@ return [
     ['sku' => 'SW-P.002', 'title' => 'D2008GPE', 'brand' => 'DASAN', 'categories' => ['GPON', 'SWITCH'], 'sub_categories' => ['ONU PoE', 'PoE SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => 'SW.002', 'title' => 'D2224G', 'brand' => 'DASAN', 'categories' => ['GPON', 'SWITCH'], 'sub_categories' => ['ONU', 'L2 SWITCH'], 'price' => 0.00, 'stock' => 100, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'V2224G', 'brand' => 'dasan', 'categories' => ['GPON'], 'sub_categories' => ['ONU'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
-    ['sku' => '', 'title' => 'V2724GT', 'brand' => 'dasan', 'categories' => ['GPON'], 'sub_categories' => ['ONU'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
+    ['sku' => '', 'title' => 'V2724GT', 'brand' => 'dasan', 'categories' => ['GPON', 'SWITCH'], 'sub_categories' => ['ONU', 'L2 SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => 'G-ONT.001', 'title' => 'H660GM', 'brand' => 'DASAN', 'categories' => ['GPON'], 'sub_categories' => ['ONT'], 'price' => 0.00, 'stock' => 800, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'H660GMA', 'brand' => 'dasan', 'categories' => ['GPON'], 'sub_categories' => ['ONT'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'H660NB', 'brand' => 'dasan', 'categories' => ['GPON'], 'sub_categories' => ['ONT'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
@@ -45,7 +45,7 @@ return [
     ['sku' => '', 'title' => 'C2100', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['L2 SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'C2200', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['L2 SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'C2300', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['L2 SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
-    ['sku' => '', 'title' => 'V2724GT', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['L2 SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
+
     ['sku' => '', 'title' => 'D2448GP', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['PoE SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'D2624GP', 'brand' => 'dasan', 'categories' => ['SWITCH'], 'sub_categories' => ['PoE SWITCH'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],
     ['sku' => '', 'title' => 'W340', 'brand' => 'dasan', 'categories' => ['WIRELESS'], 'sub_categories' => ['Access Point'], 'price' => 0.00, 'stock' => 0, 'minimum_stock' => 0, 'is_asset' => false],

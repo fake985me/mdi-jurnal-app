@@ -151,7 +151,7 @@ class HistoryController extends Controller
             ->count();
 
         $purchasesTotal = Purchase::whereBetween('order_date', [$dateFrom, $dateTo])
-            ->where('status', 'received')
+            ->where('status', 'paid')
             ->sum('total_amount');
 
         $purchasesCount = Purchase::whereBetween('order_date', [$dateFrom, $dateTo])

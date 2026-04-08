@@ -24,6 +24,7 @@ class WarrantyController extends Controller
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('warranty_code', 'like', "%{$search}%")
+                      ->orWhere('serial_number', 'like', "%{$search}%")
                       ->orWhereHas('sale', function($sq) use ($search) {
                           $sq->where('invoice_number', 'like', "%{$search}%");
                       });
@@ -51,6 +52,7 @@ class WarrantyController extends Controller
             'sale_id' => 'required|exists:sales,id',
             'product_id' => 'required|exists:products,id',
             'warranty_code' => 'required|unique:warranties,warranty_code',
+            'serial_number' => 'nullable|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'status' => 'required|in:active,expired,claimed',
@@ -65,6 +67,40 @@ class WarrantyController extends Controller
         return response()->json($warranty->load(['sale', 'product']), 201);
     }
 
+    public function batchStore(Request $request)
+    {
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'status' => 'required|in:active,expired,claimed',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.serial_number' => 'nullable|string|max:255',
+        ]);
+
+        $warranties = [];
+        foreach ($validated['items'] as $item) {
+            $warranties[] = Warranty::create([
+                'warranty_code' => 'WRN-' . now()->timestamp . '-' . $item['product_id'],
+                'sale_id' => $validated['sale_id'],
+                'product_id' => $item['product_id'],
+                'serial_number' => $item['serial_number'] ?? null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'status' => $validated['status'],
+                'notes' => $validated['notes'] ?? null,
+                'user_id' => auth()->id(),
+            ]);
+        }
+
+        return response()->json([
+            'message' => count($warranties) . ' warranties created successfully',
+            'data' => $warranties,
+        ], 201);
+    }
+
     public function show($id)
     {
         $warranty = Warranty::with(['sale', 'product'])->findOrFail($id);
@@ -76,6 +112,11 @@ class WarrantyController extends Controller
         $warranty = Warranty::findOrFail($id);
 
         $validated = $request->validate([
+            'sale_id' => 'sometimes|required|exists:sales,id',
+            'product_id' => 'sometimes|required|exists:products,id',
+            'serial_number' => 'nullable|string|max:255',
+            'start_date' => 'sometimes|required|date',
+            'end_date' => 'sometimes|required|date|after:start_date',
             'status' => 'required|in:active,expired,claimed',
             'notes' => 'nullable|string',
         ]);

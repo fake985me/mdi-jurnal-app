@@ -87,9 +87,9 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         // Get products that match this category
-        $category->products_count = DB::table('products')
+        $category->setAttribute('products_count', DB::table('products')
             ->where('category', $category->name)
-            ->count();
+            ->count());
 
         return response()->json($category);
     }

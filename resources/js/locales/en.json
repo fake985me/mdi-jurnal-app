@@ -27,6 +27,7 @@
         "sales": "Sales",
         "purchases": "Purchases",
         "deliveries": "Deliveries",
+        "salesPeople": "Sales People",
         "accounting": "ACCOUNTING",
         "accounts": "Accounts",
         "history": "History",

@@ -83,7 +83,6 @@
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
               <button v-if="!sale.delivery && ['pending', 'completed'].includes(sale.status)" @click="openDeliveryModal(sale)" class="text-teal-600 hover:text-teal-900">+ Delivery</button>
-              <button @click="openPaymentModal(sale)" class="text-emerald-600 hover:text-emerald-900">Payments</button>
               <button @click="exportExcel(sale.id, sale.invoice_number)" class="text-green-600 hover:text-green-900">Excel</button>
               <button @click="downloadPdf(sale.id, sale.invoice_number)" class="text-red-600 hover:text-red-900">PDF</button>
               <button @click="editSale(sale)" class="text-blue-600 hover:text-blue-900">Edit</button>
@@ -333,125 +332,6 @@
       </div>
     </div>
 
-    <!-- Payments Modal -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-xl font-bold text-gray-900">Payments</h3>
-            <p class="text-sm text-gray-600">Invoice: {{ paymentSale?.invoice_number }}</p>
-          </div>
-          <button @click="closePaymentModal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-sm">
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Total</div>
-            <div class="font-semibold text-gray-800">Rp {{ formatPrice(saleTotal) }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Paid</div>
-            <div class="font-semibold text-emerald-600">Rp {{ formatPrice(totalPaid) }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-gray-500">Remaining</div>
-            <div class="font-semibold text-orange-600">Rp {{ formatPrice(remainingAmount) }}</div>
-          </div>
-        </div>
-
-        <div class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-          <div class="flex justify-between items-center mb-3">
-            <h4 class="font-semibold text-gray-800">{{ editingPaymentId ? 'Edit Payment' : 'Add Payment' }}</h4>
-            <button v-if="editingPaymentId" @click="resetPaymentForm" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-              Cancel Edit
-            </button>
-          </div>
-          <form @submit.prevent="submitPayment" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-              <select v-model="paymentForm.payment_type" required class="input">
-                <option value="dp">DP</option>
-                <option value="termin">Termin</option>
-                <option value="full">Full Payment</option>
-                <option value="sharing_profit">Sharing Profit</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
-              <input v-model.number="paymentForm.amount" type="number" min="0.01" step="0.01" required class="input" />
-              <p v-if="paymentForm.amount && saleTotal > 0 && paymentForm.amount > remainingAvailable" class="text-xs text-red-600 mt-1">
-                Amount exceeds remaining balance.
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-              <input v-model="paymentForm.payment_date" type="date" class="input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
-              <input v-model="paymentForm.method" class="input" placeholder="Transfer/Cash/..." />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
-              <input v-model="paymentForm.reference_number" class="input" placeholder="Optional" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select v-model="paymentForm.status" class="input">
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div class="md:col-span-3">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="paymentForm.notes" rows="2" class="input" placeholder="Optional notes"></textarea>
-            </div>
-            <div v-if="paymentError" class="md:col-span-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ paymentError }}</div>
-            <div class="md:col-span-3 flex justify-end gap-3">
-              <button type="button" @click="closePaymentModal" class="btn-secondary">Close</button>
-              <button type="submit" :disabled="paymentSaving" class="btn-primary">
-                {{ paymentSaving ? 'Saving...' : 'Save Payment' }}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div v-if="paymentsLoading" class="text-center py-4 text-gray-500">Loading payments...</div>
-        <table v-else-if="salePayments.length" class="min-w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-2 text-left">Date</th>
-              <th class="px-4 py-2 text-left">Type</th>
-              <th class="px-4 py-2 text-left">Method</th>
-              <th class="px-4 py-2 text-left">Ref</th>
-              <th class="px-4 py-2 text-right">Amount</th>
-              <th class="px-4 py-2 text-right">Status</th>
-              <th class="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr v-for="payment in salePayments" :key="payment.id">
-              <td class="px-4 py-2">{{ payment.payment_date || '-' }}</td>
-              <td class="px-4 py-2 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
-              <td class="px-4 py-2">{{ payment.method || '-' }}</td>
-              <td class="px-4 py-2">{{ payment.reference_number || '-' }}</td>
-              <td class="px-4 py-2 text-right font-semibold">Rp {{ formatPrice(payment.amount || 0) }}</td>
-              <td class="px-4 py-2 text-right">
-                <span :class="payment.status === 'paid' ? 'text-emerald-600' : payment.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'">
-                  {{ payment.status }}
-                </span>
-              </td>
-              <td class="px-4 py-2 text-right space-x-2">
-                <button @click="editPayment(payment)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                <button @click="deletePayment(payment)" class="text-red-600 hover:text-red-900">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="text-center text-gray-500 py-4">No payments recorded</p>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -467,7 +347,6 @@ const loading = ref(true);
 const showModal = ref(false);
 const showProductModal = ref(false);
 const showDeliveryModal = ref(false);
-const showPaymentModal = ref(false);
 const editMode = ref(false);
 const editId = ref(null);
 const saving = ref(false);
@@ -478,13 +357,6 @@ const productError = ref('');
 const deliveryError = ref('');
 const productSearch = ref('');
 const selectedSale = ref(null);
-const paymentSale = ref(null);
-const salePayments = ref([]);
-const paymentsLoading = ref(false);
-const paymentSaving = ref(false);
-const paymentError = ref('');
-const editingPaymentId = ref(null);
-const editingPaymentAmount = ref(0);
 
 const filters = ref({
   search: '',
@@ -521,26 +393,7 @@ const deliveryForm = ref({
   notes: '',
 });
 
-const paymentForm = ref({
-  payment_type: 'dp',
-  amount: null,
-  payment_date: new Date().toISOString().split('T')[0],
-  method: '',
-  status: 'paid',
-  reference_number: '',
-  notes: ''
-});
 
-const saleTotal = computed(() => Number(paymentSale.value?.grand_total || paymentSale.value?.total_amount || 0));
-const totalPaid = computed(() => salePayments.value.reduce((sum, p) => {
-  if (p.status === 'cancelled') return sum;
-  return sum + Number(p.amount || 0);
-}, 0));
-const remainingAmount = computed(() => Math.max(0, saleTotal.value - totalPaid.value));
-const remainingAvailable = computed(() => {
-  if (!editingPaymentId.value) return remainingAmount.value;
-  return Math.max(0, remainingAmount.value + Number(editingPaymentAmount.value || 0));
-});
 
 const filteredProducts = computed(() => {
   if (!productSearch.value) return products.value;
@@ -814,125 +667,6 @@ const createDelivery = async () => {
   }
 };
 
-const resetPaymentForm = () => {
-  paymentForm.value = {
-    payment_type: 'dp',
-    amount: null,
-    payment_date: new Date().toISOString().split('T')[0],
-    method: '',
-    status: 'paid',
-    reference_number: '',
-    notes: ''
-  };
-  paymentError.value = '';
-  editingPaymentId.value = null;
-  editingPaymentAmount.value = 0;
-};
-
-const loadSalePayments = async (saleId) => {
-  if (!saleId) {
-    salePayments.value = [];
-    return;
-  }
-
-  paymentsLoading.value = true;
-  try {
-    const response = await api.get('/payments', {
-      params: { payable_type: 'sale', payable_id: saleId, per_page: 100 }
-    });
-    salePayments.value = response.data.data || response.data || [];
-  } catch (err) {
-    console.error('Failed to load payments:', err);
-    salePayments.value = [];
-  } finally {
-    paymentsLoading.value = false;
-  }
-};
-
-const openPaymentModal = async (sale) => {
-  paymentSale.value = sale;
-  showPaymentModal.value = true;
-  resetPaymentForm();
-  await loadSalePayments(sale.id);
-};
-
-const closePaymentModal = () => {
-  showPaymentModal.value = false;
-  paymentSale.value = null;
-  salePayments.value = [];
-  resetPaymentForm();
-};
-
-const submitPayment = async () => {
-  if (!paymentSale.value) return;
-  paymentError.value = '';
-
-  const amount = Number(paymentForm.value.amount || 0);
-  if (amount <= 0) {
-    paymentError.value = 'Amount must be greater than 0.';
-    return;
-  }
-  if (saleTotal.value > 0 && amount > remainingAvailable.value + 0.0001) {
-    paymentError.value = 'Payment exceeds remaining balance.';
-    return;
-  }
-
-  paymentSaving.value = true;
-  try {
-    const payload = {
-      payment_type: paymentForm.value.payment_type,
-      amount: amount,
-      payment_date: paymentForm.value.payment_date,
-      method: paymentForm.value.method,
-      status: paymentForm.value.status,
-      reference_number: paymentForm.value.reference_number,
-      notes: paymentForm.value.notes
-    };
-
-    if (editingPaymentId.value) {
-      await api.put(`/payments/${editingPaymentId.value}`, payload);
-    } else {
-      await api.post('/payments', {
-        payable_type: 'sale',
-        payable_id: paymentSale.value.id,
-        ...payload
-      });
-    }
-    await loadSalePayments(paymentSale.value.id);
-    resetPaymentForm();
-  } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to save payment';
-  } finally {
-    paymentSaving.value = false;
-  }
-};
-
-const editPayment = (payment) => {
-  editingPaymentId.value = payment.id;
-  editingPaymentAmount.value = Number(payment.amount || 0);
-  paymentForm.value = {
-    payment_type: payment.payment_type || 'dp',
-    amount: Number(payment.amount || 0),
-    payment_date: payment.payment_date || new Date().toISOString().split('T')[0],
-    method: payment.method || '',
-    status: payment.status || 'paid',
-    reference_number: payment.reference_number || '',
-    notes: payment.notes || ''
-  };
-};
-
-const deletePayment = async (payment) => {
-  if (!confirm('Delete this payment?')) return;
-  try {
-    await api.delete(`/payments/${payment.id}`);
-    await loadSalePayments(paymentSale.value?.id);
-    if (editingPaymentId.value === payment.id) {
-      resetPaymentForm();
-    }
-  } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to delete payment';
-  }
-};
 
 const exportExcel = async (saleId, invoiceNumber) => {
   try {

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('supplier_address')->nullable();
             $table->string('supplier_phone')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
-            $table->enum('status', ['pending', 'received', 'cancelled'])->default('pending');
+            $table->enum('status', ['unpaid', 'paid', 'cancelled'])->default('unpaid');
             $table->boolean('is_for_asset')->default(false);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('order_date');

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 2);
             $table->date('payment_date')->nullable();
             $table->string('method')->nullable();
-            $table->enum('status', ['pending', 'paid', 'cancelled'])->default('paid');
+            $table->enum('status', ['unpaid', 'paid', 'cancelled'])->default('paid');
             $table->string('reference_number')->nullable();
             $table->text('notes')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();

@@ -94,6 +94,19 @@ class ProjectInvestmentController extends Controller
                 'user_id' => auth()->id(),
             ]);
 
+            // Auto-create dedicated warehouse for this project
+            $warehouseCode = 'WH-PRJ-' . str_pad(Warehouse::count() + 1, 3, '0', STR_PAD_LEFT);
+            $projectWarehouse = Warehouse::create([
+                'code' => $warehouseCode,
+                'name' => "Warehouse - {$validated['project_name']}",
+                'address' => $validated['project_location'] ?? null,
+                'description' => "Auto-created for project {$projectCode}",
+                'is_active' => true,
+                'is_default' => false,
+            ]);
+
+            $project->update(['warehouse_id' => $projectWarehouse->id]);
+
             // Add items (stock not deducted yet - pending approval)
             if (!empty($validated['items'])) {
                 foreach ($validated['items'] as $item) {
@@ -110,7 +123,7 @@ class ProjectInvestmentController extends Controller
             }
 
             DB::commit();
-            return response()->json($project->load(['items.product', 'user']), 201);
+            return response()->json($project->load(['items.product', 'user', 'warehouse']), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
