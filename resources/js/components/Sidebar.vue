@@ -65,13 +65,6 @@ const menuSections = computed(() => [
     ]
   },
   {
-    title: t('nav.products'),
-    items: [
-      { name: t('nav.productList'), icon: 'products', to: '/dashboard/products', roles: ['admin', 'staff'] },
-      { name: t('nav.categories'), icon: 'categories', to: '/dashboard/categories', roles: ['admin', 'staff'] },
-    ]
-  },
-  {
     title: t('nav.transactions'),
     items: [
       { name: t('nav.sales'), icon: 'sales', to: '/dashboard/sales', roles: ['admin', 'staff'] },
@@ -81,19 +74,26 @@ const menuSections = computed(() => [
     ]
   },
   {
+    title: t('nav.accounting'),
+    items: [
+      { name: t('nav.accounts'), icon: 'accounts', to: '/dashboard/accounting', roles: ['admin', 'staff'] },
+      { name: t('nav.history'), icon: 'history', to: '/dashboard/history', roles: ['admin', 'staff'] },
+    ]
+  },
+  {
+    title: t('nav.products'),
+    items: [
+      { name: t('nav.productList'), icon: 'products', to: '/dashboard/products', roles: ['admin', 'staff'] },
+      { name: t('nav.categories'), icon: 'categories', to: '/dashboard/categories', roles: ['admin', 'staff'] },
+    ]
+  },
+  {
     title: t('nav.inventory'),
     items: [
       { name: t('nav.stocksOverview'), icon: 'stock', to: '/dashboard/stock', roles: ['admin', 'staff'] },
       { name: t('nav.assetManagement'), icon: 'table', to: '/dashboard/assets', roles: ['admin', 'staff'] },
       { name: t('nav.warehouses'), icon: 'warehouse', to: '/dashboard/warehouses', roles: ['admin', 'staff'] },
       { name: t('nav.stockTransfers'), icon: 'transfer', to: '/dashboard/stock-transfers', roles: ['admin', 'staff'] },
-    ]
-  },
-  {
-    title: t('nav.accounting'),
-    items: [
-      { name: t('nav.accounts'), icon: 'accounts', to: '/dashboard/accounting', roles: ['admin', 'staff'] },
-      { name: t('nav.history'), icon: 'history', to: '/dashboard/history', roles: ['admin', 'staff'] },
     ]
   },
   {

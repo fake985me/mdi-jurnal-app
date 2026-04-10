@@ -12,6 +12,26 @@
       </button>
     </div>
 
+    <!-- Summary Cards (only for Regular Stock tab) -->
+    <div v-if="activeTab === 'regular'" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-indigo-500">
+        <div class="text-sm text-gray-500">Total Products</div>
+        <div class="text-2xl font-bold text-indigo-600">{{ stocks.total || 0 }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-500">
+        <div class="text-sm text-gray-500">Low Stock</div>
+        <div class="text-2xl font-bold text-red-600">{{ stockSummary.lowStock }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-gray-500">
+        <div class="text-sm text-gray-500">Out of Stock</div>
+        <div class="text-2xl font-bold text-gray-600">{{ stockSummary.outOfStock }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+        <div class="text-sm text-gray-500">Healthy Stock</div>
+        <div class="text-2xl font-bold text-green-600">{{ stockSummary.healthy }}</div>
+      </div>
+    </div>
+
     <!-- Tabs -->
     <div class="bg-white rounded-lg shadow-md">
       <div class="border-b border-gray-200">
@@ -79,24 +99,46 @@
     <div v-show="activeTab === 'regular'" class="space-y-4">
       <!-- Filters -->
       <div class="bg-white rounded-lg shadow-md p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             v-model="filters.search"
-            @input="loadStocks"
+            @input="debouncedLoadStocks"
             type="text"
-            placeholder="Search by product name or SKU..."
+            placeholder="Search by product name, SKU, or brand..."
             class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
+          <select
+            v-model="filters.warehouse_id"
+            @change="loadStocks()"
+            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">All Warehouses</option>
+            <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">
+              {{ wh.name }} {{ wh.is_default ? '(Default)' : '' }}
+            </option>
+          </select>
           <div class="flex items-center">
             <input
               id="low-stock"
               v-model="filters.low_stock"
-              @change="loadStocks"
+              @change="loadStocks()"
               type="checkbox"
               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             />
             <label for="low-stock" class="ml-2 text-sm text-gray-700">
               Show only low stock items
+            </label>
+          </div>
+          <div class="flex items-center">
+            <input
+              id="out-of-stock"
+              v-model="filters.out_of_stock"
+              @change="loadStocks()"
+              type="checkbox"
+              class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+            />
+            <label for="out-of-stock" class="ml-2 text-sm text-gray-700">
+              Show only out of stock
             </label>
           </div>
         </div>
@@ -109,70 +151,78 @@
       </div>
 
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading stock data...</p>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
+        <p class="text-gray-600 mt-2">Loading stock data...</p>
       </div>
 
-      <table v-else class="min-w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category / Sub Category</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Stock</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="stock in stocks.data" :key="stock.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ stock.product?.title || stock.product?.name }}</div>
-              <div class="text-xs text-gray-500">{{ stock.product?.brand }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ stock.product?.sku }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex flex-wrap gap-1">
-                <template v-if="stock.product?.category_pairs?.length > 0">
-                  <span v-for="(pair, idx) in stock.product.category_pairs" :key="idx"
-                    class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
-                    {{ pair.category_name }}
-                    <span v-if="pair.sub_category_name" class="ml-1 text-indigo-600">
-                      / {{ pair.sub_category_name }}
+      <div v-else-if="!stocks.data?.length" class="p-8 text-center">
+        <p class="text-gray-500 text-lg">📦 No stock data found</p>
+        <p class="text-gray-400 text-sm mt-1">Try adjusting your filters or add products first.</p>
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category / Sub Category</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warehouse</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Stock</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="stock in stocks.data" :key="stock.id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ stock.product?.title || stock.product?.name }}</div>
+                <div class="text-xs text-gray-500">{{ stock.product?.brand }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ stock.product?.sku || '-' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-wrap gap-1">
+                  <template v-if="stock.product?.category_pairs?.length > 0">
+                    <span v-for="(pair, idx) in stock.product.category_pairs" :key="idx"
+                      class="inline-flex items-center px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
+                      {{ pair.category_name }}
+                      <span v-if="pair.sub_category_name" class="ml-1 text-indigo-600">
+                        / {{ pair.sub_category_name }}
+                      </span>
                     </span>
-                  </span>
-                </template>
-                <span v-else class="text-gray-400 text-sm">-</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-lg font-bold" :class="stock.quantity <= 10 ? 'text-red-600' : 'text-green-600'">
-                {{ stock.quantity }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              10
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span :class="[
-                'px-2 py-1 text-xs rounded-full',
-                stock.quantity <= 10
-                  ? 'bg-red-100 text-red-800'
-                  : stock.quantity <= 20
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-green-100 text-green-800'
-              ]">
-                {{ stock.quantity <= 10 ? 'Low Stock' : stock.quantity <= 20 ? 'Medium' : 'Good' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ new Date(stock.last_updated).toLocaleDateString() }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  </template>
+                  <span v-else class="text-gray-400 text-sm">-</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ stock.warehouse?.name || 'Default' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-lg font-bold" :class="getStockColor(stock)">
+                  {{ stock.quantity }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ getMinStock(stock) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="[
+                  'px-2 py-1 text-xs rounded-full',
+                  getStatusBadge(stock)
+                ]">
+                  {{ getStatusLabel(stock) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatDate(stock.last_updated || stock.updated_at) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Pagination -->
       <div v-if="stocks.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center">
@@ -209,44 +259,47 @@
       </div>
 
       <div v-if="loadingRMA" class="p-8 text-center">
-        <p class="text-gray-600">Loading RMA inventory...</p>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
+        <p class="text-gray-600 mt-2">Loading RMA inventory...</p>
       </div>
 
       <div v-else-if="!rmaStock.length" class="p-8 text-center">
         <p class="text-gray-500">No RMA items in stock</p>
       </div>
 
-      <table v-else class="min-w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="rma in rmaStock" :key="`${rma.product_id}-${rma.condition}`" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ rma.product?.title }}</div>
-              <div class="text-xs text-gray-500">{{ rma.product?.brand }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span :class="getConditionBadge(rma.condition)" class="px-2 py-1 text-xs rounded-full capitalize">
-                {{ rma.condition?.replace('_', ' ') || 'N/A' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-lg font-bold text-gray-900">{{ rma.total_quantity }}</span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
-              <router-link to="/dashboard/rmas" class="text-indigo-600 hover:text-indigo-900">
-                View RMAs →
-              </router-link>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="rma in rmaStock" :key="`${rma.product_id}-${rma.condition}`" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ rma.product?.title }}</div>
+                <div class="text-xs text-gray-500">{{ rma.product?.brand }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="getConditionBadge(rma.condition)" class="px-2 py-1 text-xs rounded-full capitalize">
+                  {{ rma.condition?.replace('_', ' ') || 'N/A' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-lg font-bold text-gray-900">{{ rma.total_quantity }}</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <router-link to="/dashboard/rmas" class="text-indigo-600 hover:text-indigo-900">
+                  View RMAs →
+                </router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     </div>
 
@@ -259,47 +312,50 @@
         </div>
 
         <div v-if="loadingInvestment" class="p-8 text-center">
-          <p class="text-gray-600">Loading investment stock...</p>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div>
+          <p class="text-gray-600 mt-2">Loading investment stock...</p>
         </div>
 
         <div v-else-if="!investmentStock.length" class="p-8 text-center">
           <p class="text-gray-500">No items allocated to projects</p>
         </div>
 
-        <table v-else class="min-w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="item in investmentStock" :key="`${item.product_id}-${item.project_investment_id}`" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ item.product?.title }}</div>
-                <div class="text-xs text-gray-500">{{ item.product?.brand }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ item.project?.project_name }}</div>
-                <div class="text-xs text-gray-500">{{ item.project?.project_code }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-lg font-bold text-purple-600">{{ item.total_quantity }}</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-sm font-semibold text-green-600">{{ formatCurrency(item.total_value) }}</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <router-link to="/dashboard/project-investments" class="text-indigo-600 hover:text-indigo-900">
-                  View Projects →
-                </router-link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="item in investmentStock" :key="`${item.product_id}-${item.project_investment_id}`" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ item.product?.title }}</div>
+                  <div class="text-xs text-gray-500">{{ item.product?.brand }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ item.project?.project_name }}</div>
+                  <div class="text-xs text-gray-500">{{ item.project?.project_code }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-lg font-bold text-purple-600">{{ item.total_quantity }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-sm font-semibold text-green-600">{{ formatCurrency(item.total_value) }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <router-link to="/dashboard/project-investments" class="text-indigo-600 hover:text-indigo-900">
+                    View Projects →
+                  </router-link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -312,39 +368,42 @@
         </div>
 
         <div v-if="loadingMSA" class="p-8 text-center">
-          <p class="text-gray-600">Loading MSA items...</p>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
+          <p class="text-gray-600 mt-2">Loading MSA items...</p>
         </div>
 
         <div v-else-if="!msaStock?.length" class="p-8 text-center">
           <p class="text-gray-500">No MSA items in repair</p>
         </div>
 
-        <table v-else class="min-w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MSA Code</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="item in msaStock" :key="item.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.msa_code }}</td>
-              <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}</td>
-              <td class="px-6 py-4 text-sm text-gray-500">{{ item.project?.project_name || '-' }}</td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800">{{ item.issue_type }}</span>
-              </td>
-              <td class="px-6 py-4 text-sm font-bold">{{ item.quantity }}</td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ item.status.replace('_', ' ') }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MSA Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="item in msaStock" :key="item.id" class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.msa_code }}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">{{ item.project?.project_name || '-' }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800">{{ item.issue_type }}</span>
+                </td>
+                <td class="px-6 py-4 text-sm font-bold">{{ item.quantity }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ item.status?.replace('_', ' ') }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -357,39 +416,42 @@
         </div>
 
         <div v-if="loadingDefective" class="p-8 text-center">
-          <p class="text-gray-600">Loading defective items...</p>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
+          <p class="text-gray-600 mt-2">Loading defective items...</p>
         </div>
 
         <div v-else-if="!defectiveStock?.length" class="p-8 text-center">
           <p class="text-gray-500">No defective items</p>
         </div>
 
-        <table v-else class="min-w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="(item, index) in defectiveStock" :key="index" class="hover:bg-gray-50">
-              <td class="px-6 py-4">
-                <span :class="item.source === 'RMA' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'" class="px-2 py-1 text-xs rounded-full">
-                  {{ item.source }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.code }}</td>
-              <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}</td>
-              <td class="px-6 py-4 text-sm font-bold text-red-600">{{ item.quantity }}</td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ item.condition }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="(item, index) in defectiveStock" :key="index" class="hover:bg-gray-50">
+                <td class="px-6 py-4">
+                  <span :class="item.source === 'RMA' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'" class="px-2 py-1 text-xs rounded-full">
+                    {{ item.source }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.code }}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}</td>
+                <td class="px-6 py-4 text-sm font-bold text-red-600">{{ item.quantity }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ item.condition }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -407,8 +469,8 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select Product</option>
-              <option v-for="stock in allStocks" :key="stock.product.id" :value="stock.product.id">
-                {{ stock.product.title || stock.product.name }} (Current: {{ stock.quantity }})
+              <option v-for="stock in allStocks" :key="stock.product?.id" :value="stock.product?.id">
+                {{ stock.product?.title || stock.product?.name }} (Current: {{ stock.quantity }})
               </option>
             </select>
           </div>
@@ -477,7 +539,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../services/api';
 
 const stocks = ref({ data: [] });
@@ -486,6 +548,7 @@ const rmaStock = ref([]);
 const investmentStock = ref([]);
 const msaStock = ref([]);
 const defectiveStock = ref([]);
+const warehouses = ref([]);
 const activeTab = ref('regular');
 const loading = ref(true);
 const loadingRMA = ref(true);
@@ -495,11 +558,13 @@ const loadingDefective = ref(true);
 const showTransactionModal = ref(false);
 const saving = ref(false);
 const error = ref('');
-const success = '';
+const success = ref('');
 
 const filters = ref({
   search: '',
   low_stock: false,
+  out_of_stock: false,
+  warehouse_id: '',
 });
 
 const transactionForm = ref({
@@ -508,6 +573,71 @@ const transactionForm = ref({
   quantity: 1,
   notes: '',
 });
+
+// Debounce timer
+let searchTimer = null;
+const debouncedLoadStocks = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadStocks(), 300);
+};
+
+// Stock summary computed from allStocks
+const stockSummary = computed(() => {
+  const all = allStocks.value || [];
+  const outOfStock = all.filter(s => s.quantity <= 0).length;
+  const lowStock = all.filter(s => {
+    const minStock = s.product?.minimum_stock || 10;
+    return s.quantity > 0 && s.quantity <= minStock;
+  }).length;
+  const healthy = all.filter(s => {
+    const minStock = s.product?.minimum_stock || 10;
+    return s.quantity > minStock;
+  }).length;
+  return { outOfStock, lowStock, healthy };
+});
+
+// Helper to get minimum stock for a stock item
+const getMinStock = (stock) => {
+  return stock.product?.minimum_stock || 10;
+};
+
+// Helper to determine stock color
+const getStockColor = (stock) => {
+  const minStock = getMinStock(stock);
+  if (stock.quantity <= 0) return 'text-gray-600';
+  if (stock.quantity <= minStock) return 'text-red-600';
+  return 'text-green-600';
+};
+
+// Helper to get status badge classes
+const getStatusBadge = (stock) => {
+  const minStock = getMinStock(stock);
+  if (stock.quantity <= 0) return 'bg-gray-100 text-gray-800';
+  if (stock.quantity <= minStock) return 'bg-red-100 text-red-800';
+  if (stock.quantity <= minStock * 2) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-green-100 text-green-800';
+};
+
+// Helper to get status label
+const getStatusLabel = (stock) => {
+  const minStock = getMinStock(stock);
+  if (stock.quantity <= 0) return 'Out of Stock';
+  if (stock.quantity <= minStock) return 'Low Stock';
+  if (stock.quantity <= minStock * 2) return 'Medium';
+  return 'Good';
+};
+
+// Format date safely
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString();
+  } catch {
+    return '-';
+  }
+};
 
 const loadStocks = async (page = 1) => {
   loading.value = true;
@@ -574,6 +704,15 @@ const loadDefectiveStock = async () => {
   }
 };
 
+const loadWarehouses = async () => {
+  try {
+    const response = await api.get('/warehouses');
+    warehouses.value = response.data.data || response.data;
+  } catch (err) {
+    console.error('Failed to load warehouses:', err);
+  }
+};
+
 const getConditionBadge = (condition) => {
   const badges = {
     working: 'bg-green-100 text-green-800',
@@ -618,6 +757,7 @@ const saveTransaction = async () => {
 onMounted(() => {
   loadStocks();
   loadAllStocks();
+  loadWarehouses();
   loadRMAStock();
   loadInvestmentStock();
   loadMSAStock();

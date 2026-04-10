@@ -34,17 +34,32 @@ class StockController extends Controller
                 $query->where('product_id', $request->product_id);
             }
 
-            // Filter by low stock (using default threshold since min_stock removed)
+            // Filter by low stock (uses product minimum_stock, fallback to 10)
             if ($request->has('low_stock') && $request->low_stock == 'true') {
-                $query->where('quantity', '<=', 10); // Default low stock threshold
+                $query->where(function ($q) {
+                    $q->whereHas('product', function ($pq) {
+                        $pq->whereColumn('current_stocks.quantity', '<=', 'products.minimum_stock');
+                    })->orWhere(function ($q2) {
+                        $q2->where('quantity', '<=', 10)
+                            ->whereHas('product', function ($pq2) {
+                                $pq2->whereNull('minimum_stock');
+                            });
+                    });
+                });
             }
 
-            // Search by product title
+            // Filter by out of stock
+            if ($request->has('out_of_stock') && $request->out_of_stock == 'true') {
+                $query->where('quantity', '<=', 0);
+            }
+
+            // Search by product title, brand, or SKU
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
                 $query->whereHas('product', function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('brand', 'like', "%{$search}%");
+                        ->orWhere('brand', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
                 });
             }
 
