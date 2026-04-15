@@ -45,7 +45,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery', 'warehouse']);
+            $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery', 'warehouse', 'customer']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -88,6 +88,7 @@ class SaleController extends Controller
     {
         $validated = $request->validate([
             'invoice_number' => 'nullable|unique:sales,invoice_number',
+            'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email',
             'customer_phone' => 'nullable|string',
@@ -109,13 +110,30 @@ class SaleController extends Controller
             $invoiceNumber = $validated['invoice_number'] ?? $this->generateInvoiceNumber();
             $warehouseId = $validated['warehouse_id'] ?? Warehouse::getDefault()?->id;
 
+            // If customer_id provided, auto-fill customer fields from customer record
+            $customerName = $validated['customer_name'];
+            $customerEmail = $validated['customer_email'] ?? null;
+            $customerPhone = $validated['customer_phone'] ?? null;
+            $customerAddress = $validated['customer_address'] ?? null;
+
+            if (!empty($validated['customer_id'])) {
+                $customer = \App\Models\Customer::find($validated['customer_id']);
+                if ($customer) {
+                    $customerName = $customerName ?: $customer->name;
+                    $customerEmail = $customerEmail ?: $customer->email;
+                    $customerPhone = $customerPhone ?: $customer->phone;
+                    $customerAddress = $customerAddress ?: $customer->address;
+                }
+            }
+
             // Create sale
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'] ?? null,
-                'customer_phone' => $validated['customer_phone'] ?? null,
-                'customer_address' => $validated['customer_address'] ?? null,
+                'customer_id' => $validated['customer_id'] ?? null,
+                'customer_name' => $customerName,
+                'customer_email' => $customerEmail,
+                'customer_phone' => $customerPhone,
+                'customer_address' => $customerAddress,
                 'sales_person_id' => $validated['sales_person_id'] ?? null,
                 'warehouse_id' => $warehouseId,
                 'sale_date' => $validated['sale_date'],
@@ -155,12 +173,18 @@ class SaleController extends Controller
             // Update total amount
             $sale->update(['total_amount' => $totalAmount]);
 
+            // Use grand_total (tax-inclusive) for payment if available, otherwise total_amount
+            $paymentAmount = (float) ($sale->grand_total ?? $totalAmount);
+            if ($paymentAmount <= 0) {
+                $paymentAmount = $totalAmount;
+            }
+
             // Auto-create payment record (unpaid)
             Payment::create([
                 'payable_type' => Sale::class,
                 'payable_id' => $sale->id,
                 'payment_type' => 'full',
-                'amount' => $totalAmount,
+                'amount' => $paymentAmount,
                 'payment_date' => $validated['sale_date'],
                 'method' => null,
                 'status' => 'unpaid',
@@ -170,7 +194,7 @@ class SaleController extends Controller
             ]);
 
             DB::commit();
-            return response()->json($sale->load(['items.product', 'salesPerson', 'user']), 201);
+            return response()->json($sale->load(['items.product', 'salesPerson', 'user', 'customer']), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -179,7 +203,7 @@ class SaleController extends Controller
 
     public function show($id)
     {
-        $sale = Sale::with(['items.product', 'salesPerson', 'user', 'warehouse'])->findOrFail($id);
+        $sale = Sale::with(['items.product', 'salesPerson', 'user', 'warehouse', 'customer'])->findOrFail($id);
         return response()->json($sale);
     }
 
@@ -218,7 +242,7 @@ class SaleController extends Controller
             $sale->update($validated);
             DB::commit();
 
-            return response()->json($sale->load(['items.product', 'salesPerson', 'user']));
+            return response()->json($sale->load(['items.product', 'salesPerson', 'user', 'customer']));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -245,6 +269,9 @@ class SaleController extends Controller
                     );
                 }
             }
+
+            // Delete associated payments to prevent orphaned records
+            $sale->payments()->delete();
 
             $sale->delete();
             DB::commit();

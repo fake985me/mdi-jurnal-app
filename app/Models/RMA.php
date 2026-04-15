@@ -18,6 +18,7 @@ class RMA extends Model
         'sale_item_id',
         'msa_project_id',
         'product_id',
+        'serial_number',
         'customer_name',
         'customer_contact',
         'quantity',
@@ -28,6 +29,7 @@ class RMA extends Model
         'condition',
         'resolution',
         'notes',
+        'evidence_files',
         'user_id'
     ];
 
@@ -35,6 +37,7 @@ class RMA extends Model
         'quantity' => 'integer',
         'issue_date' => 'date',
         'received_date' => 'date',
+        'evidence_files' => 'array',
     ];
 
     /**
@@ -124,14 +127,14 @@ class RMA extends Model
         }
         
         $activeWarranty = $warranty->where(function ($q) {
-            $q->whereNull('warranty_end')
-              ->orWhere('warranty_end', '>=', now());
+            $q->whereNull('end_date')
+              ->orWhere('end_date', '>=', now());
         })->first();
 
         if ($activeWarranty) {
             return [
                 'valid' => true, 
-                'reason' => 'Covered by warranty until: ' . ($activeWarranty->warranty_end ?? 'Unlimited'),
+                'reason' => 'Covered by warranty until: ' . ($activeWarranty->end_date ?? 'Unlimited'),
                 'warranty_id' => $activeWarranty->id
             ];
         }

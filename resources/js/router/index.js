@@ -23,7 +23,7 @@ const routes = [
     {
         path: "/solutions",
         name: "Solutions",
-        component: () => import("../pages/Solutions.vue"),
+        component: () => import("../pages/web/Solutions.vue"),
         meta: { public: true },
     },
     {
@@ -60,7 +60,7 @@ const routes = [
     {
         path: "/pages/:slug",
         name: "DynamicPage",
-        component: () => import("../pages/DynamicPage.vue"),
+        component: () => import("../pages/web/DynamicPage.vue"),
         meta: { public: true },
     },
     {
@@ -71,160 +71,165 @@ const routes = [
             {
                 path: "",
                 name: "Dashboard",
-                component: () => import("../pages/Dashboard.vue"),
+                component: () => import("../pages/admin/Dashboard.vue"),
             },
             {
                 path: "products",
                 name: "Products",
-                component: () => import("../pages/Products.vue"),
+                component: () => import("../pages/admin/Products.vue"),
             },
             {
                 path: "categories",
                 name: "Categories",
-                component: () => import("../pages/Categories.vue"),
+                component: () => import("../pages/admin/Categories.vue"),
             },
             {
                 path: "stock",
                 name: "Stock",
-                component: () => import("../pages/Stock.vue"),
+                component: () => import("../pages/admin/Stock.vue"),
             },
             {
                 path: "sales",
                 name: "Sales",
-                component: () => import("../pages/Sales.vue"),
+                component: () => import("../pages/admin/Sales.vue"),
             },
             {
                 path: "purchases",
                 name: "Purchases",
-                component: () => import("../pages/Purchases.vue"),
+                component: () => import("../pages/admin/Purchases.vue"),
             },
             {
                 path: "sales-people",
                 name: "SalesPeople",
-                component: () => import("../pages/SalesPeople.vue"),
+                component: () => import("../pages/admin/SalesPeople.vue"),
+            },
+            {
+                path: "customers",
+                name: "Customers",
+                component: () => import("../pages/admin/Customers.vue"),
             },
             {
                 path: "warranties",
                 name: "Warranties",
-                component: () => import("../pages/Warranties.vue"),
+                component: () => import("../pages/admin/Warranties.vue"),
             },
             {
                 path: "warranties/create",
                 name: "WarrantyCreate",
-                component: () => import("../pages/WarrantyCreate.vue"),
+                component: () => import("../pages/admin/WarrantyCreate.vue"),
             },
             {
                 path: "warranties/:id/edit",
                 name: "WarrantyEdit",
-                component: () => import("../pages/WarrantyCreate.vue"),
+                component: () => import("../pages/admin/WarrantyCreate.vue"),
             },
             {
                 path: "lendings",
                 name: "Lendings",
-                component: () => import("../pages/Lendings.vue"),
+                component: () => import("../pages/admin/Lendings.vue"),
             },
             {
                 path: "rmas",
                 name: "RMAs",
-                component: () => import("../pages/RMAs.vue"),
+                component: () => import("../pages/admin/RMAs.vue"),
             },
             {
                 path: "project-investments",
                 name: "ProjectInvestments",
-                component: () => import("../pages/ProjectInvestments.vue"),
+                component: () => import("../pages/admin/ProjectInvestments.vue"),
             },
             {
                 path: "msa-projects",
                 name: "MSAProjects",
-                component: () => import("../pages/MSAProjects.vue"),
+                component: () => import("../pages/admin/MSAProjects.vue"),
             },
             {
                 path: "assets",
                 name: "Assets",
-                component: () => import("../pages/Assets.vue"),
+                component: () => import("../pages/admin/Assets.vue"),
             },
             {
                 path: "warehouses",
                 name: "Warehouses",
-                component: () => import("../pages/Warehouses.vue"),
+                component: () => import("../pages/admin/Warehouses.vue"),
             },
             {
                 path: "stock-transfers",
                 name: "StockTransfers",
-                component: () => import("../pages/StockTransfers.vue"),
+                component: () => import("../pages/admin/StockTransfers.vue"),
             },
             {
                 path: "deliveries",
                 name: "Deliveries",
-                component: () => import("../pages/Deliveries.vue"),
+                component: () => import("../pages/admin/Deliveries.vue"),
             },
             {
                 path: "history",
                 name: "History",
-                component: () => import("../pages/History.vue"),
-            },
-            {
-                path: "sales-people",
-                name: "SalesPeople",
-                component: () => import("../pages/SalesPeople.vue"),
+                component: () => import("../pages/admin/History.vue"),
             },
             {
                 path: "accounting",
                 name: "Accounting",
-                component: () => import("../pages/Accounting.vue"),
+                component: () => import("../pages/admin/Accounting.vue"),
+            },
+            {
+                path: "bank-accounts",
+                name: "BankAccounts",
+                component: () => import("../pages/admin/BankAccounts.vue"),
             },
             // CMS Content Management
             {
                 path: "cms/solutions",
                 name: "CmsSolutions",
-                component: () => import("../pages/CmsSolutions.vue"),
+                component: () => import("../pages/web/CmsSolutions.vue"),
             },
             {
                 path: "cms/projects",
                 name: "CmsProjects",
-                component: () => import("../pages/CmsProjects.vue"),
+                component: () => import("../pages/web/CmsProjects.vue"),
             },
             {
                 path: "cms/settings",
                 name: "CmsSettings",
-                component: () => import("../pages/CmsSettings.vue"),
+                component: () => import("../pages/web/CmsSettings.vue"),
             },
             {
                 path: "cms/contact",
                 name: "CmsContact",
-                component: () => import("../pages/CmsContact.vue"),
+                component: () => import("../pages/web/CmsContact.vue"),
             },
             {
                 path: "cms/carousel",
                 name: "CmsCarousel",
-                component: () => import("../pages/CmsCarousel.vue"),
+                component: () => import("../pages/web/CmsCarousel.vue"),
             },
             {
                 path: "cms/public-products",
                 name: "PublicProducts",
-                component: () => import("../pages/PublicProducts.vue"),
+                component: () => import("../pages/web/PublicProducts.vue"),
             },
             // Page Builder
             {
                 path: "pages",
                 name: "Pages",
-                component: () => import("../pages/PagesList.vue"),
+                component: () => import("../pages/web/PagesList.vue"),
             },
             {
                 path: "pages/create",
                 name: "PageCreate",
-                component: () => import("../pages/PageForm.vue"),
+                component: () => import("../pages/web/PageForm.vue"),
             },
             {
                 path: "pages/:id/edit",
                 name: "PageEdit",
-                component: () => import("../pages/PageForm.vue"),
+                component: () => import("../pages/web/PageForm.vue"),
             },
             // User Management
             {
                 path: "users",
                 name: "Users",
-                component: () => import("../pages/Users.vue"),
+                component: () => import("../pages/admin/Users.vue"),
                 meta: { requiresSuperAdmin: true },
             },
         ],

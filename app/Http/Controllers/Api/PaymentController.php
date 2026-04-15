@@ -9,6 +9,7 @@ use App\Models\Purchase;
 use App\Models\MsaContract;
 use App\Models\ProjectContract;
 use App\Models\Warehouse;
+use App\Models\BankAccount;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -174,14 +175,26 @@ class PaymentController extends Controller
             }
         }
 
-        // Sale: sync status
+        // Sale: sync status + invoice sync
         if ($payable instanceof Sale) {
             if ($oldStatus !== 'paid' && $newStatus === 'paid') {
                 $payable->update(['status' => 'completed']);
+                // Sync invoice status
+                if ($payable->invoice) {
+                    $payable->invoice->update(['status' => 'paid']);
+                }
             } elseif ($oldStatus === 'paid' && $newStatus === 'cancelled') {
                 $payable->update(['status' => 'pending']);
+                // Revert invoice status
+                if ($payable->invoice) {
+                    $payable->invoice->update(['status' => 'sent']);
+                }
             } elseif ($newStatus === 'unpaid') {
                 $payable->update(['status' => 'pending']);
+                // Revert invoice status
+                if ($payable->invoice && $payable->invoice->status === 'paid') {
+                    $payable->invoice->update(['status' => 'sent']);
+                }
             }
         }
 
@@ -191,6 +204,15 @@ class PaymentController extends Controller
                 $payable->update(['status' => 'completed']);
             } elseif ($newStatus === 'unpaid') {
                 $payable->update(['status' => 'active']);
+            }
+        }
+
+        // MsaContract: sync status
+        if ($payable instanceof MsaContract) {
+            if ($newStatus === 'paid') {
+                $payable->update(['status' => 'active']);
+            } elseif ($newStatus === 'cancelled') {
+                $payable->update(['status' => 'draft']);
             }
         }
     }
@@ -209,7 +231,7 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Payment::with(['payable', 'user'])->orderBy('created_at', 'desc');
+        $query = Payment::with(['payable', 'user', 'bankAccount'])->orderBy('created_at', 'desc');
 
         if ($request->filled('payable_type')) {
             $map = $this->payableMap();
@@ -284,6 +306,7 @@ class PaymentController extends Controller
             'method' => 'nullable|string|max:100',
             'status' => 'nullable|in:unpaid,paid,cancelled',
             'reference_number' => 'nullable|string|max:100',
+            'bank_account_id' => 'nullable|exists:bank_accounts,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -318,6 +341,7 @@ class PaymentController extends Controller
                 'method' => $validated['method'] ?? null,
                 'status' => $newStatus,
                 'reference_number' => $validated['reference_number'] ?? null,
+                'bank_account_id' => $validated['bank_account_id'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
             ]);
@@ -325,7 +349,7 @@ class PaymentController extends Controller
             // Sync parent status
             $this->syncParentStatus($payment, null);
 
-            return response()->json($payment->load(['payable', 'user']), 201);
+            return response()->json($payment->load(['payable', 'user', 'bankAccount']), 201);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -345,6 +369,7 @@ class PaymentController extends Controller
             'method' => 'nullable|string|max:100',
             'status' => 'nullable|in:unpaid,paid,cancelled',
             'reference_number' => 'nullable|string|max:100',
+            'bank_account_id' => 'nullable|exists:bank_accounts,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -379,7 +404,7 @@ class PaymentController extends Controller
             }
 
             DB::commit();
-            return response()->json($payment->load(['payable', 'user']));
+            return response()->json($payment->load(['payable', 'user', 'bankAccount']));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);

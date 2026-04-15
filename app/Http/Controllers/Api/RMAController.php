@@ -10,6 +10,7 @@ use App\Models\Warranty;
 use App\Models\MSAProject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class RMAController extends Controller
 {
@@ -33,7 +34,8 @@ class RMAController extends Controller
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('rma_code', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%");
+                      ->orWhere('customer_name', 'like', "%{$search}%")
+                      ->orWhere('serial_number', 'like', "%{$search}%");
                 });
             }
 
@@ -58,12 +60,15 @@ class RMAController extends Controller
             'warranty_id' => 'nullable|exists:warranties,id',
             'msa_project_id' => 'nullable|exists:msa_projects,id',
             'product_id' => 'required|exists:products,id',
+            'serial_number' => 'nullable|string|max:255',
             'customer_name' => 'required|string|max:255',
             'customer_contact' => 'nullable|string',
             'quantity' => 'required|integer|min:1',
             'reason' => 'required|in:warranty_claim,damaged_shipment,defective,dead_on_arrival',
             'issue_date' => 'required|date',
             'notes' => 'nullable|string',
+            'evidence' => 'nullable|array|max:5',
+            'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ]);
 
         DB::beginTransaction();
@@ -89,18 +94,220 @@ class RMAController extends Controller
                 $validated['msa_project_id'] = $eligibility['msa_project_id'];
             }
 
+            // Validate serial number against warranty
+            if (isset($eligibility['warranty_id'])) {
+                $warranty = Warranty::find($eligibility['warranty_id']);
+                if ($warranty && $warranty->serial_number) {
+                    $inputSN = $validated['serial_number'] ?? '';
+                    if (strtolower(trim($inputSN)) !== strtolower(trim($warranty->serial_number))) {
+                        return response()->json([
+                            'message' => 'Serial Number tidak cocok dengan data warranty. SN yang terdaftar: ' . $warranty->serial_number
+                        ], 422);
+                    }
+                }
+            }
+
+            // Validate quantity against sale item (minus existing RMAs)
+            $saleItem = SaleItem::where('sale_id', $validated['sale_id'])
+                ->where('product_id', $validated['product_id'])
+                ->first();
+
+            if ($saleItem) {
+                // Calculate already claimed quantity from existing RMAs
+                $existingRmaQty = RMA::where('sale_id', $validated['sale_id'])
+                    ->where('product_id', $validated['product_id'])
+                    ->whereNotIn('status', ['rejected'])
+                    ->sum('quantity');
+
+                $availableQty = $saleItem->quantity - $existingRmaQty;
+
+                if ($validated['quantity'] > $availableQty) {
+                    return response()->json([
+                        'message' => "Quantity melebihi batas. Qty tersedia untuk RMA: {$availableQty} (dari {$saleItem->quantity} qty penjualan, sudah diklaim: {$existingRmaQty})"
+                    ], 422);
+                }
+            }
+
+            // Handle evidence file uploads
+            $evidenceFiles = [];
+            if ($request->hasFile('evidence')) {
+                foreach ($request->file('evidence') as $file) {
+                    $path = $file->store('rma-evidence', 'public');
+                    $evidenceFiles[] = [
+                        'path' => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                    ];
+                }
+            }
+
             // Auto-generate RMA code
             $rmaCode = 'RMA-' . date('Ymd') . '-' . str_pad(RMA::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
+
+            // Remove evidence from validated (it's handled separately)
+            unset($validated['evidence']);
 
             $rma = RMA::create([
                 ...$validated,
                 'rma_code' => $rmaCode,
                 'user_id' => auth()->id(),
                 'status' => 'pending',
+                'evidence_files' => !empty($evidenceFiles) ? $evidenceFiles : null,
             ]);
 
             DB::commit();
             return response()->json($rma->load(['warranty', 'product', 'user', 'sale', 'msaProject']), 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Batch store - create RMAs for multiple products at once
+     */
+    public function batchStore(Request $request)
+    {
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'customer_name' => 'required|string|max:255',
+            'customer_contact' => 'nullable|string',
+            'reason' => 'required|in:warranty_claim,damaged_shipment,defective,dead_on_arrival',
+            'issue_date' => 'required|date',
+            'notes' => 'nullable|string',
+            'items' => 'required|string', // JSON string of items array
+            'evidence' => 'nullable|array|max:5',
+            'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
+        ]);
+
+        $items = json_decode($validated['items'], true);
+
+        if (!is_array($items) || empty($items)) {
+            return response()->json(['message' => 'Minimal pilih 1 produk'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Handle evidence file uploads (shared across all RMAs)
+            $evidenceFiles = [];
+            if ($request->hasFile('evidence')) {
+                foreach ($request->file('evidence') as $file) {
+                    $path = $file->store('rma-evidence', 'public');
+                    $evidenceFiles[] = [
+                        'path' => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                    ];
+                }
+            }
+
+            $createdRMAs = [];
+            $errors = [];
+
+            foreach ($items as $index => $item) {
+                $productId = $item['product_id'] ?? null;
+                $serialNumber = $item['serial_number'] ?? '';
+                $quantity = $item['quantity'] ?? 1;
+                $productTitle = $item['product_title'] ?? "Product #{$productId}";
+
+                if (!$productId) {
+                    $errors[] = "Item #{$index}: Product ID tidak valid";
+                    continue;
+                }
+
+                // Validate eligibility
+                $eligibility = RMA::validateEligibility(
+                    $validated['sale_id'],
+                    null,
+                    $productId
+                );
+
+                if (!$eligibility['valid']) {
+                    $errors[] = "{$productTitle}: {$eligibility['reason']}";
+                    continue;
+                }
+
+                // Validate serial number against warranty
+                $warrantyId = $eligibility['warranty_id'] ?? null;
+                $msaProjectId = $eligibility['msa_project_id'] ?? null;
+
+                if ($warrantyId) {
+                    $warranty = Warranty::find($warrantyId);
+                    if ($warranty && $warranty->serial_number) {
+                        if (strtolower(trim($serialNumber)) !== strtolower(trim($warranty->serial_number))) {
+                            $errors[] = "{$productTitle}: SN tidak cocok. SN terdaftar: {$warranty->serial_number}";
+                            continue;
+                        }
+                    }
+                }
+
+                // Validate quantity
+                $saleItem = SaleItem::where('sale_id', $validated['sale_id'])
+                    ->where('product_id', $productId)
+                    ->first();
+
+                if ($saleItem) {
+                    $existingRmaQty = RMA::where('sale_id', $validated['sale_id'])
+                        ->where('product_id', $productId)
+                        ->whereNotIn('status', ['rejected'])
+                        ->sum('quantity');
+
+                    $availableQty = $saleItem->quantity - $existingRmaQty;
+
+                    if ($quantity > $availableQty) {
+                        $errors[] = "{$productTitle}: Qty melebihi batas (tersedia: {$availableQty})";
+                        continue;
+                    }
+                }
+
+                // Generate unique RMA code
+                $rmaCode = 'RMA-' . date('Ymd') . '-' . str_pad(
+                    RMA::whereDate('created_at', today())->count() + count($createdRMAs) + 1,
+                    4, '0', STR_PAD_LEFT
+                );
+
+                $rma = RMA::create([
+                    'rma_code' => $rmaCode,
+                    'sale_id' => $validated['sale_id'],
+                    'product_id' => $productId,
+                    'serial_number' => $serialNumber ?: null,
+                    'warranty_id' => $warrantyId,
+                    'msa_project_id' => $msaProjectId,
+                    'customer_name' => $validated['customer_name'],
+                    'customer_contact' => $validated['customer_contact'],
+                    'quantity' => $quantity,
+                    'reason' => $validated['reason'],
+                    'issue_date' => $validated['issue_date'],
+                    'notes' => $validated['notes'],
+                    'user_id' => auth()->id(),
+                    'status' => 'pending',
+                    'evidence_files' => !empty($evidenceFiles) ? $evidenceFiles : null,
+                ]);
+
+                $createdRMAs[] = $rma;
+            }
+
+            if (empty($createdRMAs)) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Tidak ada RMA yang berhasil dibuat. Error: ' . implode('; ', $errors)
+                ], 422);
+            }
+
+            DB::commit();
+
+            $message = count($createdRMAs) . ' RMA berhasil dibuat';
+            if (!empty($errors)) {
+                $message .= '. Beberapa produk gagal: ' . implode('; ', $errors);
+            }
+
+            return response()->json([
+                'message' => $message,
+                'data' => $createdRMAs,
+                'errors' => $errors,
+            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -132,6 +339,14 @@ class RMAController extends Controller
     public function destroy($id)
     {
         $rma = RMA::findOrFail($id);
+
+        // Delete associated evidence files
+        if ($rma->evidence_files) {
+            foreach ($rma->evidence_files as $file) {
+                Storage::disk('public')->delete($file['path']);
+            }
+        }
+
         $rma->delete();
 
         return response()->json(['message' => 'RMA deleted successfully']);
@@ -216,6 +431,7 @@ class RMAController extends Controller
 
     /**
      * Get sales with active warranty or MSA for RMA creation
+     * Includes warranty serial numbers for SN matching
      */
     public function getSalesWithWarranty(Request $request)
     {
@@ -251,6 +467,7 @@ class RMAController extends Controller
 
     /**
      * Check RMA eligibility for a specific sale/product
+     * Also returns warranty serial number and available quantity
      */
     public function checkEligibility(Request $request)
     {
@@ -266,6 +483,46 @@ class RMAController extends Controller
             $validated['product_id']
         );
 
+        // Add warranty serial number info
+        if (isset($eligibility['warranty_id'])) {
+            $warranty = Warranty::find($eligibility['warranty_id']);
+            $eligibility['warranty_serial_number'] = $warranty?->serial_number;
+        }
+
+        // Add available quantity info (sale item qty minus existing RMAs)
+        $saleItem = SaleItem::where('sale_id', $validated['sale_id'])
+            ->where('product_id', $validated['product_id'])
+            ->first();
+
+        if ($saleItem) {
+            $existingRmaQty = RMA::where('sale_id', $validated['sale_id'])
+                ->where('product_id', $validated['product_id'])
+                ->whereNotIn('status', ['rejected'])
+                ->sum('quantity');
+
+            $eligibility['sale_item_quantity'] = $saleItem->quantity;
+            $eligibility['existing_rma_quantity'] = (int) $existingRmaQty;
+            $eligibility['available_quantity'] = $saleItem->quantity - $existingRmaQty;
+        }
+
         return response()->json($eligibility);
+    }
+
+    /**
+     * Get evidence files for an RMA
+     */
+    public function getEvidence($id)
+    {
+        $rma = RMA::findOrFail($id);
+        
+        $evidence = $rma->evidence_files ?? [];
+        
+        // Add full URL to each file
+        $evidence = array_map(function ($file) {
+            $file['url'] = Storage::disk('public')->url($file['path']);
+            return $file;
+        }, $evidence);
+
+        return response()->json($evidence);
     }
 }

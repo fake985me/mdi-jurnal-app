@@ -40,6 +40,7 @@ class MsaContractController extends Controller
             'sharing_profit_rate' => 'nullable|numeric|min:0|max:100',
             'status' => 'nullable|in:draft,active,expired,cancelled',
             'notes' => 'nullable|string',
+            'initial_payment_amount' => 'nullable|numeric|min:0.01',
         ]);
 
         $msaCode = $validated['msa_code'] ?? MsaContract::generateMsaCode();
@@ -55,12 +56,29 @@ class MsaContractController extends Controller
             'user_id' => auth()->id(),
         ]);
 
+        // Auto-create payment record if initial payment amount provided
+        $initialAmount = (float) ($validated['initial_payment_amount'] ?? 0);
+        if ($initialAmount > 0) {
+            Payment::create([
+                'payable_type' => MsaContract::class,
+                'payable_id' => $msa->id,
+                'payment_type' => 'sharing_profit',
+                'amount' => $initialAmount,
+                'payment_date' => $validated['start_date'] ?? now()->toDateString(),
+                'method' => null,
+                'status' => 'unpaid',
+                'reference_number' => $msaCode,
+                'notes' => "Auto-created from MSA #{$msaCode}",
+                'user_id' => auth()->id(),
+            ]);
+        }
+
         return response()->json($msa->load('project'), 201);
     }
 
     public function show(MsaContract $msaContract)
     {
-        return response()->json($msaContract->load('project'));
+        return response()->json($msaContract->load(['project', 'payments']));
     }
 
     public function update(Request $request, MsaContract $msaContract)
@@ -76,11 +94,14 @@ class MsaContractController extends Controller
 
         $msaContract->update($validated);
 
-        return response()->json($msaContract->load('project'));
+        return response()->json($msaContract->load(['project', 'payments']));
     }
 
     public function destroy(MsaContract $msaContract)
     {
+        // Clean up associated payments
+        $msaContract->payments()->delete();
+
         $msaContract->delete();
         return response()->json(['message' => 'MSA contract deleted successfully']);
     }

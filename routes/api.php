@@ -118,9 +118,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // RMAs (Return Merchandise Authorization)
     Route::get('/rmas/sales-with-warranty', [App\Http\Controllers\Api\RMAController::class, 'getSalesWithWarranty']);
     Route::post('/rmas/check-eligibility', [App\Http\Controllers\Api\RMAController::class, 'checkEligibility']);
+    Route::post('/rmas/batch', [App\Http\Controllers\Api\RMAController::class, 'batchStore']);
     Route::apiResource('rmas', App\Http\Controllers\Api\RMAController::class);
     Route::post('/rmas/{rma}/mark-received', [App\Http\Controllers\Api\RMAController::class, 'markReceived']);
     Route::post('/rmas/{rma}/process', [App\Http\Controllers\Api\RMAController::class, 'process']);
+    Route::get('/rmas/{rma}/evidence', [App\Http\Controllers\Api\RMAController::class, 'getEvidence']);
 
     // Project Investments
     Route::get('/project-investments/{id}/export', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'export']);
@@ -200,6 +202,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/invoices/{invoice}/mark-paid', [App\Http\Controllers\Api\InvoiceController::class, 'markAsPaid']);
     Route::post('/invoices/{invoice}/mark-sent', [App\Http\Controllers\Api\InvoiceController::class, 'markAsSent']);
     Route::apiResource('invoices', App\Http\Controllers\Api\InvoiceController::class);
+
+    // Customers
+    Route::get('/customers/summary', [App\Http\Controllers\Api\CustomerController::class, 'summary']);
+    Route::apiResource('customers', App\Http\Controllers\Api\CustomerController::class);
+
+    // Bank Accounts
+    Route::get('/bank-accounts/summary', [App\Http\Controllers\Api\BankAccountController::class, 'summary']);
+    Route::post('/bank-accounts/{bankAccount}/set-default', [App\Http\Controllers\Api\BankAccountController::class, 'setDefault']);
+    Route::get('/bank-accounts/{bankAccount}/transactions', [App\Http\Controllers\Api\BankAccountController::class, 'transactions']);
+    Route::apiResource('bank-accounts', App\Http\Controllers\Api\BankAccountController::class);
 
     // Payments
     Route::get('/payments/summary', [App\Http\Controllers\Api\PaymentController::class, 'summary']);

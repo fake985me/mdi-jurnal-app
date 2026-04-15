@@ -18,6 +18,7 @@ class Payment extends Model
         'method',
         'status',
         'reference_number',
+        'bank_account_id',
         'notes',
         'user_id',
     ];
@@ -35,5 +36,10 @@ class Payment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 }

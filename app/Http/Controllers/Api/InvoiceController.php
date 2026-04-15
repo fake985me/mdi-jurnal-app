@@ -107,6 +107,16 @@ class InvoiceController extends Controller
     public function markAsPaid(Invoice $invoice)
     {
         $invoice->update(['status' => 'paid']);
+
+        // Sync related Sale payments to paid
+        if ($invoice->sale) {
+            $invoice->sale->payments()
+                ->where('status', 'unpaid')
+                ->update(['status' => 'paid', 'payment_date' => now()->toDateString()]);
+            // Also mark sale as completed
+            $invoice->sale->update(['status' => 'completed']);
+        }
+
         return response()->json($invoice);
     }
 

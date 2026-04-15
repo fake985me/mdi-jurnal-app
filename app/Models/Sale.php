@@ -11,6 +11,7 @@ class Sale extends Model
 
     protected $fillable = [
         'invoice_number',
+        'customer_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -46,6 +47,14 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the customer
+     */
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -95,8 +104,8 @@ class Sale extends Model
     {
         $query = $this->warranties()
             ->where(function ($q) {
-                $q->whereNull('warranty_end')
-                  ->orWhere('warranty_end', '>=', now());
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
             });
 
         if ($productId) {
