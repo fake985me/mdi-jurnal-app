@@ -127,12 +127,15 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
-                <select v-model="form.customer_id" @change="onCustomerSelect" class="input">
-                  <option value="">— Manual Entry —</option>
-                  <option v-for="c in customerList" :key="c.id" :value="c.id">
-                    {{ c.company ? `${c.company} (${c.name})` : c.name }}
-                  </option>
-                </select>
+                <div class="flex gap-2">
+                  <select v-model="form.customer_id" @change="onCustomerSelect" class="input flex-1">
+                    <option value="">— Manual Entry —</option>
+                    <option v-for="c in customerList" :key="c.id" :value="c.id">
+                      {{ c.company ? `${c.company} (${c.name})` : c.name }}
+                    </option>
+                  </select>
+                  <button type="button" @click="showCustomerModal = true" class="btn-secondary text-sm whitespace-nowrap">+ New Customer</button>
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
@@ -341,6 +344,206 @@
       </div>
     </div>
 
+    <!-- Quick Add Customer Modal -->
+    <div v-if="showCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Quick Add Customer</h3>
+        
+        <form @submit.prevent="saveNewCustomer" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+            <input v-model="customerForm.name" required class="input" placeholder="Contact person name" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <input v-model="customerForm.company" class="input" placeholder="Company name" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input v-model="customerForm.phone" class="input" placeholder="Phone number" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input v-model="customerForm.email" type="email" class="input" placeholder="email@company.com" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <textarea v-model="customerForm.address" rows="2" class="input" placeholder="Full address"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">NPWP</label>
+            <input v-model="customerForm.npwp" class="input" placeholder="Tax number (NPWP)" />
+          </div>
+
+          <div v-if="customerError" class="bg-red-50 text-red-600 p-2 rounded text-sm border border-red-200">{{ customerError }}</div>
+
+          <div class="flex justify-end space-x-2 pt-3">
+            <button type="button" @click="showCustomerModal = false" class="btn-secondary">Cancel</button>
+            <button type="submit" :disabled="savingCustomer" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all text-sm font-medium disabled:opacity-50">
+              {{ savingCustomer ? 'Saving...' : 'Add Customer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div v-if="showDetailModal && viewingSale" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div class="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl">
+        <!-- Header -->
+        <div class="border-b border-gray-200 px-8 py-5 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-xl">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900">{{ viewingSale.invoice_number }}</h3>
+            <div class="flex items-center gap-3 mt-1">
+              <span :class="getStatusBadgeClass(viewingSale.status)">{{ viewingSale.status }}</span>
+              <span class="text-sm text-gray-500">{{ formatDateLong(viewingSale.sale_date) }}</span>
+            </div>
+          </div>
+          <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="px-8 py-6 space-y-6">
+          <!-- Customer & Sale Info -->
+          <div class="grid grid-cols-2 gap-8">
+            <div>
+              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Customer</h4>
+              <p class="text-base font-semibold text-gray-900">{{ viewingSale.customer?.company || viewingSale.customer_name }}</p>
+              <p v-if="viewingSale.customer?.company" class="text-sm text-gray-600">{{ viewingSale.customer_name }}</p>
+              <p v-if="viewingSale.customer_phone" class="text-sm text-gray-500 mt-1">📞 {{ viewingSale.customer_phone }}</p>
+              <p v-if="viewingSale.customer_email" class="text-sm text-gray-500">✉️ {{ viewingSale.customer_email }}</p>
+              <p v-if="viewingSale.customer_address" class="text-sm text-gray-500 mt-1">📍 {{ viewingSale.customer_address }}</p>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sale Details</h4>
+              <div class="space-y-1 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Invoice</span>
+                  <span class="font-medium text-gray-900">{{ viewingSale.invoice_number }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Date</span>
+                  <span class="font-medium text-gray-900">{{ formatDateLong(viewingSale.sale_date) }}</span>
+                </div>
+                <div v-if="viewingSale.warehouse" class="flex justify-between">
+                  <span class="text-gray-500">Warehouse</span>
+                  <span class="font-medium text-gray-900">{{ viewingSale.warehouse.name }}</span>
+                </div>
+                <div v-if="viewingSale.sales_person" class="flex justify-between">
+                  <span class="text-gray-500">Sales Person</span>
+                  <span class="font-medium text-gray-900">{{ viewingSale.sales_person?.name || '—' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Line Items Table -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
+                  <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Price</th>
+                  <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="item in viewingSale.items" :key="item.id" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-5 py-4">
+                    <span class="text-sm font-medium text-indigo-700 hover:text-indigo-900 cursor-default">{{ item.product?.title || 'Unknown Product' }}</span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="text-sm text-gray-600">{{ item.product?.brand || '—' }}</span>
+                    <span v-if="item.product?.sku" class="block text-xs text-gray-400 mt-0.5">SKU: {{ item.product.sku }}</span>
+                  </td>
+                  <td class="px-5 py-4 text-center text-sm text-gray-900">{{ item.quantity }}</td>
+                  <td class="px-5 py-4 text-right text-sm text-gray-900">Rp. {{ formatPrice(item.unit_price) }}</td>
+                  <td class="px-5 py-4 text-center">
+                    <span v-if="viewingSale.tax_type" class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium uppercase">{{ viewingSale.tax_type }}</span>
+                    <span v-else class="text-xs text-gray-400">—</span>
+                  </td>
+                  <td class="px-5 py-4 text-right text-sm font-semibold text-gray-900">Rp. {{ formatPrice(item.quantity * item.unit_price) }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="px-5 py-2 bg-gray-50 text-xs text-gray-500 border-t border-gray-200">
+              Showing {{ viewingSale.items?.length || 0 }} from {{ viewingSale.items?.length || 0 }} product
+            </div>
+          </div>
+
+          <!-- Summary Section -->
+          <div class="grid grid-cols-2 gap-8">
+            <!-- Left: Message, Memo -->
+            <div class="space-y-4">
+              <div>
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Message</h4>
+                <p class="text-sm text-gray-700">{{ viewingSale.notes || '—' }}</p>
+              </div>
+              <div v-if="viewingSale.delivery">
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Delivery</h4>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded font-medium">🚚 {{ viewingSale.delivery.courier }}</span>
+                  <span class="text-sm text-gray-700 font-mono">{{ viewingSale.delivery.tracking_number }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Financial Summary -->
+            <div class="space-y-2">
+              <div class="flex justify-between items-center py-1">
+                <span class="text-sm font-semibold text-gray-700">Subtotal</span>
+                <span class="text-sm font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.subtotal || calcViewSubtotal()) }}</span>
+              </div>
+              <div v-if="viewingSale.tax_type" class="flex justify-between items-center py-1 text-sm">
+                <span class="text-gray-500">{{ taxDisplayName(viewingSale.tax_type) }} {{ viewingSale.tax_rate }}%</span>
+                <span class="text-gray-700">Rp. {{ formatPrice(viewingSale.tax_amount) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-t border-gray-200">
+                <span class="text-sm font-semibold text-gray-700">Total</span>
+                <span class="text-base font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.total_amount || viewingSale.grand_total) }}</span>
+              </div>
+              <div v-if="viewingSale.discount_amount > 0" class="flex justify-between items-center py-1 text-sm">
+                <span class="text-gray-500">Discount</span>
+                <span class="text-red-600">- Rp. {{ formatPrice(viewingSale.discount_amount) }}</span>
+              </div>
+              <div v-if="viewingSalePaidAmount > 0" class="flex justify-between items-center py-1 text-sm">
+                <span class="text-gray-500">Paid</span>
+                <span class="text-green-600">- Rp. {{ formatPrice(viewingSalePaidAmount) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-t-2 border-gray-300">
+                <span class="text-base font-bold text-gray-900">Balance due</span>
+                <span class="text-lg font-bold" :class="viewingSaleBalance > 0 ? 'text-red-600' : 'text-green-600'">Rp. {{ formatPrice(viewingSaleBalance) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Last Updated -->
+          <div class="text-xs text-indigo-600 underline">
+            Last updated by {{ viewingSale.user?.name || 'System' }} on {{ formatDateTimeLong(viewingSale.updated_at) }}
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="border-t border-gray-200 px-8 py-4 flex items-center justify-between sticky bottom-0 bg-gray-50 rounded-b-xl">
+          <button @click="deleteSale(viewingSale.id); showDetailModal = false" class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">Delete</button>
+          <div class="flex items-center gap-3">
+            <button @click="showDetailModal = false; editSale(viewingSale)" class="px-5 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 text-sm font-medium transition-colors">Edit</button>
+            <button @click="exportExcel(viewingSale.id, viewingSale.invoice_number)" class="px-5 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 text-sm font-medium transition-colors">📊 Excel</button>
+            <button @click="downloadPdf(viewingSale.id, viewingSale.invoice_number)" class="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-sm transition-all">📄 PDF</button>
+            <button v-if="!viewingSale.delivery && ['pending', 'completed'].includes(viewingSale.status)" @click="showDetailModal = false; openDeliveryModal(viewingSale)" class="px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium shadow-sm transition-all">🚚 + Delivery</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -357,16 +560,21 @@ const loading = ref(true);
 const showModal = ref(false);
 const showProductModal = ref(false);
 const showDeliveryModal = ref(false);
+const showCustomerModal = ref(false);
+const showDetailModal = ref(false);
 const editMode = ref(false);
 const editId = ref(null);
 const saving = ref(false);
 const savingProduct = ref(false);
 const savingDelivery = ref(false);
+const savingCustomer = ref(false);
 const error = ref('');
 const productError = ref('');
 const deliveryError = ref('');
+const customerError = ref('');
 const productSearch = ref('');
 const selectedSale = ref(null);
+const viewingSale = ref(null);
 
 const filters = ref({
   search: '',
@@ -402,6 +610,15 @@ const deliveryForm = ref({
   courier: '',
   tracking_number: '',
   notes: '',
+});
+
+const customerForm = ref({
+  name: '',
+  company: '',
+  phone: '',
+  email: '',
+  address: '',
+  npwp: '',
 });
 
 
@@ -602,8 +819,47 @@ const saveSale = async () => {
   }
 };
 
-const viewSale = (sale) => {
-  alert(`Sale Details:\nInvoice: ${sale.invoice_number}\nCustomer: ${sale.customer_name}\nTotal: Rp ${formatPrice(sale.total_amount)}`);
+const viewSale = async (sale) => {
+  try {
+    const response = await api.get(`/sales/${sale.id}`);
+    viewingSale.value = response.data;
+    showDetailModal.value = true;
+  } catch (err) {
+    console.error('Failed to load sale details:', err);
+    alert('Failed to load sale details');
+  }
+};
+
+const calcViewSubtotal = () => {
+  if (!viewingSale.value?.items) return 0;
+  return viewingSale.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+};
+
+const viewingSalePaidAmount = computed(() => {
+  if (!viewingSale.value?.payments) return 0;
+  return viewingSale.value.payments
+    .filter(p => p.status === 'paid')
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+});
+
+const viewingSaleBalance = computed(() => {
+  const total = Number(viewingSale.value?.total_amount || viewingSale.value?.grand_total || 0);
+  return Math.max(0, total - viewingSalePaidAmount.value);
+});
+
+const taxDisplayName = (code) => {
+  const names = { ppn: 'PPN', pph23: 'PPh 23' };
+  return names[code] || code?.toUpperCase() || '';
+};
+
+const formatDateLong = (date) => {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatDateTimeLong = (date) => {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const editSale = (sale) => {
@@ -740,6 +996,25 @@ const downloadPdf = async (saleId, invoiceNumber) => {
   } catch (err) {
     console.error('PDF download error:', err);
     alert('Failed to download PDF file');
+  }
+};
+
+const saveNewCustomer = async () => {
+  savingCustomer.value = true;
+  customerError.value = '';
+  try {
+    const response = await api.post('/customers', customerForm.value);
+    // Add to the customer list and auto-select
+    customerList.value.push(response.data);
+    form.value.customer_id = response.data.id;
+    onCustomerSelect();
+    // Close modal and reset form
+    showCustomerModal.value = false;
+    customerForm.value = { name: '', company: '', phone: '', email: '', address: '', npwp: '' };
+  } catch (err) {
+    customerError.value = err.response?.data?.message || 'Failed to add customer';
+  } finally {
+    savingCustomer.value = false;
   }
 };
 

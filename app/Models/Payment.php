@@ -14,6 +14,9 @@ class Payment extends Model
         'payable_id',
         'payment_type',
         'amount',
+        'tax_type',
+        'tax_rate',
+        'tax_amount',
         'payment_date',
         'method',
         'status',
@@ -26,6 +29,8 @@ class Payment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
     ];
 
     public function payable()

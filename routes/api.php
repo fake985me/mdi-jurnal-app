@@ -207,6 +207,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/customers/summary', [App\Http\Controllers\Api\CustomerController::class, 'summary']);
     Route::apiResource('customers', App\Http\Controllers\Api\CustomerController::class);
 
+    // Suppliers
+    Route::get('/suppliers/summary', [App\Http\Controllers\Api\SupplierController::class, 'summary']);
+    Route::apiResource('suppliers', App\Http\Controllers\Api\SupplierController::class);
+
     // Bank Accounts
     Route::get('/bank-accounts/summary', [App\Http\Controllers\Api\BankAccountController::class, 'summary']);
     Route::post('/bank-accounts/{bankAccount}/set-default', [App\Http\Controllers\Api\BankAccountController::class, 'setDefault']);

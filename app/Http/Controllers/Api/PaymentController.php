@@ -10,6 +10,7 @@ use App\Models\MsaContract;
 use App\Models\ProjectContract;
 use App\Models\Warehouse;
 use App\Models\BankAccount;
+use App\Models\TaxRate;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -302,6 +303,7 @@ class PaymentController extends Controller
             'payable_id' => 'required|integer',
             'payment_type' => 'required|in:dp,full,termin,sharing_profit',
             'amount' => 'required|numeric|min:0.01',
+            'tax_type' => 'nullable|string|max:50',
             'payment_date' => 'nullable|date',
             'method' => 'nullable|string|max:100',
             'status' => 'nullable|in:unpaid,paid,cancelled',
@@ -332,11 +334,26 @@ class PaymentController extends Controller
                 ], 422);
             }
 
+            // Calculate tax if tax_type is provided
+            $taxType = $validated['tax_type'] ?? null;
+            $taxRate = 0;
+            $taxAmount = 0;
+            if ($taxType) {
+                $taxRateModel = TaxRate::getByCode($taxType);
+                if ($taxRateModel) {
+                    $taxRate = $taxRateModel->rate;
+                    $taxAmount = $taxRateModel->calculateTax((float) $validated['amount']);
+                }
+            }
+
             $payment = Payment::create([
                 'payable_type' => $payableType,
                 'payable_id' => $payable->id,
                 'payment_type' => $validated['payment_type'],
                 'amount' => $validated['amount'],
+                'tax_type' => $taxType,
+                'tax_rate' => $taxRate,
+                'tax_amount' => $taxAmount,
                 'payment_date' => $validated['payment_date'] ?? now()->toDateString(),
                 'method' => $validated['method'] ?? null,
                 'status' => $newStatus,
@@ -365,6 +382,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'payment_type' => 'nullable|in:dp,full,termin,sharing_profit',
             'amount' => 'nullable|numeric|min:0.01',
+            'tax_type' => 'nullable|string|max:50',
             'payment_date' => 'nullable|date',
             'method' => 'nullable|string|max:100',
             'status' => 'nullable|in:unpaid,paid,cancelled',
@@ -396,6 +414,23 @@ class PaymentController extends Controller
 
         DB::beginTransaction();
         try {
+            // Recalculate tax if tax_type changed or amount changed
+            if (array_key_exists('tax_type', $validated) || array_key_exists('amount', $validated)) {
+                $taxType = $validated['tax_type'] ?? $payment->tax_type;
+                $amount = (float) ($validated['amount'] ?? $payment->amount);
+                if ($taxType) {
+                    $taxRateModel = TaxRate::getByCode($taxType);
+                    if ($taxRateModel) {
+                        $validated['tax_rate'] = $taxRateModel->rate;
+                        $validated['tax_amount'] = $taxRateModel->calculateTax($amount);
+                    }
+                } else {
+                    $validated['tax_type'] = null;
+                    $validated['tax_rate'] = 0;
+                    $validated['tax_amount'] = 0;
+                }
+            }
+
             $payment->update($validated);
 
             // Sync parent status if status changed
@@ -453,12 +488,19 @@ class PaymentController extends Controller
         $countPaid = (clone $query)->where('status', 'paid')->count();
         $countAll = (clone $query)->count();
 
+        // Tax totals
+        $totalTaxAmount = (clone $query)->where('status', '!=', 'cancelled')->sum('tax_amount');
+        $totalPaidTax = (clone $query)->where('status', 'paid')->sum('tax_amount');
+
         // This month
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $thisMonthPaid = Payment::where('status', 'paid')
             ->whereBetween('payment_date', [$monthStart, $monthEnd])
             ->sum('amount');
+        $thisMonthTax = Payment::where('status', 'paid')
+            ->whereBetween('payment_date', [$monthStart, $monthEnd])
+            ->sum('tax_amount');
 
         return response()->json([
             'total_unpaid' => (float) $totalUnpaid,
@@ -468,6 +510,9 @@ class PaymentController extends Controller
             'count_paid' => $countPaid,
             'count_all' => $countAll,
             'this_month_paid' => (float) $thisMonthPaid,
+            'total_tax_amount' => (float) $totalTaxAmount,
+            'total_paid_tax' => (float) $totalPaidTax,
+            'this_month_tax' => (float) $thisMonthTax,
         ]);
     }
 }

@@ -63,8 +63,8 @@
           <tr v-for="purchase in purchases.data" :key="purchase.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ purchase.po_number }}</td>
             <td class="px-6 py-4">
-              <div class="text-sm font-medium text-gray-900">{{ purchase.supplier_name }}</div>
-              <div class="text-sm text-gray-500">{{ purchase.supplier_phone }}</div>
+              <div class="text-sm font-medium text-gray-900">{{ purchase.supplier?.company || purchase.supplier?.name || purchase.supplier_name }}</div>
+              <div class="text-sm text-gray-500">{{ purchase.supplier?.phone || purchase.supplier_phone }}</div>
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(purchase.order_date).toLocaleDateString() }}</td>
             <td class="px-6 py-4 text-sm text-gray-700">{{ purchase.warehouse?.name || '-' }}</td>
@@ -132,9 +132,21 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Order Date *</label>
                 <input v-model="form.order_date" type="date" required class="input" />
               </div>
-              <div>
+              <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+                <div class="flex gap-2">
+                  <select v-model="form.supplier_id" @change="onSupplierSelect" class="input flex-1">
+                    <option value="">— Select Supplier —</option>
+                    <option v-for="s in supplierList" :key="s.id" :value="s.id">
+                      {{ s.company ? `${s.company} (${s.name})` : s.name }} — {{ s.phone || '' }}
+                    </option>
+                  </select>
+                  <button type="button" @click="showSupplierModal = true" class="btn-secondary text-sm whitespace-nowrap">+ New Supplier</button>
+                </div>
+              </div>
+              <div v-if="!form.supplier_id">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
-                <input v-model="form.supplier_name" required class="input" />
+                <input v-model="form.supplier_name" :required="!form.supplier_id" class="input" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
@@ -143,13 +155,20 @@
                   <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
                 </select>
               </div>
-              <div>
+              <div v-if="!form.supplier_id">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                 <input v-model="form.supplier_phone" class="input" />
               </div>
-              <div class="col-span-2">
+              <div v-if="!form.supplier_id" class="col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
                 <textarea v-model="form.supplier_address" rows="2" class="input"></textarea>
+              </div>
+              <div v-if="form.supplier_id" class="col-span-2">
+                <div class="p-2 bg-white rounded border border-blue-200 text-sm text-gray-600">
+                  <strong>{{ selectedSupplierInfo?.company || selectedSupplierInfo?.name }}</strong>
+                  <span v-if="selectedSupplierInfo?.phone"> — {{ selectedSupplierInfo.phone }}</span>
+                  <span v-if="selectedSupplierInfo?.address" class="block text-xs text-gray-500 mt-1">{{ selectedSupplierInfo.address }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -272,6 +291,47 @@
         </form>
       </div>
     </div>
+
+    <!-- Quick Add Supplier Modal -->
+    <div v-if="showSupplierModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Quick Add Supplier</h3>
+        
+        <form @submit.prevent="saveNewSupplier" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+            <input v-model="supplierForm.name" required class="input" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <input v-model="supplierForm.company" class="input" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input v-model="supplierForm.phone" class="input" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input v-model="supplierForm.email" type="email" class="input" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <textarea v-model="supplierForm.address" rows="2" class="input"></textarea>
+          </div>
+
+          <div v-if="supplierError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ supplierError }}</div>
+
+          <div class="flex justify-end space-x-2 pt-3">
+            <button type="button" @click="showSupplierModal = false" class="btn-secondary">Cancel</button>
+            <button type="submit" :disabled="savingSupplier" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all text-sm font-medium disabled:opacity-50">
+              {{ savingSupplier ? 'Saving...' : 'Add Supplier' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -285,11 +345,16 @@ const warehouses = ref([]);
 const loading = ref(true);
 const showModal = ref(false);
 const showProductModal = ref(false);
+const showSupplierModal = ref(false);
 const saving = ref(false);
 const savingProduct = ref(false);
+const savingSupplier = ref(false);
 const error = ref('');
 const productError = ref('');
+const supplierError = ref('');
 const productSearch = ref('');
+const supplierList = ref([]);
+const selectedSupplierInfo = ref(null);
 
 const filters = ref({
   search: '',
@@ -300,6 +365,7 @@ const filters = ref({
 
 const form = ref({
   po_number: '',
+  supplier_id: '',
   supplier_name: '',
   supplier_address: '',
   supplier_phone: '',
@@ -308,6 +374,14 @@ const form = ref({
   is_for_asset: false,
   notes: '',
   items: [{ product_id: '', quantity: 1, unit_price: 0 }],
+});
+
+const supplierForm = ref({
+  name: '',
+  company: '',
+  phone: '',
+  email: '',
+  address: '',
 });
 
 const productForm = ref({
@@ -374,6 +448,25 @@ const loadWarehouses = async () => {
   }
 };
 
+const loadSuppliers = async () => {
+  try {
+    const response = await api.get('/suppliers', { params: { all: true } });
+    supplierList.value = response.data;
+  } catch (err) {
+    console.error('Failed to load suppliers:', err);
+  }
+};
+
+const onSupplierSelect = () => {
+  const supplier = supplierList.value.find(s => s.id == form.value.supplier_id);
+  selectedSupplierInfo.value = supplier || null;
+  if (supplier) {
+    form.value.supplier_name = supplier.company ? `${supplier.company} (${supplier.name})` : supplier.name;
+    form.value.supplier_phone = supplier.phone || '';
+    form.value.supplier_address = supplier.address || '';
+  }
+};
+
 const addLineItem = () => {
   form.value.items.push({ product_id: '', quantity: 1, unit_price: 0 });
 };
@@ -396,6 +489,7 @@ const calculateTotal = () => {
 const resetForm = () => {
   form.value = {
     po_number: 'PO-' + Date.now(),
+    supplier_id: '',
     supplier_name: '',
     supplier_address: '',
     supplier_phone: '',
@@ -405,6 +499,7 @@ const resetForm = () => {
     notes: '',
     items: [{ product_id: '', quantity: 1, unit_price: 0 }],
   };
+  selectedSupplierInfo.value = null;
   error.value = '';
 };
 
@@ -460,9 +555,27 @@ const deletePurchase = async (id) => {
   }
 };
 
+const saveNewSupplier = async () => {
+  savingSupplier.value = true;
+  supplierError.value = '';
+  try {
+    const response = await api.post('/suppliers', supplierForm.value);
+    supplierList.value.push(response.data);
+    form.value.supplier_id = response.data.id;
+    onSupplierSelect();
+    showSupplierModal.value = false;
+    supplierForm.value = { name: '', company: '', phone: '', email: '', address: '' };
+  } catch (err) {
+    supplierError.value = err.response?.data?.message || 'Failed to add supplier';
+  } finally {
+    savingSupplier.value = false;
+  }
+};
+
 onMounted(() => {
   loadPurchases();
   loadProducts();
   loadWarehouses();
+  loadSuppliers();
 });
 </script>

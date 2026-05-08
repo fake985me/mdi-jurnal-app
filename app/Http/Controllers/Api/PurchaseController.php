@@ -19,7 +19,7 @@ class PurchaseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Purchase::with(['user', 'items.product', 'warehouse', 'payments']);
+            $query = Purchase::with(['user', 'items.product', 'warehouse', 'payments', 'supplier']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -39,7 +39,11 @@ class PurchaseController extends Controller
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('po_number', 'like', "%{$search}%")
-                      ->orWhere('supplier_name', 'like', "%{$search}%");
+                      ->orWhere('supplier_name', 'like', "%{$search}%")
+                      ->orWhereHas('supplier', function ($sq) use ($search) {
+                          $sq->where('name', 'like', "%{$search}%")
+                            ->orWhere('company', 'like', "%{$search}%");
+                      });
                 });
             }
 
@@ -83,7 +87,8 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'po_number' => 'required|unique:purchases,po_number',
-            'supplier_name' => 'required|string|max:255',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_name' => 'required_without:supplier_id|string|max:255',
             'supplier_address' => 'nullable|string',
             'supplier_phone' => 'nullable|string',
             'warehouse_id' => 'nullable|exists:warehouses,id',
@@ -102,10 +107,20 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
+            // If supplier_id provided, auto-fill supplier name from relationship
+            $supplierName = $validated['supplier_name'] ?? null;
+            if (!empty($validated['supplier_id'])) {
+                $supplier = \App\Models\Supplier::find($validated['supplier_id']);
+                if ($supplier) {
+                    $supplierName = $supplierName ?: $supplier->display_name;
+                }
+            }
+
             // Create purchase with status 'unpaid' (payment determines status)
             $purchase = Purchase::create([
                 'po_number' => $validated['po_number'],
-                'supplier_name' => $validated['supplier_name'],
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'supplier_name' => $supplierName,
                 'supplier_address' => $validated['supplier_address'] ?? null,
                 'supplier_phone' => $validated['supplier_phone'] ?? null,
                 'warehouse_id' => $warehouseId,
@@ -163,7 +178,7 @@ class PurchaseController extends Controller
 
     public function show($id)
     {
-        $purchase = Purchase::with(['items.product', 'user', 'warehouse', 'payments'])->findOrFail($id);
+        $purchase = Purchase::with(['items.product', 'user', 'warehouse', 'payments', 'supplier'])->findOrFail($id);
         return response()->json($purchase);
     }
 

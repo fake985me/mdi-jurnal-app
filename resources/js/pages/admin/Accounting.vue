@@ -11,7 +11,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div class="card p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
         <p class="text-sm text-red-600 font-medium">Total Unpaid</p>
         <p class="text-2xl font-bold text-red-800">{{ formatCurrency(summary.total_unpaid) }}</p>
@@ -25,6 +25,11 @@
       <div class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
         <p class="text-sm text-blue-600 font-medium">This Month Paid</p>
         <p class="text-2xl font-bold text-blue-800">{{ formatCurrency(summary.this_month_paid) }}</p>
+      </div>
+      <div class="card p-4 bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
+        <p class="text-sm text-amber-600 font-medium">Total Tax (Paid)</p>
+        <p class="text-2xl font-bold text-amber-800">{{ formatCurrency(summary.total_paid_tax) }}</p>
+        <p class="text-xs text-amber-500 mt-1">This month: {{ formatCurrency(summary.this_month_tax) }}</p>
       </div>
       <div class="card p-4 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
         <p class="text-sm text-gray-600 font-medium">Total Transactions</p>
@@ -79,6 +84,7 @@
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Type</th>
             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -97,6 +103,14 @@
             <td class="px-4 py-3 text-sm text-gray-700">{{ payment.payable_party || '—' }}</td>
             <td class="px-4 py-3 text-sm text-gray-700 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
             <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">{{ formatCurrency(payment.amount) }}</td>
+            <td class="px-4 py-3">
+              <div v-if="payment.tax_type" class="text-xs">
+                <span class="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium uppercase">{{ payment.tax_type }}</span>
+                <span class="text-gray-600 ml-1">{{ payment.tax_rate }}%</span>
+                <div class="text-amber-700 font-semibold mt-0.5">{{ formatCurrency(payment.tax_amount) }}</div>
+              </div>
+              <span v-else class="text-gray-400 text-xs">—</span>
+            </td>
             <td class="px-4 py-3 text-sm text-gray-700">{{ payment.method || '—' }}</td>
             <td class="px-4 py-3 text-sm text-gray-700">
               <span v-if="payment.bank_account" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">
@@ -131,7 +145,7 @@
             </td>
           </tr>
           <tr v-if="!payments.data?.length && !loading">
-            <td colspan="10" class="px-4 py-8 text-center text-gray-500">No payments found</td>
+            <td colspan="11" class="px-4 py-8 text-center text-gray-500">No payments found</td>
           </tr>
         </tbody>
       </table>
@@ -204,6 +218,28 @@
                 </option>
               </select>
             </div>
+            <div class="col-span-2 p-3 bg-amber-50 rounded-lg">
+              <label class="block text-sm font-medium text-amber-700 mb-2">Tax Information</label>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Tax Type</label>
+                  <select v-model="editForm.tax_type" class="input text-sm">
+                    <option :value="null">No Tax</option>
+                    <option v-for="tax in taxRates" :key="tax.id" :value="tax.code">
+                      {{ tax.name }} ({{ tax.rate }}%)
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Tax Rate</label>
+                  <input :value="computedTaxRate + '%'" disabled class="input text-sm bg-gray-50" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Tax Amount</label>
+                  <input :value="formatCurrency(computedTaxAmount)" disabled class="input text-sm bg-gray-50 font-semibold text-amber-700" />
+                </div>
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
@@ -225,15 +261,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
 
 const payments = ref({ data: [] });
 const summary = ref({
   total_unpaid: 0, total_paid: 0, total_cancelled: 0,
-  count_unpaid: 0, count_paid: 0, count_all: 0, this_month_paid: 0
+  count_unpaid: 0, count_paid: 0, count_all: 0, this_month_paid: 0,
+  total_tax_amount: 0, total_paid_tax: 0, this_month_tax: 0
 });
 const bankAccounts = ref([]);
+const taxRates = ref([]);
 const loading = ref(true);
 const saving = ref(false);
 const showEditModal = ref(false);
@@ -251,6 +289,7 @@ const filters = ref({
 const editForm = ref({
   payment_type: 'full',
   amount: 0,
+  tax_type: null,
   payment_date: '',
   method: '',
   status: 'unpaid',
@@ -328,6 +367,26 @@ const loadBankAccounts = async () => {
   }
 };
 
+const loadTaxRates = async () => {
+  try {
+    const response = await api.get('/tax-rates/active');
+    taxRates.value = response.data;
+  } catch (err) {
+    console.error('Failed to load tax rates:', err);
+  }
+};
+
+const computedTaxRate = computed(() => {
+  if (!editForm.value.tax_type) return 0;
+  const tax = taxRates.value.find(t => t.code === editForm.value.tax_type);
+  return tax ? parseFloat(tax.rate) : 0;
+});
+
+const computedTaxAmount = computed(() => {
+  if (!editForm.value.tax_type || !editForm.value.amount) return 0;
+  return Math.round(editForm.value.amount * (computedTaxRate.value / 100) * 100) / 100;
+});
+
 const markPaid = async (payment) => {
   if (!confirm(`Mark payment of ${formatCurrency(payment.amount)} as Paid?`)) return;
   try {
@@ -355,6 +414,7 @@ const editPayment = (payment) => {
   editForm.value = {
     payment_type: payment.payment_type || 'full',
     amount: Number(payment.amount || 0),
+    tax_type: payment.tax_type || null,
     payment_date: payment.payment_date ? payment.payment_date.split('T')[0] : '',
     method: payment.method || '',
     status: payment.status || 'unpaid',
@@ -398,5 +458,6 @@ onMounted(() => {
   loadPayments();
   loadSummary();
   loadBankAccounts();
+  loadTaxRates();
 });
 </script>

@@ -11,6 +11,7 @@ class Purchase extends Model
 
     protected $fillable = [
         'po_number',
+        'supplier_id',
         'supplier_name',
         'supplier_address',
         'supplier_phone',
@@ -29,6 +30,14 @@ class Purchase extends Model
         'order_date' => 'date',
         'received_date' => 'date',
     ];
+
+    /**
+     * Get the supplier for this purchase
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
     /**
      * Get the user who created the purchase
