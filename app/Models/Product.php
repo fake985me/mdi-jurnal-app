@@ -57,12 +57,14 @@ class Product extends Model
         'descriptions',
         'stock',
         'minimum_stock',
+        'warranty_period_months',
         'is_asset',
     ];
 
     protected $casts = [
         'stock' => 'integer',
         'minimum_stock' => 'integer',
+        'warranty_period_months' => 'integer',
         'is_asset' => 'boolean',
     ];
 

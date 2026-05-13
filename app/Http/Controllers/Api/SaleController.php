@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\CurrentStock;
 use App\Models\Payment;
 use App\Models\StockTransaction;
+use App\Models\TaxRate;
 use App\Models\Warehouse;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
@@ -98,6 +99,8 @@ class SaleController extends Controller
             'sale_date' => 'required|date',
             'status' => 'required|in:pending,completed,cancelled',
             'notes' => 'nullable|string',
+            'tax_type' => 'nullable|string',
+            'discount_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -170,14 +173,36 @@ class SaleController extends Controller
                 );
             }
 
-            // Update total amount
-            $sale->update(['total_amount' => $totalAmount]);
+            // Calculate subtotal, tax, and grand total
+            $subtotal = $totalAmount;
+            $taxType = $validated['tax_type'] ?? null;
+            $taxRateValue = 0;
+            $taxAmount = 0;
+            $discountAmount = $validated['discount_amount'] ?? 0;
 
-            // Use grand_total (tax-inclusive) for payment if available, otherwise total_amount
-            $paymentAmount = (float) ($sale->grand_total ?? $totalAmount);
-            if ($paymentAmount <= 0) {
-                $paymentAmount = $totalAmount;
+            if ($taxType) {
+                $taxRate = TaxRate::getByCode($taxType);
+                if ($taxRate) {
+                    $taxRateValue = $taxRate->rate;
+                    $taxAmount = $taxRate->calculateTax($subtotal);
+                }
             }
+
+            $grandTotal = $subtotal + $taxAmount - $discountAmount;
+
+            // Update sale with all financial fields
+            $sale->update([
+                'total_amount' => $subtotal,
+                'subtotal' => $subtotal,
+                'tax_type' => $taxType,
+                'tax_rate' => $taxRateValue,
+                'tax_amount' => $taxAmount,
+                'discount_amount' => $discountAmount,
+                'grand_total' => $grandTotal,
+            ]);
+
+            // Use grand_total (tax-inclusive) for payment amount
+            $paymentAmount = $grandTotal > 0 ? $grandTotal : $subtotal;
 
             // Auto-create payment record (unpaid)
             Payment::create([

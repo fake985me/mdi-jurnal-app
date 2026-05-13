@@ -7,7 +7,7 @@
           Sales Management</h2>
         <p class="text-sm text-gray-600 mt-1">Create and manage sales orders</p>
       </div>
-      <button @click="showModal = true; resetForm()"
+      <button @click="$router.push({ name: 'SalesCreate' })"
         class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
         + Create Sale
       </button>
@@ -48,6 +48,7 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -69,7 +70,13 @@
               </ul>
             </td>
             <td class="px-6 py-4 text-sm text-gray-700">{{ sale.warehouse?.name || '-' }}</td>
-            <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(sale.total_amount) }}</td>
+            <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(sale.grand_total || sale.total_amount) }}</td>
+            <td class="px-6 py-4">
+              <span v-if="sale.tax_type" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                {{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%
+              </span>
+              <span v-else class="text-xs text-gray-400">—</span>
+            </td>
             <td class="px-6 py-4">
               <span :class="getStatusBadgeClass(sale.status)">
                 {{ sale.status }}
@@ -216,13 +223,17 @@
               <p class="text-sm text-gray-600">Subtotal: Rp {{ formatPrice(calculateTotal()) }}</p>
               <div class="flex justify-end items-center gap-2">
                 <label class="text-sm text-gray-600">Tax:</label>
-                <select v-model="form.tax_type" @change="updateTaxCalculation" class="input w-32 text-sm">
+                <select v-model="form.tax_type" @change="updateTaxCalculation" class="input w-40 text-sm">
                   <option value="">No Tax</option>
-                  <option value="ppn">PPN (11%)</option>
-                  <option value="pph23">PPh 23 (2%)</option>
+                  <option v-for="tax in taxRates" :key="tax.id" :value="tax.code">
+                    {{ tax.name }} ({{ tax.rate }}%)
+                  </option>
                 </select>
               </div>
-              <p v-if="form.tax_type" class="text-sm text-gray-600">Tax Amount: Rp {{ formatPrice(calculateTax()) }}</p>
+              <p v-if="form.tax_type" class="text-sm text-amber-600 font-medium">
+                {{ taxDisplayName(form.tax_type) }} ({{ getSelectedTaxRate() }}%): Rp {{ formatPrice(calculateTax()) }}
+              </p>
+              <p v-if="form.discount_amount > 0" class="text-sm text-red-500">Discount: - Rp {{ formatPrice(form.discount_amount) }}</p>
               <p class="text-lg font-bold text-gray-900">Grand Total: Rp {{ formatPrice(calculateGrandTotal()) }}</p>
             </div>
           </div>
@@ -502,17 +513,17 @@
                 <span class="text-sm font-semibold text-gray-700">Subtotal</span>
                 <span class="text-sm font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.subtotal || calcViewSubtotal()) }}</span>
               </div>
-              <div v-if="viewingSale.tax_type" class="flex justify-between items-center py-1 text-sm">
-                <span class="text-gray-500">{{ taxDisplayName(viewingSale.tax_type) }} {{ viewingSale.tax_rate }}%</span>
-                <span class="text-gray-700">Rp. {{ formatPrice(viewingSale.tax_amount) }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2 border-t border-gray-200">
-                <span class="text-sm font-semibold text-gray-700">Total</span>
-                <span class="text-base font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.total_amount || viewingSale.grand_total) }}</span>
-              </div>
               <div v-if="viewingSale.discount_amount > 0" class="flex justify-between items-center py-1 text-sm">
                 <span class="text-gray-500">Discount</span>
                 <span class="text-red-600">- Rp. {{ formatPrice(viewingSale.discount_amount) }}</span>
+              </div>
+              <div v-if="viewingSale.tax_type" class="flex justify-between items-center py-1.5 text-sm bg-amber-50 px-3 rounded">
+                <span class="text-amber-700 font-medium">{{ taxDisplayName(viewingSale.tax_type) }} ({{ viewingSale.tax_rate }}%)</span>
+                <span class="text-amber-800 font-semibold">+ Rp. {{ formatPrice(viewingSale.tax_amount) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-t border-gray-200">
+                <span class="text-base font-bold text-gray-900">Grand Total</span>
+                <span class="text-base font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.grand_total || viewingSale.total_amount) }}</span>
               </div>
               <div v-if="viewingSalePaidAmount > 0" class="flex justify-between items-center py-1 text-sm">
                 <span class="text-gray-500">Paid</span>
@@ -549,13 +560,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../../services/api';
+
+const router = useRouter();
 
 const sales = ref({ data: [] });
 const products = ref([]);
 const salesPeople = ref([]);
 const warehouses = ref([]);
 const customerList = ref([]);
+const taxRates = ref([]);
 const loading = ref(true);
 const showModal = ref(false);
 const showProductModal = ref(false);
@@ -709,6 +724,20 @@ const loadSalesPeople = async () => {
   }
 };
 
+const loadTaxRates = async () => {
+  try {
+    const response = await api.get('/tax-rates/active');
+    taxRates.value = response.data;
+  } catch (err) {
+    console.error('Failed to load tax rates:', err);
+    // Fallback to default rates
+    taxRates.value = [
+      { id: 1, name: 'PPN', code: 'ppn', rate: '11.00' },
+      { id: 2, name: 'PPh 23', code: 'pph23', rate: '2.00' },
+    ];
+  }
+};
+
 const loadCustomers = async () => {
   try {
     const response = await api.get('/customers', { params: { all: true } });
@@ -752,14 +781,15 @@ const calculateTotal = () => {
   return form.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
 };
 
-const TAX_RATES = {
-  ppn: 11,
-  pph23: 2,
+const getSelectedTaxRate = () => {
+  if (!form.value.tax_type) return 0;
+  const tax = taxRates.value.find(t => t.code === form.value.tax_type);
+  return tax ? parseFloat(tax.rate) : 0;
 };
 
 const calculateTax = () => {
   const subtotal = calculateTotal();
-  const rate = TAX_RATES[form.value.tax_type] || 0;
+  const rate = getSelectedTaxRate();
   return Math.round(subtotal * (rate / 100));
 };
 
@@ -843,7 +873,7 @@ const viewingSalePaidAmount = computed(() => {
 });
 
 const viewingSaleBalance = computed(() => {
-  const total = Number(viewingSale.value?.total_amount || viewingSale.value?.grand_total || 0);
+  const total = Number(viewingSale.value?.grand_total || viewingSale.value?.total_amount || 0);
   return Math.max(0, total - viewingSalePaidAmount.value);
 });
 
@@ -863,22 +893,7 @@ const formatDateTimeLong = (date) => {
 };
 
 const editSale = (sale) => {
-  editMode.value = true;
-  editId.value = sale.id;
-  form.value = {
-    invoice_number: sale.invoice_number,
-    customer_name: sale.customer_name,
-    customer_email: sale.customer_email || '',
-    customer_phone: sale.customer_phone || '',
-    customer_address: sale.customer_address || '',
-    sales_person_id: sale.sales_person_id || '',
-    warehouse_id: sale.warehouse_id || '',
-    sale_date: sale.sale_date,
-    status: sale.status,
-    notes: sale.notes || '',
-    items: sale.items || [{ product_id: '', quantity: 1, unit_price: 0 }]
-  };
-  showModal.value = true;
+  router.push({ name: 'SalesEdit', params: { id: sale.id } });
 };
 
 const deleteSale = async (id) => {
@@ -1024,5 +1039,6 @@ onMounted(() => {
   loadSalesPeople();
   loadWarehouses();
   loadCustomers();
+  loadTaxRates();
 });
 </script>

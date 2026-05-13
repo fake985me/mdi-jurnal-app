@@ -75,55 +75,56 @@
         <p class="text-gray-600">Loading payments...</p>
       </div>
 
-      <table v-else class="min-w-full">
+      <div v-else class="overflow-x-auto">
+      <table class="min-w-full">
         <thead class="table-header">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Type</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pay Type</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase sticky right-0 bg-gradient-to-r from-gray-50 to-gray-100">Actions</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="payment in payments.data" :key="payment.id" class="hover:bg-gray-50 transition-colors">
-            <td class="px-4 py-3 text-sm text-gray-700">{{ formatDate(payment.payment_date) }}</td>
-            <td class="px-4 py-3">
-              <span :class="getTypeBadge(payment.payable_type_label)" class="text-xs font-medium px-2 py-1 rounded-full">
+            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ formatDate(payment.payment_date) }}</td>
+            <td class="px-3 py-3">
+              <span :class="getTypeBadge(payment.payable_type_label)" class="text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap">
                 {{ formatTypeName(payment.payable_type_label) }}
               </span>
             </td>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ payment.payable_reference || payment.reference_number || '—' }}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">{{ payment.payable_party || '—' }}</td>
-            <td class="px-4 py-3 text-sm text-gray-700 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
-            <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">{{ formatCurrency(payment.amount) }}</td>
-            <td class="px-4 py-3">
+            <td class="px-3 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">{{ payment.payable_reference || payment.reference_number || '—' }}</td>
+            <td class="px-3 py-3 text-sm text-gray-700 max-w-[120px] truncate">{{ payment.payable_party || '—' }}</td>
+            <td class="px-2 py-3 text-sm text-gray-700 capitalize whitespace-nowrap">{{ payment.payment_type?.replace('_', ' ') }}</td>
+            <td class="px-3 py-3 text-sm font-bold text-gray-900 text-right whitespace-nowrap">{{ formatCurrency(payment.amount) }}</td>
+            <td class="px-2 py-3">
               <div v-if="payment.tax_type" class="text-xs">
                 <span class="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium uppercase">{{ payment.tax_type }}</span>
                 <span class="text-gray-600 ml-1">{{ payment.tax_rate }}%</span>
-                <div class="text-amber-700 font-semibold mt-0.5">{{ formatCurrency(payment.tax_amount) }}</div>
+                <div class="text-amber-700 font-semibold mt-0.5 whitespace-nowrap">{{ formatCurrency(payment.tax_amount) }}</div>
               </div>
               <span v-else class="text-gray-400 text-xs">—</span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-700">{{ payment.method || '—' }}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">
-              <span v-if="payment.bank_account" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">
+            <td class="px-2 py-3 text-sm text-gray-700">{{ payment.method || '—' }}</td>
+            <td class="px-2 py-3 text-sm text-gray-700">
+              <span v-if="payment.bank_account" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium whitespace-nowrap">
                 {{ payment.bank_account.bank_name }}
               </span>
               <span v-else class="text-gray-400">—</span>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-2 py-3">
               <span :class="getStatusBadge(payment.status)" class="text-xs font-medium px-2 py-1 rounded-full">
                 {{ payment.status }}
               </span>
             </td>
-            <td class="px-4 py-3 text-right text-sm space-x-1">
+            <td class="px-3 py-3 text-right text-sm whitespace-nowrap sticky right-0 bg-white space-x-1">
               <button
                 v-if="payment.status === 'unpaid'"
                 @click="markPaid(payment)"
@@ -149,6 +150,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
 
       <!-- Pagination -->
       <div v-if="payments.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">

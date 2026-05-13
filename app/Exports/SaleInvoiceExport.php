@@ -100,9 +100,22 @@ class SaleInvoiceExport implements FromArray, WithStyles, WithColumnWidths
         // Separator row
         $data[] = [''];
         
-        // Total row
-        $totalRow = count($data) + 1;
-        $data[] = ['', '', '', 'TOTAL:', 'Rp ' . number_format($this->sale->total_amount, 0, ',', '.')];
+        // Subtotal row
+        $data[] = ['', '', '', 'Subtotal:', 'Rp ' . number_format($this->sale->subtotal ?: $this->sale->total_amount, 0, ',', '.')];
+        
+        // Discount row (if applicable)
+        if ($this->sale->discount_amount > 0) {
+            $data[] = ['', '', '', 'Discount:', '- Rp ' . number_format($this->sale->discount_amount, 0, ',', '.')];
+        }
+        
+        // Tax row (if applicable)
+        if ($this->sale->tax_type) {
+            $taxLabel = strtoupper($this->sale->tax_type === 'ppn' ? 'PPN' : ($this->sale->tax_type === 'pph23' ? 'PPh 23' : $this->sale->tax_type));
+            $data[] = ['', '', '', $taxLabel . ' (' . number_format($this->sale->tax_rate, 0) . '%):', '+ Rp ' . number_format($this->sale->tax_amount, 0, ',', '.')];
+        }
+        
+        // Grand Total row
+        $data[] = ['', '', '', 'GRAND TOTAL:', 'Rp ' . number_format($this->sale->grand_total ?: $this->sale->total_amount, 0, ',', '.')];
         
         // Empty rows
         $data[] = [''];
@@ -120,7 +133,11 @@ class SaleInvoiceExport implements FromArray, WithStyles, WithColumnWidths
     {
         $itemsStartRow = 14;
         $itemsEndRow = 14 + count($this->sale->items) - 1;
-        $totalRow = $itemsEndRow + 3;
+        // Calculate total row offset: subtotal(1) + discount(0-1) + tax(0-1) + grand_total(1) 
+        $extraRows = 1; // subtotal row always present
+        if ($this->sale->discount_amount > 0) $extraRows++;
+        if ($this->sale->tax_type) $extraRows++;
+        $grandTotalRow = $itemsEndRow + 2 + $extraRows; // +2 for separator rows, then subtotal + conditionals
         
         return [
             // Title "INVOICE" - Row 2
@@ -171,7 +188,7 @@ class SaleInvoiceExport implements FromArray, WithStyles, WithColumnWidths
             ],
             
             // Total label and value
-            $totalRow => [
+            $grandTotalRow => [
                 'font' => [
                     'bold' => true,
                     'size' => 16,
@@ -181,11 +198,11 @@ class SaleInvoiceExport implements FromArray, WithStyles, WithColumnWidths
             ],
             
             // Footer messages
-            ($totalRow + 4) => [
+            ($grandTotalRow + 4) => [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 'font' => ['size' => 11]
             ],
-            ($totalRow + 5) => [
+            ($grandTotalRow + 5) => [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 'font' => ['size' => 9, 'color' => ['rgb' => '999999']]
             ],

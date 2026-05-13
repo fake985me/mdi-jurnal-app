@@ -94,6 +94,16 @@ const routes = [
                 component: () => import("../pages/admin/Sales.vue"),
             },
             {
+                path: "sales/create",
+                name: "SalesCreate",
+                component: () => import("../pages/admin/SalesCreate.vue"),
+            },
+            {
+                path: "sales/:id/edit",
+                name: "SalesEdit",
+                component: () => import("../pages/admin/SalesCreate.vue"),
+            },
+            {
                 path: "purchases",
                 name: "Purchases",
                 component: () => import("../pages/admin/Purchases.vue"),

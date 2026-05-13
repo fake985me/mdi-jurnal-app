@@ -59,13 +59,11 @@ class BankAccount extends Model
     {
         $incoming = $this->payments()
             ->where('status', 'paid')
-            ->whereHas('payable', function ($q) {
-                $q->whereIn('payable_type', [
-                    Sale::class,
-                    ProjectContract::class,
-                    MsaContract::class,
-                ]);
-            })
+            ->whereIn('payable_type', [
+                Sale::class,
+                ProjectContract::class,
+                MsaContract::class,
+            ])
             ->sum('amount');
 
         $outgoing = $this->payments()

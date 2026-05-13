@@ -12,7 +12,8 @@ class DeliveryItem extends Model
     protected $fillable = [
         'delivery_id',
         'product_id',
-        'quantity'
+        'quantity',
+        'serial_number'
     ];
 
     protected $casts = [

@@ -222,6 +222,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('payments', App\Http\Controllers\Api\PaymentController::class);
 
     // Deliveries
+    Route::post('/deliveries/{id}/import-serials', [App\Http\Controllers\Api\DeliveryController::class, 'importSerialNumbers']);
+    Route::get('/deliveries/{id}/serial-template', [App\Http\Controllers\Api\DeliveryController::class, 'downloadSerialTemplate']);
     Route::apiResource('deliveries', App\Http\Controllers\Api\DeliveryController::class);
 
     // Dashboard

@@ -150,8 +150,22 @@
     </table>
 
     <div class="total-section">
+        <div class="total-row">
+            Subtotal: Rp {{ number_format($sale->subtotal ?: $sale->total_amount, 0, ',', '.') }}
+        </div>
+        @if($sale->discount_amount > 0)
+        <div class="total-row" style="color: #dc2626;">
+            Discount: - Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}
+        </div>
+        @endif
+        @if($sale->tax_type)
+        <div class="total-row" style="color: #b45309;">
+            {{ strtoupper($sale->tax_type === 'ppn' ? 'PPN' : ($sale->tax_type === 'pph23' ? 'PPh 23' : $sale->tax_type)) }}
+            ({{ number_format($sale->tax_rate, 0) }}%): + Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}
+        </div>
+        @endif
         <div class="total-row grand-total">
-            TOTAL: Rp {{ number_format($sale->total_amount, 0, ',', '.') }}
+            GRAND TOTAL: Rp {{ number_format($sale->grand_total ?: $sale->total_amount, 0, ',', '.') }}
         </div>
     </div>
 

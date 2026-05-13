@@ -12,7 +12,7 @@ class WarrantyController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Warranty::with(['sale', 'product']);
+            $query = Warranty::with(['sale.customer', 'product']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -27,11 +27,16 @@ class WarrantyController extends Controller
                       ->orWhere('serial_number', 'like', "%{$search}%")
                       ->orWhereHas('sale', function($sq) use ($search) {
                           $sq->where('invoice_number', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('product', function($pq) use ($search) {
+                          $pq->where('title', 'like', "%{$search}%");
                       });
                 });
             }
 
-            $warranties = $query->orderBy('created_at', 'desc')
+            $warranties = $query->orderBy('sale_id', 'desc')
+                ->orderBy('product_id')
+                ->orderBy('serial_number')
                 ->paginate($request->per_page ?? 15);
 
             return response()->json($warranties);
