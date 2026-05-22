@@ -35,6 +35,7 @@
                 <div class="text-sm text-gray-500">{{ category.description || 'No description' }}</div>
               </div>
             </div>
+
             <div class="flex items-center gap-4">
               <div class="text-sm text-gray-500">
                 <span class="font-medium">{{ category.sub_categories?.length || 0 }}</span> subcategories
@@ -67,34 +68,69 @@
             <div v-if="!category.sub_categories?.length" class="text-sm text-gray-500 italic py-2">
               No subcategories yet
             </div>
+
             <div v-else class="space-y-2">
-              <div
-                v-for="sub in category.sub_categories"
-                :key="sub.id"
-                class="flex items-center justify-between py-2 px-4 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <div class="font-medium text-gray-800">{{ sub.name }}</div>
-                  <div class="text-xs text-gray-500">{{ sub.description || 'No description' }}</div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="text-xs text-gray-500">
-                    {{ sub.products_count || 0 }} products
+              <div v-for="sub in category.sub_categories" :key="sub.id" class="p-4 bg-gray-50 rounded-lg">
+                <!-- SubCategories Row -->
+                <div class="flex items-center justify-between">
+
+                  <div class="flex items-center gap-3">
+                    <button @click="toggleExpand(sub.id)" class="text-gray-500 hover:text-gray-700">
+                      <svg :class="['w-5 h-5 transition-transform', expandedCategories.includes(sub.id) ? 'rotate-90' : '']"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <div>
+                      <div class="font-medium text-gray-800">{{ sub.name }}</div>
+                      <div class="text-xs text-gray-500">{{ sub.description || 'No description' }}</div>
+                    </div>
                   </div>
-                  <button
-                    @click="openSubcategoryModal(category, sub)"
-                    class="text-indigo-600 hover:text-indigo-800 text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    @click="deleteSubcategory(sub)"
-                    class="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Delete
-                  </button>
+
+                  <div class="flex items-center gap-3">
+                    <div class="text-xs text-gray-500"> {{ sub.products_count || 0 }} products</div>
+                    <button @click="openSubcategoryModal(category, sub)" class="text-indigo-600 hover:text-indigo-800 text-sm">Edit</button>
+                    <button @click="deleteSubcategory(sub)" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                  </div>
+
                 </div>
+
+                <div v-if="expandedCategories.includes(sub.id)" class="mt-3 ml-8">
+
+                  <div v-if="loading" class="p-12 text-center">
+                    <div class="inline-flex items-center gap-2 text-gray-500">
+                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        Loading products...
+                    </div>
+                  </div>
+                  <table v-else class="w-full">
+                      <thead class="table-header">
+                        <tr>
+                          <th class="table-header-cell">Name</th>
+                          <th class="table-header-cell">Brand</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        <tr v-for="product in sub.products" :key="product.id" class="table-row">
+                          <td class="text-center table-cell">{{ product.title }}</td>
+                          <td class="text-center table-cell">{{ product.brand }}</td>
+                        </tr>
+
+                        <tr v-if="!sub.products || !sub.products.length">
+                          <td colspan="3" class="text-center py-4 text-gray-500">
+                            No products found
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                </div>
+
               </div>
+
             </div>
           </div>
         </div>
@@ -215,12 +251,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
+import { data } from 'autoprefixer';
 
 const categories = ref([]);
 const loading = ref(true);
 const saving = ref(false);
 const error = ref('');
 const expandedCategories = ref([]);
+const subcategoryProducts = ref({ data: [] });
 
 // Category Modal
 const showCategoryModal = ref(false);

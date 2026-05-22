@@ -35,7 +35,7 @@
       </header>
 
       <!-- Page Content -->
-      <main class="p-6 min-h-screen">
+      <main class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
         <div class="animate-fade-in">
           <router-view />
         </div>

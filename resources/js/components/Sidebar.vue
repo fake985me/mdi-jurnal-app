@@ -87,7 +87,7 @@ const menuSections = computed(() => [
     title: t('nav.products'),
     items: [
       { name: t('nav.productList'), icon: 'products', to: '/dashboard/products', roles: ['admin', 'staff'] },
-      { name: t('nav.categories'), icon: 'categories', to: '/dashboard/categories', roles: ['admin', 'staff'] },
+      // { name: t('nav.categories'), icon: 'categories', to: '/dashboard/categories', roles: ['admin', 'staff'] },
     ]
   },
   {

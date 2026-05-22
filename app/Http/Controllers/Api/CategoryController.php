@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::with(['subCategories', 'children']);
+        $query = Category::with(['subCategories.products', 'children']);
 
         // Search
         if ($request->has('search')) {

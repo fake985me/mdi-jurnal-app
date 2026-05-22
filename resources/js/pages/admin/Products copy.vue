@@ -3,8 +3,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center">
             <div>
-                <h2
-                    class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     Product Management</h2>
                 <p class="text-sm text-gray-600 mt-1">Manage your product catalog, stock levels, and categories</p>
             </div>
@@ -45,28 +44,31 @@
         <!-- Tabs -->
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8">
-                <button @click="activeTab = 'products'" :class="[
-                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-                    activeTab === 'products'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                ]">
+                <button @click="activeTab = 'products'"
+                    :class="[
+                        'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                        activeTab === 'products'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ]">
                     Products
                 </button>
-                <button @click="activeTab = 'adjustments'; loadAdjustments()" :class="[
-                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-                    activeTab === 'adjustments'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                ]">
+                <button @click="activeTab = 'adjustments'; loadAdjustments()"
+                    :class="[
+                        'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                        activeTab === 'adjustments'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ]">
                     Stock Adjustments
                 </button>
-                <button @click="activeTab = 'categories'; loadCategories()" :class="[
-                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-                    activeTab === 'categories'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                ]">
+                <button @click="activeTab = 'categories'; loadCategories()"
+                    :class="[
+                        'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                        activeTab === 'categories'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ]">
                     Categories
                 </button>
             </nav>
@@ -78,19 +80,23 @@
             <div class="card p-4 mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <input v-model="filters.search" @input="loadProducts" type="text"
-                        placeholder="Search by title, SKU, brand..." class="input" />
-                    <select v-model="filters.category_id" @change="onFilterCategoryChange" class="input">
+                        placeholder="Search by title, SKU, brand..."
+                        class="input" />
+                    <select v-model="filters.category_id" @change="onFilterCategoryChange"
+                        class="input">
                         <option value="">All Categories</option>
                         <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
                     </select>
-                    <select v-model="filters.sub_category_id" @change="loadProducts" :disabled="!filters.category_id"
+                    <select v-model="filters.sub_category_id" @change="loadProducts"
+                        :disabled="!filters.category_id"
                         class="input disabled:bg-gray-100 disabled:cursor-not-allowed">
                         <option value="">All Subcategories</option>
                         <option v-for="sub in getSubcategoryOptions(filters.category_id)" :key="sub.id" :value="sub.id">
                             {{ sub.label }}
                         </option>
                     </select>
-                    <select v-model="filters.brand" @change="loadProducts" class="input">
+                    <select v-model="filters.brand" @change="loadProducts"
+                        class="input">
                         <option value="">All Brands</option>
                         <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
                     </select>
@@ -111,10 +117,8 @@
                 <div v-if="loading" class="p-12 text-center">
                     <div class="inline-flex items-center gap-2 text-gray-500">
                         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                                fill="none" />
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                         </svg>
                         Loading products...
                     </div>
@@ -135,19 +139,15 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="(product, index) in products.data" :key="product.id"
-                            class="hover:bg-gray-50 transition-colors duration-150">
+                        <tr v-for="(product, index) in products.data" :key="product.id" class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-6 py-4 text-sm text-gray-500">{{ getRowNumber(index) }}</td>
                             <td class="px-6 py-4">
-                                <span v-if="product.sku"
-                                    class="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{
-                                    product.sku }}</span>
+                                <span v-if="product.sku" class="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ product.sku }}</span>
                                 <span v-else class="text-gray-400 text-sm">—</span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-medium text-gray-900">{{ product.title }}</div>
-                                <div v-if="product.descriptions" class="text-xs text-gray-500 mt-0.5 truncate max-w-xs">
-                                    {{ product.descriptions }}</div>
+                                <div v-if="product.descriptions" class="text-xs text-gray-500 mt-0.5 truncate max-w-xs">{{ product.descriptions }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1">
@@ -155,16 +155,13 @@
                                         <span v-for="(pair, idx) in product.category_pairs" :key="idx"
                                             class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                                             {{ getCategoryPath(pair.category_id) || pair.category_name || '-' }}
-                                            <span v-if="pair.sub_category_id || pair.sub_category_name"
-                                                class="ml-1 text-indigo-500">
-                                                / {{ getSubcategoryPath(pair.sub_category_id) || pair.sub_category_name
-                                                || '-' }}
+                                            <span v-if="pair.sub_category_id || pair.sub_category_name" class="ml-1 text-indigo-500">
+                                                / {{ getSubcategoryPath(pair.sub_category_id) || pair.sub_category_name || '-' }}
                                             </span>
                                         </span>
                                     </template>
                                     <template v-else-if="product.category">
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                             {{ product.category }}
                                             <span v-if="product.sub_category" class="ml-1 text-gray-500">
                                                 / {{ product.sub_category }}
@@ -183,14 +180,13 @@
                                 <span :class="[
                                     'inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 text-xs font-semibold rounded-full',
                                     (product.stock || 0) <= 0 ? 'bg-red-100 text-red-700' :
-                                        (product.stock || 0) <= (product.minimum_stock || 0) ? 'bg-amber-100 text-amber-700' :
-                                            'bg-green-100 text-green-700'
+                                    (product.stock || 0) <= (product.minimum_stock || 0) ? 'bg-amber-100 text-amber-700' :
+                                    'bg-green-100 text-green-700'
                                 ]">
                                     {{ product.stock || 0 }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center text-sm text-gray-500">{{ product.minimum_stock || 0 }}
-                            </td>
+                            <td class="px-6 py-4 text-center text-sm text-gray-500">{{ product.minimum_stock || 0 }}</td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1">
                                     <button @click="openAdjustModal(product)"
@@ -218,8 +214,7 @@
                         </tr>
                         <tr v-if="!products.data?.length">
                             <td colspan="9" class="px-6 py-12 text-center text-gray-500">
-                                <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
@@ -230,8 +225,7 @@
                 </table>
 
                 <!-- Pagination -->
-                <div v-if="products.data?.length"
-                    class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
+                <div v-if="products.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
                     <p class="text-sm text-gray-700">
                         Showing {{ products.from }} to {{ products.to }} of {{ products.total }} products
                     </p>
@@ -250,8 +244,7 @@
             @click.self="showModal = false">
             <div class="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
-                    <h3
-                        class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {{ editingProduct ? 'Edit Product' : 'Add New Product' }}
                     </h3>
                     <button @click="showModal = false; editingProduct = null"
@@ -265,30 +258,33 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                                <input v-model="form.title" type="text" required class="input"
-                                    placeholder="Product name" />
+                                <input v-model="form.title" type="text" required
+                                    class="input" placeholder="Product name" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                                <input v-model="form.sku" type="text" class="input" placeholder="e.g. XG-OLT.001" />
+                                <input v-model="form.sku" type="text"
+                                    class="input" placeholder="e.g. XG-OLT.001" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                <input v-model="form.brand" type="text" class="input" placeholder="e.g. DASAN" />
+                                <input v-model="form.brand" type="text"
+                                    class="input" placeholder="e.g. DASAN" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
-                                <input v-model.number="form.price" type="number" min="0" step="0.01" class="input"
-                                    placeholder="0" />
+                                <input v-model.number="form.price" type="number" min="0" step="0.01"
+                                    class="input" placeholder="0" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                                <input v-model="form.image" type="url" class="input" placeholder="https://..." />
+                                <input v-model="form.image" type="url"
+                                    class="input" placeholder="https://..." />
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                <textarea v-model="form.descriptions" rows="2" class="input"
-                                    placeholder="Optional product description..."></textarea>
+                                <textarea v-model="form.descriptions" rows="2"
+                                    class="input" placeholder="Optional product description..."></textarea>
                             </div>
                             <div class="flex items-end">
                                 <label class="flex items-center gap-2 cursor-pointer">
@@ -311,8 +307,7 @@
                             </button>
                         </div>
 
-                        <div v-if="form.categories.length === 0"
-                            class="text-gray-500 text-sm py-3 text-center border-2 border-dashed border-gray-200 rounded-lg">
+                        <div v-if="form.categories.length === 0" class="text-gray-500 text-sm py-3 text-center border-2 border-dashed border-gray-200 rounded-lg">
                             No categories added. Click "+ Add Category" to add one.
                         </div>
 
@@ -331,11 +326,12 @@
                                 </div>
                                 <div class="flex-1">
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Subcategory</label>
-                                    <select v-model="catPair.sub_category_id" class="input text-sm"
+                                    <select v-model="catPair.sub_category_id"
+                                        class="input text-sm"
                                         :disabled="!catPair.category_id">
                                         <option value="">Select Subcategory</option>
-                                        <option v-for="sub in getSubcategoryOptions(catPair.category_id)" :key="sub.id"
-                                            :value="sub.id">
+                                        <option v-for="sub in getSubcategoryOptions(catPair.category_id)"
+                                            :key="sub.id" :value="sub.id">
                                             {{ sub.label }}
                                         </option>
                                     </select>
@@ -343,8 +339,7 @@
                                 <button type="button" @click="removeCategoryPair(index)"
                                     class="mt-5 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
@@ -357,12 +352,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Current Stock</label>
-                                <input v-model.number="form.stock" type="number" min="0" class="input" />
+                                <input v-model.number="form.stock" type="number" min="0"
+                                    class="input" />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Stock
-                                    (Alert)</label>
-                                <input v-model.number="form.minimum_stock" type="number" min="0" class="input" />
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Stock (Alert)</label>
+                                <input v-model.number="form.minimum_stock" type="number" min="0"
+                                    class="input" />
                             </div>
                         </div>
                     </div>
@@ -371,7 +367,8 @@
                     <div class="flex justify-end space-x-3 pt-4 border-t">
                         <button type="button" @click="showModal = false; editingProduct = null"
                             class="btn-secondary">Cancel</button>
-                        <button type="submit" :disabled="saving" class="btn-primary disabled:opacity-50">
+                        <button type="submit" :disabled="saving"
+                            class="btn-primary disabled:opacity-50">
                             {{ saving ? 'Saving...' : (editingProduct ? 'Update Product' : 'Save Product') }}
                         </button>
                     </div>
@@ -389,10 +386,8 @@
                 <div v-if="adjustmentsLoading" class="p-12 text-center">
                     <div class="inline-flex items-center gap-2 text-gray-500">
                         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                                fill="none" />
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                         </svg>
                         Loading adjustments...
                     </div>
@@ -406,15 +401,13 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Before → After
-                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Before → After</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="adj in adjustments.data" :key="adj.id"
-                            class="hover:bg-gray-50 transition-colors duration-150">
+                        <tr v-for="adj in adjustments.data" :key="adj.id" class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-6 py-4 text-sm font-mono text-gray-700">{{ adj.adjustment_code }}</td>
                             <td class="px-6 py-4 text-sm text-gray-900">{{ adj.product?.title || '-' }}</td>
                             <td class="px-6 py-4">
@@ -425,18 +418,15 @@
                                     {{ adj.adjustment_type === 'in' ? '+ IN' : '- OUT' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm capitalize text-gray-700">{{ adj.reason?.replace(/_/g, ' ') }}
-                            </td>
+                            <td class="px-6 py-4 text-sm capitalize text-gray-700">{{ adj.reason?.replace(/_/g, ' ') }}</td>
                             <td class="px-6 py-4 text-sm font-semibold text-center">{{ adj.quantity }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ adj.before_qty }} → {{ adj.after_qty }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(adj.created_at).toLocaleDateString()
-                                }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(adj.created_at).toLocaleDateString() }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ adj.user?.name || '-' }}</td>
                         </tr>
                         <tr v-if="!adjustments.data?.length">
                             <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                                <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
@@ -447,17 +437,14 @@
                 </table>
 
                 <!-- Pagination -->
-                <div v-if="adjustments.data?.length"
-                    class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
+                <div v-if="adjustments.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
                     <p class="text-sm text-gray-700">
                         Showing {{ adjustments.from }} to {{ adjustments.to }} of {{ adjustments.total }} adjustments
                     </p>
                     <div class="flex space-x-2">
-                        <button @click="loadAdjustments(adjustments.current_page - 1)"
-                            :disabled="!adjustments.prev_page_url"
+                        <button @click="loadAdjustments(adjustments.current_page - 1)" :disabled="!adjustments.prev_page_url"
                             class="btn-secondary disabled:opacity-50">Previous</button>
-                        <button @click="loadAdjustments(adjustments.current_page + 1)"
-                            :disabled="!adjustments.next_page_url"
+                        <button @click="loadAdjustments(adjustments.current_page + 1)" :disabled="!adjustments.next_page_url"
                             class="btn-secondary disabled:opacity-50">Next</button>
                     </div>
                 </div>
@@ -465,8 +452,7 @@
         </div>
 
         <!-- Adjustment Modal -->
-        <div v-if="showAdjustModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div v-if="showAdjustModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             @click.self="showAdjustModal = false">
             <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
@@ -477,8 +463,7 @@
 
                 <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                     <p class="font-medium text-gray-900">{{ adjustingProduct?.title }}</p>
-                    <p class="text-sm text-gray-600">Current Stock: <span class="font-semibold text-indigo-600">{{
-                            adjustingProduct?.stock || 0 }}</span></p>
+                    <p class="text-sm text-gray-600">Current Stock: <span class="font-semibold text-indigo-600">{{ adjustingProduct?.stock || 0 }}</span></p>
                 </div>
 
                 <form @submit.prevent="submitAdjustment" class="space-y-4">
@@ -500,15 +485,13 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
                         <select v-model="adjustForm.reason" required class="input">
                             <option value="">Select Reason</option>
-                            <option v-for="(label, key) in adjustmentReasons" :key="key" :value="key">{{ label }}
-                            </option>
+                            <option v-for="(label, key) in adjustmentReasons" :key="key" :value="key">{{ label }}</option>
                         </select>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                        <textarea v-model="adjustForm.notes" rows="2" class="input"
-                            placeholder="Optional notes..."></textarea>
+                        <textarea v-model="adjustForm.notes" rows="2" class="input" placeholder="Optional notes..."></textarea>
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-4 border-t">
@@ -523,8 +506,7 @@
         </div>
 
         <!-- Stock Breakdown Modal -->
-        <div v-if="showStockModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div v-if="showStockModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             @click.self="closeStockModal">
             <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
@@ -554,10 +536,8 @@
                 <div v-if="stockLoading" class="text-center py-6 text-gray-500">
                     <div class="inline-flex items-center gap-2">
                         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                                fill="none" />
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                         </svg>
                         Loading stock data...
                     </div>
@@ -568,8 +548,7 @@
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                             <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Last Updated
-                            </th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Last Updated</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -591,15 +570,13 @@
             </div>
         </div>
 
-        <!-- Categories Tab Content -->
-        <div v-if="activeTab === 'categories'">
-            <Categories />
-        </div>
-
         <!-- Upload Progress/Error Message -->
-        <Transition enter-active-class="transition ease-out duration-300"
-            enter-from-class="transform translate-y-2 opacity-0" enter-to-class="transform translate-y-0 opacity-100"
-            leave-active-class="transition ease-in duration-200" leave-from-class="transform translate-y-0 opacity-100"
+        <Transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="transform translate-y-2 opacity-0"
+            enter-to-class="transform translate-y-0 opacity-100"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform translate-y-2 opacity-0">
             <div v-if="uploadMessage" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 max-w-md border"
                 :class="uploadMessage.type === 'success' ? 'border-green-200' : 'border-red-200'">
@@ -639,7 +616,6 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../services/api';
-import Categories from './Categories.vue'
 
 const route = useRoute();
 
