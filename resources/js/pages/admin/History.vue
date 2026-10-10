@@ -140,8 +140,8 @@
                     <i class="fas fa-shopping-cart text-blue-600"></i>
                   </div>
                   <div>
-                    <h3 class="font-semibold text-gray-900">{{ sale.reference_number }}</h3>
-                    <p class="text-sm text-gray-600">{{ sale.party_name }}</p>
+                    <h3 class="font-semibold text-gray-900">{{ sale.invoice_number }}</h3>
+                    <p class="text-sm text-gray-600">{{ sale.customer_name }}</p>
                   </div>
                 </div>
                 

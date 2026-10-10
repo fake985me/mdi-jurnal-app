@@ -6,47 +6,39 @@
     <!-- Tabs -->
     <div class="flex flex-wrap gap-3 mb-4 justify-center">
       <div
-        v-for="(tab, i) in tabs"
-        :key="i"
-        @click="
-          () => {
-            activeTab = i
-            activeSubTab = 0
-            desktopIndex = 0
-            mobileIndex = 0
-          }
-        "
+        v-for="(tab, i) in tabs" :key="i"  @click="switchTab(tab.title)"
         :class="[
           'cursor-pointer py-2 px-2 border-b-2',
-          i === activeTab
+          activeTab === tab.title
             ? 'border-blue-600 text-blue-600 font-bold'
             : 'border-transparent border-b-slate-900 text-gray-800 hover:text-blue-800',
-        ]"
-      >
+        ]">
         {{ tab.title }}
       </div>
     </div>
 
     <!-- Sub Tabs -->
-    <div
-      v-if="tabs[activeTab].subCategories"
-      class="flex flex-wrap gap-2 -mt-2 mb-8 justify-center"
-    >
+    <div class="flex flex-wrap gap-2 -mt-2 mb-8 justify-center">
       <div
-        v-for="(sub, j) in tabs[activeTab].subCategories"
-        :key="j"
-        @click="
-          () => {
-            activeSubTab = j
-            desktopIndex = 0
-            mobileIndex = 0
-          }
-        "
+        @click="switchSubCategory(null)"
         :class="[
-          'cursor-pointer text-sm py-1 px-3 border-2',
-          j === activeSubTab
-            ? 'bg-black border-blue-500 rounded-md text-white font-medium'
-            : 'bg-white border-slate-900 rounded-md text-gray-900 hover:text-blue-800',
+          'cursor-pointer text-sm py-1 px-3 border-2 rounded-md transition-colors',
+          activeSubTab === null
+            ? 'bg-black border-blue-500 text-white font-medium'
+            : 'bg-white border-slate-900 text-gray-900 hover:text-blue-800',
+        ]"
+      >
+        All
+      </div>
+      <div
+        v-for="(sub, j) in currentSubCategories"
+        :key="j"
+        @click="switchSubCategory(sub)"
+        :class="[
+          'cursor-pointer text-sm py-1 px-3 border-2 rounded-md transition-colors',
+          activeSubTab === sub
+            ? 'bg-black border-blue-500 text-white font-medium'
+            : 'bg-white border-slate-900 text-gray-900 hover:text-blue-800',
         ]"
       >
         {{ sub }}
@@ -72,7 +64,14 @@
           class="relative h-[320px] bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 transform hover:-translate-y-1"
         >
           <RouterLink
-            :to="`/product/${product.id}`"
+            :to="{
+              name: 'product-detail',
+              params: { slug: product.slug || product.id },
+              query: {
+                ...(activeTab ? { category: activeTab } : {}),
+                ...(activeSubTab ? { sub: activeSubTab } : {})
+              }
+            }"
             class="block flex-1 flex-col justify-between"
           >
             <!-- Default logo (kiri) -->
@@ -155,7 +154,14 @@
         <div
           class="relative w-[300px] h-[450px] bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 transform hover:-translate-y-1"
         >
-          <RouterLink :to="`/product/${pagedMobile[mobileIndex].id}`">
+          <RouterLink :to="{
+            name: 'product-detail',
+            params: { slug: pagedMobile[mobileIndex].slug || pagedMobile[mobileIndex].id },
+            query: {
+              ...(activeTab ? { category: activeTab } : {}),
+              ...(activeSubTab ? { sub: activeSubTab } : {})
+            }
+          }">
             <!-- Default logo (kiri) -->
             <img
               :src="defaultLogo"
@@ -250,8 +256,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import useProducts from '@/composable/useProducts.js'
 
 // Logo paths from public folder
@@ -259,8 +265,11 @@ const defaultLogo = '/assets/static/logo_mdi.png'
 const ldasan = '/assets/static/logo_dasan.png'
 const lzaram = '/assets/static/logo_zaram.png'
 
-// Fetch products from database
-const { products, loading } = useProducts()
+const route = useRoute()
+const router = useRouter()
+
+// Fetch products and categories from database
+const { products, categories, fetchProducts, loading } = useProducts()
 
 const brandLogos = {
   dasan: ldasan,
@@ -271,29 +280,130 @@ const getBrandLogo = (brand) => {
   return brandLogos[brand?.toLowerCase()] || null
 }
 
-const activeTab = ref(0)
-const activeSubTab = ref(0)
+// Dynamic tabs based on categories from database
+const tabs = computed(() => {
+  if (categories.value && categories.value.length > 0) {
+    return categories.value.map(c => ({
+      title: c.name,
+      subCategories: c.sub_categories ? c.sub_categories.map(s => s.name) : []
+    }))
+  }
+  // Fallback from products
+  const catSet = new Set()
+  products.value.forEach(p => {
+    if (p.categories && p.categories.length > 0) {
+      p.categories.forEach(c => catSet.add(c))
+    } else if (p.category) {
+      catSet.add(p.category)
+    }
+  })
+  return Array.from(catSet).map(name => ({ title: name, subCategories: [] }))
+})
+
+// State aktif
+const activeTab = ref(route?.query?.category || '')
+const activeSubTab = ref(route?.query?.sub || null)
 const desktopIndex = ref(0)
 const mobileIndex = ref(0)
 
-const tabs = [
-  { title: 'XGSPON', subCategories: ['All', 'OLT', 'ONT', 'ONU', 'XGSPON STICK'] },
-  { title: 'GPON', subCategories: ['All', 'OLT', 'ONT', 'ONU PoE', 'ONU', 'GPON STICK'] },
-  {
-    title: 'SWITCH',
-    subCategories: ['All', 'BACKBONE', 'L3 SWITCH', 'L2 SWITCH', 'PoE SWITCH'],
-  },
-  { title: 'WIRELESS', subCategories: ['All', 'AP', 'CONTROLLER'] },
-]
-
-const filteredProducts = computed(() => {
-  const category = tabs[activeTab.value].title
-  const subCategory = tabs[activeTab.value].subCategories[activeSubTab.value] || 'All'
-  let filtered = products.value.filter((p) => p.category === category)
-  if (subCategory !== 'All') {
-    filtered = filtered.filter((p) => p.subCategory === subCategory)
+// Set default category when tabs become available
+watch(tabs, (newTabs) => {
+  if (newTabs.length && !activeTab.value) {
+    activeTab.value = newTabs[0].title
   }
-  return filtered
+}, { immediate: true })
+
+// Auto-refresh when page becomes visible (e.g., user switches back to tab)
+let visibilityHandler = null
+
+onMounted(() => {
+  visibilityHandler = () => {
+    if (!document.hidden) {
+      // Force refresh products when user comes back to the page
+      fetchProducts(true)
+    }
+  }
+  document.addEventListener('visibilitychange', visibilityHandler)
+})
+
+onUnmounted(() => {
+  if (visibilityHandler) {
+    document.removeEventListener('visibilitychange', visibilityHandler)
+  }
+})
+
+// Sinkronisasi dengan query string saat berubah
+watch(
+  () => route?.query,
+  (query) => {
+    if (!query) return
+    if (query.category) activeTab.value = query.category
+    if (query.sub) activeSubTab.value = query.sub || null
+  },
+  { immediate: true }
+)
+
+// Subkategori yang tersedia dari kategori aktif — hanya yang berpasangan dengan kategori aktif
+const currentSubCategories = computed(() => {
+  const activeCat = activeTab.value?.toLowerCase()
+  if (!activeCat) return []
+
+  const subSet = new Set()
+  const list = products.value || []
+
+  list.forEach(p => {
+    if (p.category_pairs && p.category_pairs.length > 0) {
+      // Gunakan pairs: hanya ambil sub_category yang berpasangan dengan kategori aktif
+      p.category_pairs.forEach(pair => {
+        if (pair.category_name?.toLowerCase() === activeCat && pair.sub_category_name) {
+          subSet.add(pair.sub_category_name)
+        }
+      })
+    } else {
+      // Fallback jika tidak ada category_pairs: cek kategori lalu ambil subkategori
+      const pCats = p.categories?.length > 0 ? p.categories : (p.category ? [p.category] : [])
+      const matchesCat = pCats.some(c => c.toLowerCase() === activeCat)
+      if (matchesCat) {
+        if (p.subCategories?.length > 0) {
+          p.subCategories.forEach(s => subSet.add(s))
+        } else if (p.subCategory) {
+          subSet.add(p.subCategory)
+        }
+      }
+    }
+  })
+
+  return Array.from(subSet).filter(s => s && s.toLowerCase() !== 'all')
+})
+
+function switchTab(tabTitle) {
+  activeTab.value = tabTitle
+  activeSubTab.value = null
+  desktopIndex.value = 0
+  mobileIndex.value = 0
+}
+
+function switchSubCategory(sub) {
+  activeSubTab.value = sub
+  desktopIndex.value = 0
+  mobileIndex.value = 0
+}
+
+// Produk hasil filter dengan dukungan multi-kategori & multi-subkategori
+const filteredProducts = computed(() => {
+  const list = products.value || []
+  if (!activeTab.value) return list
+
+  return list.filter((p) => {
+    const pCats = p.categories && p.categories.length > 0 ? p.categories : (p.category ? [p.category] : [])
+    const matchesCat = pCats.some(c => c.toLowerCase() === activeTab.value.toLowerCase())
+
+    if (!matchesCat) return false
+    if (!activeSubTab.value) return true
+
+    const pSubs = p.subCategories && p.subCategories.length > 0 ? p.subCategories : (p.subCategory ? [p.subCategory] : [])
+    return pSubs.some(s => s.toLowerCase() === activeSubTab.value.toLowerCase())
+  })
 })
 
 const pagedDesktop = computed(() => {
@@ -306,10 +416,10 @@ const pagedDesktop = computed(() => {
   return pages
 })
 
-// Daftar spec yang valid
+// Daftar spec yang valid (hingga spec20)
 const getSpecs = (product) => {
-  return Array.from({ length: 7 }, (_, i) => product[`spec${i + 1}`]).filter(
-    (s) => s && s !== 'null',
+  return Array.from({ length: 20 }, (_, i) => product[`spec${i + 1}`]).filter(
+    (s) => s && s !== 'null' && s !== '',
   )
 }
 

@@ -940,7 +940,7 @@ const saveProduct = async () => {
         showModal.value = false;
         editingProduct.value = null;
         resetForm();
-        loadProducts();
+        loadWarehouseStocks();
     } catch (error) {
         console.error('Failed to save product:', error);
         alert('Failed to save product: ' + (error.response?.data?.message || 'Unknown error'));
@@ -953,7 +953,7 @@ const deleteProduct = async (id) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
         await api.delete(`/products/${id}`);
-        loadProducts();
+        loadWarehouseStocks();
     } catch (error) {
         console.error('Failed to delete product:', error);
         alert('Failed to delete product');

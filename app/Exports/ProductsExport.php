@@ -4,93 +4,115 @@ namespace App\Exports;
 
 use App\Models\Product;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithColumnWidths, WithStyles
+class ProductsExport implements FromCollection, WithColumnWidths, WithHeadings, WithMapping, WithStyles
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
     public function collection()
     {
-        // Eager load productCategories with category and subCategory
-        return Product::with(['productCategories.category', 'productCategories.subCategory'])->get();
+        return Product::with(['productCategories.category', 'productCategories.subCategory'])
+            ->withSum('currentStocks', 'quantity')
+            ->orderBy('id')
+            ->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
-        return [
+        $headers = [
+            'id',
+            'module',
+            'image',
             'SKU',
-            'Title',
-            'Subtitle',
-            'Category',           // Multi-category support: pipe-separated (e.g., GPON|SWITCH)
-            'Sub Category',       // Multi-subcategory support: pipe-separated (e.g., ONU|L2 SWITCH)
-            'Brand',
-            'Module',
-            'Descriptions',
-            // Specs
-            'Spec1',
-            'Spec2',
-            'Spec3',
-            'Spec4',
-            'Spec5',
-            'Spec6',
-            'Spec7',
-            // Features
-            'Fitur1',
-            'Fitur2',
-            'Fitur3',
-            'Fitur4',
-            'Fitur5',
-            'Fitur6',
-            'Fitur7',
-            'Fitur8',
-            'Fitur9',
-            'Fitur10',
-            'Fitur11',
-            'Fitur12',
-            'Fitur13',
-            'Fitur14',
-            'Fitur15',
-            // Technical Specs
-            'Flash Memory',
-            'SDRAM Memory',
-            'Interface Main',
+            'title',
+            'subtitle',
+            'category',
+            'subCategory',
+            'brand',
+            'Stock',
+            'descriptions',
+        ];
+
+        for ($i = 1; $i <= 20; $i++) {
+            $headers[] = "spec{$i}";
+        }
+
+        for ($i = 1; $i <= 20; $i++) {
+            $headers[] = "fitur{$i}";
+        }
+
+        $headers = array_merge($headers, [
+            'wirelessStandard',
+            'wirelessStream',
+            'wirelessStream1',
+            'wirelessStream2',
+            'wirelessStream3',
+            'wirelessStream4',
+            'wirelessStream5',
+            'manageableAps',
+            'APnumber',
+            'numberOfClients',
+            'capacity',
+            'iprating',
+            'switching',
+            'throughput',
+            'flashmemory',
+            'sdrammemory',
+            'Interface',
             'Interface1',
             'Interface2',
             'Interface3',
             'Interface4',
             'Interface5',
-            'Operating Temperature',
-            'Storage Temperature',
-            'Operating Humidity',
-            'Power1',
-            'Power2',
-            'Power3',
-            'Power Consumptions',
-            'Dimensions',
-            'Diagram',
-            'Network Diagram',
-        ];
+            'antena',
+            'cu',
+            'cu1',
+            'cu2',
+            'cu3',
+            'cu4',
+            'cu5',
+            'aditionalinterface1',
+            'aditionalinterface2',
+            'aditionalinterface3',
+            'aditionalinterface4',
+            'aditionalinterface5',
+            'macaddress',
+            'routingtable',
+            'dustproofwaterproof',
+            'noise',
+            'mtbf',
+            'operatingtemperature',
+            'storagetemperature',
+            'operatinghumidity',
+            'power1',
+            'power2',
+            'power3',
+            'power4',
+            'power5',
+            'powercomsumptions',
+            'PowerConsumption(withPoE)',
+            'PowerConsumption(ExcludingPoE)',
+            'PoEBudget',
+            'dimensions',
+            'diagram',
+            'networkDIagram',
+        ]);
+
+        return $headers;
     }
 
     /**
      * @param Product $product
-     * @return array
      */
     public function map($product): array
     {
-        // Get multi-category data from pivot table
+        // Category & SubCategory from pivot or string
         $categories = [];
         $subCategories = [];
-        
+
         if ($product->productCategories && $product->productCategories->count() > 0) {
             foreach ($product->productCategories as $pc) {
                 if ($pc->category) {
@@ -99,51 +121,57 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithC
                 }
             }
         }
-        
-        // If no pivot data, fallback to single category columns
-        if (empty($categories)) {
-            $categories = [$product->category ?? ''];
-            $subCategories = [$product->sub_category ?? ''];
-        }
-        
-        // Join with pipe separator for multi-category
-        $categoryString = implode('|', array_filter($categories));
-        $subCategoryString = implode('|', $subCategories);
 
-        return [
+        if (empty($categories)) {
+            $categoryString = $product->category ?? '';
+            $subCategoryString = $product->sub_category ?? '';
+        } else {
+            $categoryString = implode(' | ', array_filter($categories));
+            $subCategoryString = implode(' | ', array_filter($subCategories));
+        }
+
+        $stockQty = (int) ($product->current_stocks_sum_quantity ?? $product->stock ?? 0);
+
+        $row = [
+            $product->id,
+            $product->module ?? 'A',
+            $product->image,
             $product->sku,
             $product->title,
             $product->subtitle,
             $categoryString,
             $subCategoryString,
             $product->brand,
-            $product->module,
+            $stockQty,
             $product->descriptions,
-            // Specs
-            $product->spec1,
-            $product->spec2,
-            $product->spec3,
-            $product->spec4,
-            $product->spec5,
-            $product->spec6,
-            $product->spec7,
-            // Features
-            $product->fitur1,
-            $product->fitur2,
-            $product->fitur3,
-            $product->fitur4,
-            $product->fitur5,
-            $product->fitur6,
-            $product->fitur7,
-            $product->fitur8,
-            $product->fitur9,
-            $product->fitur10,
-            $product->fitur11,
-            $product->fitur12,
-            $product->fitur13,
-            $product->fitur14,
-            $product->fitur15,
-            // Technical Specs
+        ];
+
+        // Specs 1-20
+        for ($i = 1; $i <= 20; $i++) {
+            $row[] = $product->{"spec{$i}"};
+        }
+
+        // Features 1-20
+        for ($i = 1; $i <= 20; $i++) {
+            $row[] = $product->{"fitur{$i}"};
+        }
+
+        // Technical specs
+        $row = array_merge($row, [
+            $product->wireless_standard,
+            $product->wireless_stream,
+            $product->wireless_stream1,
+            $product->wireless_stream2,
+            $product->wireless_stream3,
+            $product->wireless_stream4,
+            $product->wireless_stream5,
+            $product->manageable_aps,
+            $product->ap_number,
+            $product->number_of_clients,
+            $product->capacity,
+            $product->ip_rating,
+            $product->switching,
+            $product->throughput,
             $product->flash_memory,
             $product->sdram_memory,
             $product->interface_main,
@@ -152,44 +180,63 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithC
             $product->interface3,
             $product->interface4,
             $product->interface5,
+            $product->antena,
+            $product->cu,
+            $product->cu1,
+            $product->cu2,
+            $product->cu3,
+            $product->cu4,
+            $product->cu5,
+            $product->additional_interface1,
+            $product->additional_interface2,
+            $product->additional_interface3,
+            $product->additional_interface4,
+            $product->additional_interface5,
+            $product->mac_address,
+            $product->routing_table,
+            $product->dustproof_waterproof,
+            $product->noise,
+            $product->mtbf,
             $product->operating_temperature,
             $product->storage_temperature,
             $product->operating_humidity,
             $product->power1,
             $product->power2,
             $product->power3,
+            $product->power4,
+            $product->power5,
             $product->power_consumptions,
+            $product->power_consumption_with_poe,
+            $product->power_consumption_excluding_poe,
+            $product->poe_budget,
             $product->dimensions,
             $product->diagram,
             $product->network_diagram,
-        ];
+        ]);
+
+        return $row;
     }
 
-    /**
-     * @return array
-     */
     public function columnWidths(): array
     {
         return [
-            'A' => 20,  // SKU
-            'B' => 30,  // Title
-            'C' => 25,  // Subtitle
-            'D' => 25,  // Category (wider for multi-category)
-            'E' => 30,  // Sub Category (wider for multi-subcategory)
-            'F' => 15,  // Brand
-            'G' => 10,  // Module
-            'H' => 50,  // Descriptions
+            'A' => 8,   // id
+            'B' => 10,  // module
+            'C' => 30,  // image
+            'D' => 15,  // SKU
+            'E' => 25,  // title
+            'F' => 20,  // subtitle
+            'G' => 20,  // category
+            'H' => 20,  // subCategory
+            'I' => 15,  // brand
+            'J' => 10,  // Stock
+            'K' => 40,  // descriptions
         ];
     }
 
-    /**
-     * @param Worksheet $sheet
-     * @return array
-     */
     public function styles(Worksheet $sheet)
     {
         return [
-            // Style the first row as bold text
             1 => ['font' => ['bold' => true]],
         ];
     }

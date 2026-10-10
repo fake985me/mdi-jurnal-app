@@ -67,9 +67,9 @@ const menuSections = computed(() => [
   {
     title: t('nav.transactions'),
     items: [
-      { name: t('nav.sales'), icon: 'sales', to: '/dashboard/sales', roles: ['admin', 'staff'] },
+      { name: t('nav.sales'), icon: 'chart', to: '/dashboard/sales', roles: ['admin', 'staff'] },
       { name: t('nav.purchases'), icon: 'purchases', to: '/dashboard/purchases', roles: ['admin', 'staff'] },
-      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] },
+      // { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] },
       { name: t('nav.salesPeople'), icon: 'users', to: '/dashboard/sales-people', roles: ['admin', 'staff'] },
       { name: t('nav.customers'), icon: 'contacts', to: '/dashboard/customers', roles: ['admin', 'staff'] },
       { name: t('nav.suppliers'), icon: 'warehouse', to: '/dashboard/suppliers', roles: ['admin', 'staff'] },
@@ -80,6 +80,7 @@ const menuSections = computed(() => [
     items: [
       { name: t('nav.accounts'), icon: 'accounts', to: '/dashboard/accounting', roles: ['admin', 'staff'] },
       { name: t('nav.bankAccounts'), icon: 'wallet', to: '/dashboard/bank-accounts', roles: ['admin', 'staff'] },
+      { name: t('nav.taxRates'), icon: 'tax', to: '/dashboard/tax-rates', roles: ['admin', 'staff'] },
       { name: t('nav.history'), icon: 'history', to: '/dashboard/history', roles: ['admin', 'staff'] },
     ]
   },
@@ -104,7 +105,8 @@ const menuSections = computed(() => [
     items: [
       { name: t('nav.warranties'), icon: 'forms', to: '/dashboard/warranties', roles: ['admin', 'staff'] },
       { name: t('nav.lendings'), icon: 'components', to: '/dashboard/lendings', roles: ['admin', 'staff'] },
-      { name: t('nav.rmaManagement'), icon: 'elements', to: '/dashboard/rmas', roles: ['admin', 'staff'] }
+      { name: t('nav.rmaManagement'), icon: 'elements', to: '/dashboard/rmas', roles: ['admin', 'staff'] },
+      { name: t('nav.rmaShipments'), icon: 'elements', to: '/dashboard/rma-shipments', roles: ['admin', 'staff'] },
     ]
   },
   {

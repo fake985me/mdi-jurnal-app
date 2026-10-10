@@ -88,7 +88,8 @@ class WarrantyController extends Controller
         $warranties = [];
         foreach ($validated['items'] as $item) {
             $warranties[] = Warranty::create([
-                'warranty_code' => 'WRN-' . now()->timestamp . '-' . $item['product_id'],
+                // Gunakan microtime + product_id + uniqid untuk memastikan uniqueness
+                'warranty_code' => 'WRN-' . now()->format('YmdHis') . '-' . $item['product_id'] . '-' . substr(uniqid(), -5),
                 'sale_id' => $validated['sale_id'],
                 'product_id' => $item['product_id'],
                 'serial_number' => $item['serial_number'] ?? null,

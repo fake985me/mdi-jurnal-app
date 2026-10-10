@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class MSAProjectController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     public function index(Request $request)
     {
         try {
@@ -143,7 +144,7 @@ class MSAProjectController extends Controller
 
         DB::beginTransaction();
         try {
-            $stockService = new StockSyncService();
+            $stockService = $this->stockService;
             
             // Deduct replacement item from stock
             $stockService->deductStock(

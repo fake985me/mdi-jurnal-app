@@ -97,7 +97,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import FirmwareModification from '@/views/partial/Firmware Modification.vue'
+import FirmwareModification from '../../views/partial/FirmwareModification.vue'
 
 // Images from public folder
 const xgspon = '/assets/static/solutions/xgspon.png'

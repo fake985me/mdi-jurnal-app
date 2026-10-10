@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warranty extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'warranty_code',
@@ -42,5 +43,13 @@ class Warranty extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    /**
+     * Get all RMAs created under this warranty
+     */
+    public function rmas()
+    {
+        return $this->hasMany(RMA::class);
     }
 }

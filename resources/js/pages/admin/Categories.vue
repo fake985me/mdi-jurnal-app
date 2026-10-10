@@ -251,7 +251,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
-import { data } from 'autoprefixer';
 
 const categories = ref([]);
 const loading = ref(true);

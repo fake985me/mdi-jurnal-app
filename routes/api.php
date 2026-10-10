@@ -10,15 +10,10 @@ use App\Http\Controllers\Api\AuthController;
 |--------------------------------------------------------------------------
 */
 
-// Public routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/verify-2fa', [AuthController::class, 'verify2fa']);
-Route::post('/resend-2fa', [AuthController::class, 'resend2fa']);
-
-// TODO: FIX AUTH - History routes temporarily public for local testing
-// Move back inside auth:sanctum middleware before production deployment
-Route::get('/history', [App\Http\Controllers\Api\HistoryController::class, 'index']);
-Route::get('/history/stats', [App\Http\Controllers\Api\HistoryController::class, 'stats']);
+// Public routes — strict rate limiting on auth endpoints to prevent brute-force
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/verify-2fa', [AuthController::class, 'verify2fa'])->middleware('throttle:10,1');
+Route::post('/resend-2fa', [AuthController::class, 'resend2fa'])->middleware('throttle:3,1');
 
 // Guest routes for public product and CMS content
 Route::prefix('guest')->group(function () {
@@ -66,6 +61,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products/filter-options', [App\Http\Controllers\Api\ProductController::class, 'filterOptions']);
     Route::apiResource('products', App\Http\Controllers\Api\ProductController::class);
     Route::post('/products/{product}/images', [App\Http\Controllers\Api\ProductController::class, 'uploadImages']);
+
+    // Product → Public Sync
+    Route::post('/products/{product}/sync-to-public', [App\Http\Controllers\Api\ProductController::class, 'syncToPublic']);
+    Route::post('/products/bulk-sync-to-public', [App\Http\Controllers\Api\ProductController::class, 'bulkSyncToPublic']);
+    Route::post('/products/sync-all-to-public', [App\Http\Controllers\Api\ProductController::class, 'syncAllToPublic']);
+    Route::get('/products/{product}/export/all', [App\Http\Controllers\Api\ProductController::class, 'exportAll']);
+    Route::get('/products/{product}/export/template', [App\Http\Controllers\Api\ProductController::class, 'exportTemplate']);
 
     // Stock Management
     Route::prefix('stock')->group(function () {
@@ -123,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rmas/{rma}/mark-received', [App\Http\Controllers\Api\RMAController::class, 'markReceived']);
     Route::post('/rmas/{rma}/process', [App\Http\Controllers\Api\RMAController::class, 'process']);
     Route::get('/rmas/{rma}/evidence', [App\Http\Controllers\Api\RMAController::class, 'getEvidence']);
+    
+    // RMA Shipments
+    Route::apiResource('rma-shipments', App\Http\Controllers\Api\RMAShipmentController::class);
+    Route::post('/rma-shipments/{id}/ship', [App\Http\Controllers\Api\RMAShipmentController::class, 'ship']);
+    Route::post('/rma-shipments/{id}/mark-delivered', [App\Http\Controllers\Api\RMAShipmentController::class, 'markDelivered']);
 
     // Project Investments
     Route::get('/project-investments/{id}/export', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'export']);
@@ -226,11 +233,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/deliveries/{id}/serial-template', [App\Http\Controllers\Api\DeliveryController::class, 'downloadSerialTemplate']);
     Route::apiResource('deliveries', App\Http\Controllers\Api\DeliveryController::class);
 
-    // Dashboard
-    Route::get('/dashboard/stock-chart', [App\Http\Controllers\Api\DashboardController::class, 'stockChart']);
-    Route::get('/dashboard/top-products', [App\Http\Controllers\Api\DashboardController::class, 'topProducts']);
-    Route::get('/dashboard/sales-trend', [App\Http\Controllers\Api\DashboardController::class, 'salesTrend']);
-    Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
+    // History
+    Route::get('/history', [App\Http\Controllers\Api\HistoryController::class, 'index']);
+    Route::get('/history/stats', [App\Http\Controllers\Api\HistoryController::class, 'stats']);
 
     // Excel Import/Export for Products
     Route::get('/products/export/all', [App\Http\Controllers\Api\ProductController::class, 'exportProducts']);
@@ -255,6 +260,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/public-products/export/all', [App\Http\Controllers\Api\PublicProductController::class, 'exportProducts']);
     Route::get('/public-products/export/template', [App\Http\Controllers\Api\PublicProductController::class, 'exportTemplate']);
     Route::post('/public-products/import', [App\Http\Controllers\Api\PublicProductController::class, 'importProducts']);
+    Route::post('/public-products/sync-from-products', [App\Http\Controllers\Api\PublicProductController::class, 'syncFromProducts']);
     Route::post('/public-products/{id}/toggle-active', [App\Http\Controllers\Api\PublicProductController::class, 'toggleActive']);
     Route::apiResource('public-products', App\Http\Controllers\Api\PublicProductController::class);
 

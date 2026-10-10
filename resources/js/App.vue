@@ -2,7 +2,7 @@
   <navbar v-if="isPublic" />
   <router-view />
   <customer-view v-if="isPublic" />
-  <foo v-if="isPublic" />
+  <AppFooter v-if="isPublic" />
 </template>
 
 <script setup>
@@ -12,7 +12,7 @@ import { useRoute } from 'vue-router';
 
 import Navbar from './components/Navbar.vue';
 import CustomerView from './views/partial/CustomerView.vue';
-import Foo from './components/Footer.vue';
+import AppFooter from './components/Footer.vue';
 import '../css/app.css';
 
 const route = useRoute();

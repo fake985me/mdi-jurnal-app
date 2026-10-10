@@ -141,6 +141,24 @@ const ANCHORS = {
     { x: 560, y: 380, sizePct: 12 },
     { x: 710, y: 305, sizePct: 12 },
   ],
+  'POE SWITCH': [
+    { x: 440, y: 250, sizePct: 12 },
+    { x: 610, y: 190, sizePct: 12 },
+    { x: 560, y: 380, sizePct: 12 },
+    { x: 710, y: 305, sizePct: 12 },
+  ],
+  'L2 POE': [
+    { x: 440, y: 250, sizePct: 12 },
+    { x: 610, y: 190, sizePct: 12 },
+    { x: 560, y: 380, sizePct: 12 },
+    { x: 710, y: 305, sizePct: 12 },
+  ],
+  'L2 PoE': [
+    { x: 440, y: 250, sizePct: 12 },
+    { x: 610, y: 190, sizePct: 12 },
+    { x: 560, y: 380, sizePct: 12 },
+    { x: 710, y: 305, sizePct: 12 },
+  ],
 }
 
 // fallback jika subCategory tidak dikenali
@@ -164,9 +182,31 @@ const resolvedMarkers = computed(() => {
   const p = props.product
   if (!p) return []
 
-  const sub = p.subCategory || ''
-  const cat = p.category || ''
-  const points = ANCHORS[sub] || FALLBACK
+  const sub = (p.subCategory || '').trim()
+  let points = ANCHORS[sub]
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    for (const [key, val] of Object.entries(ANCHORS)) {
+      if (key.toUpperCase() === subUpper) {
+        points = val
+        break
+      }
+    }
+  }
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    if (subUpper.includes('L2') || subUpper.includes('POE') || subUpper.includes('ACCESS')) {
+      points = ANCHORS['L2 SWITCH']
+    } else if (subUpper.includes('L3')) {
+      points = ANCHORS['L3 SWITCH']
+    } else if (subUpper.includes('BACKBONE') || subUpper.includes('CORE')) {
+      points = ANCHORS['BACKBONE']
+    }
+  }
+
+  points = points || FALLBACK
 
   console.log('=== SwitchLine Debug ===')
   console.log('Product:', p.title)

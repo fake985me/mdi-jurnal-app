@@ -49,7 +49,7 @@
                 <RouterLink :to="{
                   name: 'product-detail',
                   params: { slug: product.slug },
-                  query: { category: product.category, sub: product.subCategory }
+                  query: getDetailQuery(product)
                 }">
                   <img :src="product.image" :alt="product.title" class="w-full h-48 object-contain rounded-t-lg p-4" />
                 </RouterLink>
@@ -58,13 +58,22 @@
                     <RouterLink :to="{
                       name: 'product-detail',
                       params: { slug: product.slug },
-                      query: { category: product.category, sub: product.subCategory }
+                      query: getDetailQuery(product)
                     }" class="hover:underline">
                       {{ product.title }}
                     </RouterLink>
                   </h3>
                   <p class="text-sm text-gray-500" v-if="product.spec1">{{ product.spec1 }}</p>
                   <p class="text-sm text-gray-500" v-if="product.spec2">{{ product.spec2 }}</p>
+                  <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <RouterLink :to="{
+                      name: 'product-detail',
+                      params: { slug: product.slug },
+                      query: getDetailQuery(product)
+                    }" class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                      Lihat Detail →
+                    </RouterLink>
+                  </div>
                 </div>
               </div>
             </div>
@@ -95,17 +104,42 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import useProducts from '@/composable/useProducts.js'
 
-const { products, fetchProducts } = useProducts()
+const { products, categories, fetchProducts } = useProducts()
 const route = useRoute()
 const router = useRouter()
 
-const tabs = [{ title: 'XGSPON' }, { title: 'GPON' }, { title: 'SWITCH' }, { title: 'WIRELESS' }]
+// Dynamic tabs based on categories from database
+const tabs = computed(() => {
+  if (categories.value && categories.value.length > 0) {
+    return categories.value.map(c => ({
+      title: c.name,
+      subCategories: c.sub_categories ? c.sub_categories.map(s => s.name) : []
+    }))
+  }
+  // Fallback from products
+  const catSet = new Set()
+  products.value.forEach(p => {
+    if (p.categories && p.categories.length > 0) {
+      p.categories.forEach(c => catSet.add(c))
+    } else if (p.category) {
+      catSet.add(p.category)
+    }
+  })
+  return Array.from(catSet).map(name => ({ title: name, subCategories: [] }))
+})
 
 // State aktif
-const activeCategory = ref(route.query.category || tabs[0].title)
+const activeCategory = ref(route.query.category || '')
 const activeSubCategory = ref(route.query.sub || null)
 const currentPage = ref(1)
 const itemsPerPage = ref(6)
+
+// Set default category when tabs become available
+watch(tabs, (newTabs) => {
+  if (newTabs.length > 0 && !activeCategory.value) {
+    activeCategory.value = newTabs[0].title
+  }
+}, { immediate: true })
 
 // Auto-refresh when page becomes visible (e.g., user switches back to tab)
 let visibilityHandler = null
@@ -136,22 +170,55 @@ watch(
   { immediate: true },
 )
 
-// Subkategori yang tersedia dari produk aktif
+// Subkategori yang tersedia dari kategori aktif — hanya yang berpasangan dengan kategori aktif
 const currentSubCategories = computed(() => {
+  const activeCat = activeCategory.value?.toLowerCase()
+  if (!activeCat) return []
+
+  const subSet = new Set()
   const list = products.value || []
-  const filtered = list.filter((p) => p.category === activeCategory.value)
-  const subSet = new Set(filtered.map((p) => p.subCategory))
-  return Array.from(subSet)
+
+  list.forEach(p => {
+    if (p.category_pairs && p.category_pairs.length > 0) {
+      // Gunakan pairs: hanya ambil sub_category yang berpasangan dengan kategori aktif
+      p.category_pairs.forEach(pair => {
+        if (pair.category_name?.toLowerCase() === activeCat && pair.sub_category_name) {
+          subSet.add(pair.sub_category_name)
+        }
+      })
+    } else {
+      // Fallback jika tidak ada category_pairs: cek kategori lalu ambil subkategori
+      const pCats = p.categories?.length > 0 ? p.categories : (p.category ? [p.category] : [])
+      const matchesCat = pCats.some(c => c.toLowerCase() === activeCat)
+      if (matchesCat) {
+        if (p.subCategories?.length > 0) {
+          p.subCategories.forEach(s => subSet.add(s))
+        } else if (p.subCategory) {
+          subSet.add(p.subCategory)
+        }
+      }
+    }
+  })
+
+  return Array.from(subSet).filter(Boolean)
 })
 
-// Produk hasil filter
+
+// Produk hasil filter dengan dukungan multi-kategori & multi-subkategori
 const filteredProducts = computed(() => {
   const list = products.value || []
-  return list.filter(
-    (p) =>
-      p.category === activeCategory.value &&
-      (!activeSubCategory.value || p.subCategory === activeSubCategory.value),
-  )
+  if (!activeCategory.value) return list
+
+  return list.filter((p) => {
+    const pCats = p.categories && p.categories.length > 0 ? p.categories : (p.category ? [p.category] : [])
+    const matchesCat = pCats.some(c => c.toLowerCase() === activeCategory.value?.toLowerCase())
+    if (!matchesCat) return false
+
+    if (!activeSubCategory.value) return true
+
+    const pSubs = p.subCategories && p.subCategories.length > 0 ? p.subCategories : (p.subCategory ? [p.subCategory] : [])
+    return pSubs.some(s => s.toLowerCase() === activeSubCategory.value?.toLowerCase())
+  })
 })
 
 // Pagination
@@ -197,6 +264,44 @@ function updateQuery() {
       ...(activeSubCategory.value ? { sub: activeSubCategory.value } : {}),
     },
   })
+}
+
+// Query parameter untuk navigasi ke detail produk sesuai kategori aktif
+function getDetailQuery(product) {
+  const currentCat = activeCategory.value || ''
+  const currentSub = activeSubCategory.value || ''
+
+  // 1. Cek dari category_pairs jika ada pasangan yang cocok
+  if (product.category_pairs && product.category_pairs.length > 0) {
+    const pair = product.category_pairs.find(p =>
+      p.category_name && currentCat && p.category_name.toLowerCase() === currentCat.toLowerCase()
+    )
+    if (pair) {
+      return {
+        category: pair.category_name,
+        sub: currentSub || pair.sub_category_name || undefined
+      }
+    }
+  }
+
+  // 2. Cek dari categories array
+  if (product.categories && product.categories.length > 0) {
+    const idx = product.categories.findIndex(c =>
+      currentCat && c.toLowerCase() === currentCat.toLowerCase()
+    )
+    if (idx !== -1) {
+      return {
+        category: product.categories[idx],
+        sub: currentSub || (product.subCategories && product.subCategories[idx]) || undefined
+      }
+    }
+  }
+
+  // 3. Fallback
+  return {
+    category: currentCat || product.category,
+    sub: currentSub || product.subCategory || undefined
+  }
 }
 </script>
 

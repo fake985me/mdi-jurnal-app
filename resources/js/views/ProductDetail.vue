@@ -11,7 +11,7 @@
         Product Detail
       </h2>
     </div>
-    <component :is="detailComponent" v-if="detailComponent && product" :product="product" />
+    <component :is="detailComponent" v-if="detailComponent && product" :product="product" :category="route.query.category" :sub="route.query.sub" />
     <!-- Related Products -->
     <section class="mt-16 w-full max-w-7xl px-4" v-if="relatedProducts.length">
       <h2 class="text-2xl font-bold mb-6 text-gray-900 text-center">Related Products</h2>
@@ -22,8 +22,8 @@
             name: 'product-detail',
             params: { slug: product.slug },
             query: {
-              category: product.category,
-              sub: product.subCategory
+              category: route.query.category || product.category,
+              sub: route.query.sub || product.subCategory
             }
           }">
             <img :src="product.image" :alt="product.title" class="w-full h-44 object-contain rounded-t-lg p-4" />
@@ -34,8 +34,8 @@
                 name: 'product-detail',
                 params: { slug: product.slug },
                 query: {
-                  category: product.category,
-                  sub: product.subCategory
+                  category: route.query.category || product.category,
+                  sub: route.query.sub || product.subCategory
                 }
               }" class="hover:underline">
                 {{ product.title }}
@@ -80,12 +80,16 @@ console.log('product di detail:', product.value) // <-- taruh di sini
 
 const relatedProducts = computed(() => {
   if (!product.value) return []
-  return products.value.filter(
-    (p) =>
-      p.slug !== product.value.slug &&
-      p.category === product.value.category &&
-      p.subCategory === product.value.subCategory
-  )
+  const currentCat = (route.query.category || '').toLowerCase().trim()
+  return products.value.filter((p) => {
+    if (p.slug === product.value.slug || String(p.id) === String(product.value.id)) return false
+    if (currentCat) {
+      const pCats = p.categories?.map(c => c.toLowerCase()) || []
+      const inPairs = p.category_pairs?.some(cp => cp.category_name?.toLowerCase() === currentCat)
+      return pCats.includes(currentCat) || inPairs || p.category?.toLowerCase().includes(currentCat)
+    }
+    return p.category === product.value.category
+  })
 })
 
 const features = computed(() => {

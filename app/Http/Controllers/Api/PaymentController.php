@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     protected function payableMap(): array
     {
         return [
@@ -120,7 +121,7 @@ class PaymentController extends Controller
 
                 // Add stock when purchase is paid
                 $warehouseId = $payable->warehouse_id ?? Warehouse::getDefault()?->id;
-                $stockService = new StockSyncService();
+                $stockService = $this->stockService;
                 foreach ($payable->items as $item) {
                     $itemIsForAsset = $item->is_for_asset ?? $payable->is_for_asset ?? false;
                     if ($itemIsForAsset) {
@@ -157,7 +158,7 @@ class PaymentController extends Controller
 
                 // Deduct stock when purchase payment cancelled
                 $warehouseId = $payable->warehouse_id ?? Warehouse::getDefault()?->id;
-                $stockService = new StockSyncService();
+                $stockService = $this->stockService;
                 foreach ($payable->items as $item) {
                     $itemIsForAsset = $item->is_for_asset ?? $payable->is_for_asset ?? false;
                     if (!$itemIsForAsset) {

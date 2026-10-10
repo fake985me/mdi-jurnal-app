@@ -9,235 +9,229 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class ProductsTemplateExport implements WithMultipleSheets
 {
-    /**
-     * @return array
-     */
     public function sheets(): array
     {
         return [
-            'Products' => new ProductsTemplateSheet(),
-            'Categories Reference' => new CategoriesReferenceSheet(),
+            'Products'             => new ProductsTemplateSheet(),
+            'Kategori & Referensi' => new CategoriesReferenceSheet(),
         ];
     }
 }
 
-/**
- * Main template sheet with example data
- */
 class ProductsTemplateSheet implements FromArray, WithHeadings, WithColumnWidths, WithStyles
 {
-    /**
-     * @return array
-     */
     public function array(): array
     {
-        // Return example rows showing multi-category format
         return [
+            // Sample Row 1
             [
-                'EXAMPLE-001',              // SKU
-                'Example Product Single',   // Title
-                'Single Category Example',  // Subtitle
-                'GPON',                     // Category (single)
-                'ONT',                      // Sub Category (single)
-                'DASAN',                    // Brand
-                'A',                        // Module
-                'Product with single category', // Descriptions
-                '', '', '', '', '', '', '', // Specs
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // Features
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' // Technical
-            ],
-            [
-                'EXAMPLE-002',              // SKU
-                'Example Product Multi',    // Title
-                'Multi Category Example',   // Subtitle
-                'GPON|SWITCH',              // Category (multi with pipe separator)
-                'ONU|L2 SWITCH',            // Sub Category (multi with pipe separator)
-                'DASAN',                    // Brand
-                'A',                        // Module
-                'Product with multiple categories (GPON>ONU and SWITCH>L2 SWITCH)', // Descriptions
-                '', '', '', '', '', '', '', // Specs
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // Features
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' // Technical
+                '', // id (leave blank for new product)
+                'A', // module
+                'https://ik.imagekit.io/...', // image
+                'V8208', // SKU
+                'V8208', // title
+                'XGSPON OLT', // subtitle
+                'XGSPON', // category (use | for multi-category: e.g. GPON | SWITCH)
+                'OLT', // subCategory (use | for multi-subcategory: e.g. ONU | L2 SWITCH)
+                'dasan', // brand
+                '10', // Stock
+                'Chassis PON Optical Line Termination', // descriptions
+                '8 port GPON/XGSPON Combo', // spec1
+                '16p GPON/XGSPON Combo', // spec2
+                '8p 10GE', // spec3
+                'DC', // spec4
+                'up to 96PON', // spec5
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // spec6-20
+                '8-port GPON interfaces per slot', // fitur1
+                '8-port XGS-PON interfaces per slot', // fitur2
+                '8-port 10GE interface per slot', // fitur3
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // fitur4-20
+                '', '', '', '', '', '', '', // wireless
+                '', '', '', '', '', '', '', // capacity / switch
+                '8MB(Boot) + 512MB(NOS)', // flashmemory
+                '4GB (DDR4)', // sdrammemory
+                '', // Interface
+                'IU_GPON8 for GPON(SFP)', // Interface1
+                'IU_XGSPON8 for GPON/XGS-PON Combo(SFP+)', // Interface2
+                'IU_10GE8 for 10GE(SFP+)', // Interface3
+                '', '', // Interface4, 5
+                '', // antena
+                '', '', '', '', '', '', // cu, cu1-5
+                '', '', '', '', '', // aditionalinterface1-5
+                '', '', '', '', '', // mac, routing, dustproof, noise, mtbf
+                '0 ~ 50°C', // operatingtemperature
+                '-20 ~ 70°C', // storagetemperature
+                '20 ~ 80%', // operatinghumidity
+                '-48VDC', '', '', '', '', // power1-5
+                '875W', // powercomsumptions
+                '', '', '', // withPoE, ExcludingPoE, PoEBudget
+                '443.8 x 265.9 x 280 mm', // dimensions
+                'xgspon_olt', // diagram (use | for multi: xgspon_olt | gpon_olt)
+                'xgsponLine', // networkDIagram (use | for multi: xgsponLine | gponline)
             ],
         ];
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
-        return [
+        $headers = [
+            'id',
+            'module',
+            'image',
             'SKU',
-            'Title',
-            'Subtitle',
-            'Category',           // Use pipe (|) separator for multiple categories
-            'Sub Category',       // Use pipe (|) separator for multiple subcategories
-            'Brand',
-            'Module',
-            'Descriptions',
-            // Specs
-            'Spec1',
-            'Spec2',
-            'Spec3',
-            'Spec4',
-            'Spec5',
-            'Spec6',
-            'Spec7',
-            // Features
-            'Fitur1',
-            'Fitur2',
-            'Fitur3',
-            'Fitur4',
-            'Fitur5',
-            'Fitur6',
-            'Fitur7',
-            'Fitur8',
-            'Fitur9',
-            'Fitur10',
-            'Fitur11',
-            'Fitur12',
-            'Fitur13',
-            'Fitur14',
-            'Fitur15',
-            // Technical Specs
-            'Flash Memory',
-            'SDRAM Memory',
-            'Interface Main',
+            'title',
+            'subtitle',
+            'category',
+            'subCategory',
+            'brand',
+            'Stock',
+            'descriptions',
+        ];
+
+        for ($i = 1; $i <= 20; $i++) {
+            $headers[] = "spec{$i}";
+        }
+
+        for ($i = 1; $i <= 20; $i++) {
+            $headers[] = "fitur{$i}";
+        }
+
+        $headers = array_merge($headers, [
+            'wirelessStandard',
+            'wirelessStream',
+            'wirelessStream1',
+            'wirelessStream2',
+            'wirelessStream3',
+            'wirelessStream4',
+            'wirelessStream5',
+            'manageableAps',
+            'APnumber',
+            'numberOfClients',
+            'capacity',
+            'iprating',
+            'switching',
+            'throughput',
+            'flashmemory',
+            'sdrammemory',
+            'Interface',
             'Interface1',
             'Interface2',
             'Interface3',
             'Interface4',
             'Interface5',
-            'Operating Temperature',
-            'Storage Temperature',
-            'Operating Humidity',
-            'Power1',
-            'Power2',
-            'Power3',
-            'Power Consumptions',
-            'Dimensions',
-            'Diagram',
-            'Network Diagram',
-        ];
+            'antena',
+            'cu',
+            'cu1',
+            'cu2',
+            'cu3',
+            'cu4',
+            'cu5',
+            'aditionalinterface1',
+            'aditionalinterface2',
+            'aditionalinterface3',
+            'aditionalinterface4',
+            'aditionalinterface5',
+            'macaddress',
+            'routingtable',
+            'dustproofwaterproof',
+            'noise',
+            'mtbf',
+            'operatingtemperature',
+            'storagetemperature',
+            'operatinghumidity',
+            'power1',
+            'power2',
+            'power3',
+            'power4',
+            'power5',
+            'powercomsumptions',
+            'PowerConsumption(withPoE)',
+            'PowerConsumption(ExcludingPoE)',
+            'PoEBudget',
+            'dimensions',
+            'diagram',
+            'networkDIagram',
+        ]);
+
+        return $headers;
     }
 
-    /**
-     * @return array
-     */
     public function columnWidths(): array
     {
         return [
-            'A' => 20,  // SKU
-            'B' => 30,  // Title
-            'C' => 25,  // Subtitle
-            'D' => 25,  // Category (wider for multi-category)
-            'E' => 30,  // Sub Category (wider for multi-subcategory)
-            'F' => 15,  // Brand
-            'G' => 10,  // Module
-            'H' => 60,  // Descriptions
+            'A' => 8,
+            'B' => 10,
+            'C' => 30,
+            'D' => 15,
+            'E' => 25,
+            'F' => 20,
+            'G' => 20,
+            'H' => 20,
+            'I' => 15,
+            'J' => 10,
+            'K' => 35,
         ];
     }
 
-    /**
-     * @param Worksheet $sheet
-     * @return array
-     */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
-        // Add instructions as comment in header
-        $sheet->getComment('D1')->getText()->createTextRun('Use pipe (|) separator for multiple categories. Example: GPON|SWITCH');
-        $sheet->getComment('E1')->getText()->createTextRun('Use pipe (|) separator for multiple subcategories. Order must match categories. Example: ONU|L2 SWITCH');
-        
         return [
-            // Style the first row as bold text with background
             1 => [
-                'font' => ['bold' => true],
+                'font' => ['bold' => true, 'color' => ['rgb' => '1A3A1A']],
                 'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'E2EFDA']
-                ]
-            ],
-            // Style example rows with light yellow background
-            2 => [
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FFFFD0']
-                ]
-            ],
-            3 => [
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FFFFD0']
-                ]
+                    'fillType'   => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'C6EFCE'],
+                ],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ],
         ];
     }
 }
 
-/**
- * Reference sheet listing all valid categories and subcategories
- */
 class CategoriesReferenceSheet implements FromArray, WithHeadings, WithColumnWidths, WithStyles
 {
-    /**
-     * @return array
-     */
     public function array(): array
     {
         $data = [];
-        
-        // Fetch all categories with their subcategories
         $categories = Category::with('subCategories')->orderBy('name')->get();
-        
+
         foreach ($categories as $category) {
             if ($category->subCategories && $category->subCategories->count() > 0) {
-                foreach ($category->subCategories as $subCategory) {
-                    $data[] = [$category->name, $subCategory->name];
+                foreach ($category->subCategories as $sub) {
+                    $data[] = [$category->name, $sub->name];
                 }
             } else {
-                $data[] = [$category->name, '(no subcategories)'];
+                $data[] = [$category->name, '(tidak ada sub-kategori)'];
             }
         }
-        
+
         return $data;
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return ['Category', 'Sub Category'];
     }
 
-    /**
-     * @return array
-     */
     public function columnWidths(): array
     {
-        return [
-            'A' => 25,
-            'B' => 30,
-        ];
+        return ['A' => 25, 'B' => 30];
     }
 
-    /**
-     * @param Worksheet $sheet
-     * @return array
-     */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
             1 => [
                 'font' => ['bold' => true],
                 'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'B4C6E7']
-                ]
+                    'fillType'   => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'B4C6E7'],
+                ],
             ],
         ];
     }

@@ -9,7 +9,7 @@
     </div>
 
     <!-- Stats Grid - Minimal Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <!-- <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
       <div
         class="group bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300">
         <div class="flex items-center justify-between mb-3">
@@ -58,10 +58,96 @@
         </div>
         <p class="text-2xl font-semibold text-gray-800">{{ stats.lowStockItems || 0 }}</p>
       </div>
-    </div>
+    </div> -->
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid gap-4">
+
+      <!-- Sales Pie Chart Section -->
+    <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-medium text-gray-800">Statistik Penjualan</h2>
+          <p class="text-sm text-gray-400">Ringkasan berdasarkan status transaksi</p>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-gray-400 mb-0.5">Grand Total</div>
+          <div class="text-xl font-bold text-indigo-600">Rp {{ formatRp(salesGrandTotal) }}</div>
+        </div>
+      </div>
+
+      <!-- Chart + Cards -->
+      <div class="px-6 py-6 flex flex-col md:flex-row items-center gap-8">
+
+        <!-- Donut SVG -->
+        <div class="relative shrink-0" style="width:160px;height:160px">
+          <svg viewBox="0 0 36 36" class="w-full h-full" style="transform:rotate(-90deg)">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f1f5f9" stroke-width="4"/>
+            <template v-if="salesData.length">
+              <circle v-for="(seg, i) in donutSegments" :key="i"
+                cx="18" cy="18" r="15.9" fill="none"
+                :stroke="seg.color" stroke-width="4"
+                :stroke-dasharray="seg.dash + ' ' + (100 - seg.dash)"
+                :stroke-dashoffset="-seg.offset"
+                stroke-linecap="butt"
+                style="transition: stroke-dasharray 0.7s ease"
+              />
+            </template>
+            <!-- Empty ring when no data -->
+            <circle v-if="!salesData.length" cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="4" stroke-dasharray="100 0"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-gray-800">{{ salesData.length }}</span>
+            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Transaksi</span>
+          </div>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+          <div v-for="stat in salesStats" :key="stat.key"
+            class="flex items-start gap-3 p-4 rounded-2xl border transition-all duration-200 hover:shadow-sm"
+            :style="'border-color:' + stat.borderColor + '; background:' + stat.bg">
+            <!-- Color dot + icon -->
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" :style="'background:' + stat.iconBg">
+              <span class="text-lg">{{ stat.icon }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold uppercase tracking-wide" :style="'color:' + stat.color">{{ stat.label }}</div>
+              <div class="text-2xl font-bold text-gray-800 mt-0.5">{{ stat.count }}</div>
+              <div class="text-xs text-gray-400 mt-0.5">Rp {{ formatRp(stat.total) }}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-sm font-bold rounded-full px-2 py-0.5" :style="'color:' + stat.color + '; background:' + stat.pctBg">
+                {{ salesData.length ? Math.round(stat.count / salesData.length * 100) : 0 }}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly mini bar chart (SVG) -->
+        <div class="shrink-0 hidden xl:block" style="width:180px">
+          <div class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3">6 Bulan Terakhir</div>
+          <div class="flex items-end gap-1 h-20">
+            <div v-for="(m, i) in monthlySales" :key="i" class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-t-md bg-indigo-100 hover:bg-indigo-400 transition-colors"
+                :style="'height:' + (m.maxH) + 'px'" :title="m.label + ': ' + m.count + ' transaksi'"></div>
+              <span class="text-[9px] text-gray-400">{{ m.shortLabel }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="salesLoading" class="px-6 pb-6 text-center text-sm text-gray-400">
+        <span class="inline-block w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mr-2"></span>
+        Memuat data penjualan...
+      </div>
+      <div v-else-if="!salesData.length" class="px-6 pb-6 text-center text-sm text-gray-400">
+        Belum ada data penjualan
+      </div>
+    </div>
       <!-- Recent Stock Report -->
       <div class="bg-white rounded-2xl p-6 border border-gray-100">
         <div class="flex justify-between items-center mb-6">
@@ -162,7 +248,7 @@
 
 
       <!-- Stock Status Cards -->
-      <div class="bg-white rounded-2xl p-6 border border-gray-100">
+      <!-- <div class="bg-white rounded-2xl p-6 border border-gray-100">
         <div class="mb-6">
           <h2 class="text-lg font-medium text-gray-800">{{ $t('dashboard.stockStatus') }}</h2>
           <p v-if="defaultWarehouseName" class="text-sm text-gray-400">{{ defaultWarehouseName }}</p>
@@ -208,59 +294,9 @@
             <span class="text-xl font-semibold text-gray-800">{{ stockStatus.out }}</span>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
 
-    <!-- Recent Stock Report -->
-    <!-- <div class="bg-white rounded-2xl p-6 border border-gray-100">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h2 class="text-lg font-medium text-gray-800">{{ $t('dashboard.stockReport') }}</h2>
-          <p class="text-sm text-gray-400">{{ defaultWarehouseName ? defaultWarehouseName : $t('dashboard.topProducts') }}</p>
-        </div>
-      </div>
-      <div class="overflow-hidden">
-        <table class="w-full">
-          <thead>
-            <tr class="text-left text-xs text-gray-400 uppercase tracking-wider">
-              <th class="pb-4 font-medium">{{ $t('dashboard.sku') }}</th>
-              <th class="pb-4 font-medium">{{ $t('dashboard.productName') }}</th>
-              <th class="pb-4 font-medium">{{ $t('dashboard.category') }}</th>
-              <th class="pb-4 font-medium">{{ $t('dashboard.subcategory') }}</th>
-              <th class="pb-4 font-medium text-right">{{ $t('dashboard.quantity') }}</th>
-              <th class="pb-4 font-medium text-right">{{ $t('dashboard.updated') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <tr v-for="(item, index) in stockReports" :key="index" class="group">
-              <td class="py-4">
-                <span class="text-sm font-mono text-gray-600 bg-gray-50 px-2 py-1 rounded">{{ item.code }}</span>
-              </td>
-              <td class="py-4 text-sm text-gray-700">{{ item.unit }}</td>
-              <td class="py-4 text-sm text-gray-600">
-                <div v-if="item.categories && item.categories.length" class="flex flex-wrap gap-1">
-                  <span v-for="(cat, i) in item.categories" :key="i" class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">{{ cat }}</span>
-                </div>
-                <span v-else class="text-gray-400">-</span>
-              </td>
-              <td class="py-4 text-sm text-gray-600">
-                <div v-if="item.subcategories && item.subcategories.length" class="flex flex-wrap gap-1">
-                  <span v-for="(sub, i) in item.subcategories" :key="i" class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">{{ sub }}</span>
-                </div>
-                <span v-else class="text-gray-400">-</span>
-              </td>
-              <td class="py-4 text-right">
-                <span class="text-sm font-semibold text-gray-800">{{ item.value }}</span>
-              </td>
-              <td class="py-4 text-right text-sm text-gray-400">{{ item.date }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div v-if="!stockReports.length" class="py-8 text-center text-gray-400">
-          {{ $t('dashboard.noStockData') }}
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -268,6 +304,10 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '../../services/api';
 import VueApexCharts from 'vue3-apexcharts';
+
+// ── Sales data for pie chart ─────────────────────────────────
+const salesData    = ref([])
+const salesLoading = ref(true)
 
 const stats = ref({});
 const stockChartOptions = ref(null);
@@ -300,10 +340,72 @@ const currentDate = computed(() => {
   });
 });
 
+// ── Sales computed ───────────────────────────────────────────
+const salesStats = computed(() => [
+  { key: 'pending',   label: 'Pending',   icon: '🕐', color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe', iconBg: '#dbeafe', pctBg: '#eff6ff',
+    count: salesData.value.filter(s => s.status === 'pending').length,
+    total: salesData.value.filter(s => s.status === 'pending').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
+  { key: 'completed', label: 'Completed', icon: '✅', color: '#10b981', bg: '#f0fdf4', borderColor: '#a7f3d0', iconBg: '#d1fae5', pctBg: '#f0fdf4',
+    count: salesData.value.filter(s => s.status === 'completed').length,
+    total: salesData.value.filter(s => s.status === 'completed').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
+  { key: 'cancelled', label: 'Cancelled', icon: '❌', color: '#f43f5e', bg: '#fff1f2', borderColor: '#fecdd3', iconBg: '#fee2e2', pctBg: '#fff1f2',
+    count: salesData.value.filter(s => s.status === 'cancelled').length,
+    total: salesData.value.filter(s => s.status === 'cancelled').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
+])
+
+const salesGrandTotal = computed(() =>
+  salesData.value.reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0)
+)
+
+const donutSegments = computed(() => {
+  const total = salesData.value.length
+  if (!total) return []
+  let offset = 0
+  return salesStats.value.map(s => {
+    const pct = (s.count / total) * 100
+    const seg = { color: s.color, dash: pct, offset }
+    offset += pct
+    return seg
+  })
+})
+
+const monthlySales = computed(() => {
+  const now = new Date()
+  const months = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    const shortLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+    months.push({
+      key,
+      label: shortLabels[d.getMonth()] + ' ' + d.getFullYear(),
+      shortLabel: shortLabels[d.getMonth()],
+      count: salesData.value.filter(s => s.sale_date && s.sale_date.startsWith(key)).length
+    })
+  }
+  const maxCount = Math.max(1, ...months.map(m => m.count))
+  return months.map(m => ({ ...m, maxH: Math.max(4, Math.round((m.count / maxCount) * 64)) }))
+})
+
+const formatRp = (n) => Number(n || 0).toLocaleString('id-ID')
+
+const loadSalesData = async () => {
+  salesLoading.value = true
+  try {
+    const res = await api.get('/sales', { params: { per_page: 1000 } })
+    salesData.value = res.data.data || res.data || []
+  } catch (e) {
+    console.error('Failed to load sales for dashboard:', e)
+  } finally {
+    salesLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     await loadCategories();
     await loadDashboardData();
+    await loadSalesData();
   } catch (error) {
     console.error('Dashboard: Failed to load', error);
   }

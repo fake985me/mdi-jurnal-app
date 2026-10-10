@@ -1,1044 +1,586 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
+  <div class="space-y-0">
+    <!-- Top Header -->
+    <div class="flex justify-between items-center mb-4">
       <div>
         <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Sales Management</h2>
-        <p class="text-sm text-gray-600 mt-1">Create and manage sales orders</p>
+          Sales Management
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">Kelola dan pantau semua transaksi penjualan</p>
       </div>
       <button @click="$router.push({ name: 'SalesCreate' })"
-        class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-        + Create Sale
+        class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm">
+        + Buat Penjualan
       </button>
     </div>
 
-    <!-- Filters -->
-    <div class="card p-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <input v-model="filters.search" @input="loadSales" type="text" placeholder="Search by invoice or customer..."
-          class="input" />
-        <select v-model="filters.status" @change="loadSales" class="input">
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <input v-model="filters.start_date" @change="loadSales" type="date" class="input" />
-        <input v-model="filters.end_date" @change="loadSales" type="date" class="input" />
-      </div>
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-0">
+      <nav class="-mb-px flex space-x-8">
+        <button @click="activeTab = 'sales'" :class="[
+          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
+          activeTab === 'sales'
+            ? 'border-indigo-500 text-indigo-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ]">?? Sales Orders</button>
+        <button @click="activeTab = 'deliveries'" :class="[
+          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
+          activeTab === 'deliveries'
+            ? 'border-indigo-500 text-indigo-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ]">?? Delivery</button>
+      </nav>
     </div>
 
-    <!-- Sales Table -->
-    <div class="table-wrapper">
-      <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">Sales Orders</h3>
-      </div>
+    <!-- SALES TAB -->
+    <div v-if="activeTab === 'sales'" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-4">
 
-      <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading sales...</p>
-      </div>
 
-      <table v-else class="min-w-full">
-        <thead class="table-header">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tax</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="sale in sales.data" :key="sale.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ sale.invoice_number }}</td>
-            <td class="px-6 py-4">
-              <div class="text-sm font-medium text-gray-900">{{ sale.customer_name }}</div>
-              <div class="text-sm text-gray-500">{{ sale.customer_phone }}</div>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(sale.sale_date).toLocaleDateString() }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">
-              <ul class="list-disc list-inside">
-                <li v-for="item in sale.items" :key="item.id">
-                  {{ item.product?.title }} (x{{ item.quantity }})
-                </li>
-              </ul>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-700">{{ sale.warehouse?.name || '-' }}</td>
-            <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(sale.grand_total || sale.total_amount) }}</td>
-            <td class="px-6 py-4">
-              <span v-if="sale.tax_type" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                {{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%
-              </span>
-              <span v-else class="text-xs text-gray-400">—</span>
-            </td>
-            <td class="px-6 py-4">
-              <span :class="getStatusBadgeClass(sale.status)">
-                {{ sale.status }}
-              </span>
-            </td>
-            <td class="px-6 py-4">
-              <span v-if="sale.delivery" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-                🚚 {{ sale.delivery.tracking_number }}
-              </span>
-              <span v-else class="text-xs text-gray-400">No delivery</span>
-            </td>
-            <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button v-if="!sale.delivery && ['pending', 'completed'].includes(sale.status)" @click="openDeliveryModal(sale)" class="text-teal-600 hover:text-teal-900">+ Delivery</button>
-              <button @click="exportExcel(sale.id, sale.invoice_number)" class="text-green-600 hover:text-green-900">Excel</button>
-              <button @click="downloadPdf(sale.id, sale.invoice_number)" class="text-red-600 hover:text-red-900">PDF</button>
-              <button @click="editSale(sale)" class="text-blue-600 hover:text-blue-900">Edit</button>
-              <button @click="viewSale(sale)" class="text-indigo-600 hover:text-indigo-900">View</button>
-              <button @click="deleteSale(sale.id)" class="text-red-600 hover:text-red-900">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Sales Summary + Pie Chart Footer -->
+      <div class="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
 
-      <!-- Pagination -->
-      <div v-if="sales.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
-        <p class="text-sm text-gray-700">Showing {{ sales.from }} to {{ sales.to }} of {{ sales.total }} sales</p>
-        <div class="flex space-x-2">
-          <button @click="loadSales(sales.current_page - 1)" :disabled="!sales.prev_page_url"
-            class="btn-secondary disabled:opacity-50">
-            Previous
-          </button>
-          <button @click="loadSales(sales.current_page + 1)" :disabled="!sales.next_page_url"
-            class="btn-secondary disabled:opacity-50">
-            Next
-          </button>
+        <!-- Donut Chart + Status Cards -->
+        <div class="px-6 py-5 flex flex-col md:flex-row items-center gap-8">
+
+          <!-- Donut SVG Chart -->
+          <div class="relative shrink-0" style="width:140px;height:140px">
+            <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+              <!-- Background ring -->
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3.8"/>
+              <!-- Segments -->
+              <template v-for="(seg, i) in donutSegments" :key="i">
+                <circle
+                  cx="18" cy="18" r="15.9"
+                  fill="none"
+                  :stroke="seg.color"
+                  stroke-width="3.8"
+                  :stroke-dasharray="`${seg.dash} ${100 - seg.dash}`"
+                  :stroke-dashoffset="`${-seg.offset}`"
+                  stroke-linecap="butt"
+                  style="transition: stroke-dasharray 0.6s ease"
+                />
+              </template>
+            </svg>
+            <!-- Center label -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-2xl font-bold text-slate-800">{{ allSales.length }}</span>
+              <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Total</span>
+            </div>
+          </div>
+
+          <!-- Status Cards -->
+          <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+            <div v-for="stat in salesStats" :key="stat.label"
+              class="flex items-center gap-3 p-3 rounded-xl border"
+              :style="`border-color: ${stat.borderColor}; background: ${stat.bg}`">
+              <div class="w-3 h-3 rounded-full shrink-0" :style="`background:${stat.color}`"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-slate-600 uppercase tracking-wide">{{ stat.label }}</div>
+                <div class="text-xl font-bold" :style="`color:${stat.color}`">{{ stat.count }}</div>
+                <div class="text-[11px] text-slate-400">Rp {{ formatInt(stat.total) }}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs font-bold" :style="`color:${stat.color}`">
+                  {{ allSales.length ? Math.round(stat.count / allSales.length * 100) : 0 }}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total summary -->
+          <div class="shrink-0 text-right hidden lg:block">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Grand Total</div>
+            <div class="text-2xl font-bold text-indigo-700">Rp {{ formatInt(allTotal) }}</div>
+            <div class="text-xs text-slate-400 mt-1">{{ allSales.length }} transaksi</div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Create Sale Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-          {{ editMode ? 'Edit Sales Order' : 'Create Sales Order' }}
-        </h3>
-
-        <form @submit.prevent="saveSale" class="space-y-6">
-          <!-- Customer Information -->
-          <div class="p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">Customer Information</h4>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Sale Date *</label>
-                <input v-model="form.sale_date" type="date" required class="input" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
-                <div class="flex gap-2">
-                  <select v-model="form.customer_id" @change="onCustomerSelect" class="input flex-1">
-                    <option value="">— Manual Entry —</option>
-                    <option v-for="c in customerList" :key="c.id" :value="c.id">
-                      {{ c.company ? `${c.company} (${c.name})` : c.name }}
-                    </option>
-                  </select>
-                  <button type="button" @click="showCustomerModal = true" class="btn-secondary text-sm whitespace-nowrap">+ New Customer</button>
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-                <input v-model="form.customer_name" required class="input" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input v-model="form.customer_phone" class="input" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input v-model="form.customer_email" type="email" class="input" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Sales Person</label>
-                <select v-model="form.sales_person_id" class="input">
-                  <option value="">None</option>
-                  <option v-for="sp in salesPeople" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
-                <select v-model="form.warehouse_id" class="input">
-                  <option value="">Default Warehouse</option>
-                  <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea v-model="form.customer_address" rows="2" class="input"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- Line Items -->
-          <div class="p-4 bg-green-50 rounded-lg">
-            <div class="flex justify-between items-center mb-3">
-              <h4 class="font-semibold text-gray-900">Line Items</h4>
-              <div class="flex gap-2">
-                <input v-model="productSearch" type="text" placeholder="Search products..."
-                  class="input text-sm w-48" />
-                <button type="button" @click="showProductModal = true" class="btn-secondary text-sm">+ New
-                  Product</button>
-                <button type="button" @click="addLineItem" class="btn-primary text-sm">+ Add Item</button>
-              </div>
-            </div>
-            <div class="space-y-3">
-              <div v-for="(item, index) in form.items" :key="index"
-                class="grid grid-cols-12 gap-2 items-end p-3 bg-white rounded-lg">
-                <div class="col-span-5">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
-                  <select v-model="item.product_id" @change="updatePrice(index)" required class="input text-sm">
-                    <option value="">Select Product</option>
-                    <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
-                      {{ product.title || product.name }} - {{ product.brand }} (Stock: {{ product.stock || 0 }})
-                    </option>
-                  </select>
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
-                  <input v-model.number="item.quantity" type="number" min="1" required class="input text-sm" />
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Price</label>
-                  <input v-model.number="item.unit_price" type="number" step="0.01" required class="input text-sm" />
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Subtotal</label>
-                  <input :value="formatPrice(item.quantity * item.unit_price)" disabled
-                    class="input text-sm bg-gray-50" />
-                </div>
-                <div class="col-span-1">
-                  <button type="button" @click="removeLineItem(index)" class="btn-danger text-sm w-full">×</button>
-                </div>
-              </div>
-            </div>
-            <div class="mt-4 text-right space-y-1">
-              <p class="text-sm text-gray-600">Subtotal: Rp {{ formatPrice(calculateTotal()) }}</p>
-              <div class="flex justify-end items-center gap-2">
-                <label class="text-sm text-gray-600">Tax:</label>
-                <select v-model="form.tax_type" @change="updateTaxCalculation" class="input w-40 text-sm">
-                  <option value="">No Tax</option>
-                  <option v-for="tax in taxRates" :key="tax.id" :value="tax.code">
-                    {{ tax.name }} ({{ tax.rate }}%)
-                  </option>
-                </select>
-              </div>
-              <p v-if="form.tax_type" class="text-sm text-amber-600 font-medium">
-                {{ taxDisplayName(form.tax_type) }} ({{ getSelectedTaxRate() }}%): Rp {{ formatPrice(calculateTax()) }}
-              </p>
-              <p v-if="form.discount_amount > 0" class="text-sm text-red-500">Discount: - Rp {{ formatPrice(form.discount_amount) }}</p>
-              <p class="text-lg font-bold text-gray-900">Grand Total: Rp {{ formatPrice(calculateGrandTotal()) }}</p>
-            </div>
-          </div>
-
-          <!-- Additional Info -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Discount</label>
-              <input v-model.number="form.discount_amount" type="number" step="0.01" class="input" placeholder="0" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
-              <select v-model="form.status" required class="input">
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="form.notes" rows="2" class="input"></textarea>
-            </div>
-          </div>
-
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
-
-          <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? 'Saving...' : 'Create Sale' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Create Delivery Modal -->
-    <div v-if="showDeliveryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4 text-teal-600">Create Delivery</h3>
-        
-        <form @submit.prevent="createDelivery" class="space-y-4">
-          <div class="p-3 bg-gray-50 rounded-lg">
-            <p class="text-sm font-medium text-gray-700">Sale Information:</p>
-            <p class="text-sm text-gray-600">Invoice: <span class="font-semibold">{{ selectedSale?.invoice_number }}</span></p>
-            <p class="text-sm text-gray-600">Customer: <span class="font-semibold">{{ selectedSale?.customer_name }}</span></p>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Courier *</label>
-            <select v-model="deliveryForm.courier" required class="input">
-              <option value="">Select Courier</option>
-              <option value="JNE">JNE</option>
-              <option value="J&T">J&T</option>
-              <option value="SiCepat">SiCepat</option>
-              <option value="Ninja Express">Ninja Express</option>
-              <option value="AnterAja">AnterAja</option>
-              <option value="Pickup">Pickup</option>
-              <option value="Other">Other</option>
+        <!-- Compact Pagination -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 pb-3 border-t border-slate-100 pt-3">
+          <div class="flex items-center gap-2 text-xs text-slate-500">
+            <label>Baris:</label>
+            <select v-model="pageSize" @change="currentPage=1"
+              class="border border-slate-200 rounded-lg px-2 py-1 text-sm">
+              <option :value="5">5</option>
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="50">50</option>
             </select>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tracking Number</label>
-            <input v-model="deliveryForm.tracking_number" class="input" placeholder="Leave empty to auto-generate" />
-            <p class="text-xs text-gray-500 mt-1">Will be auto-generated if left empty</p>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="deliveryForm.notes" rows="3" class="input"></textarea>
-          </div>
-
-          <div v-if="deliveryError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ deliveryError }}</div>
-
-          <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showDeliveryModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="savingDelivery" class="btn-primary">
-              {{ savingDelivery ? 'Creating...' : 'Create Delivery' }}
+          <div class="flex items-center gap-1 flex-wrap justify-center">
+            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+              class="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm">
+              &larr;
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Quick Add Product Modal -->
-    <div v-if="showProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">Quick Add Product</h3>
-
-        <form @submit.prevent="saveProduct" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Product Title *</label>
-            <input v-model="productForm.title" required class="input" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
-            <input v-model="productForm.brand" required class="input" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
-              <input v-model.number="productForm.price" type="number" step="0.01" required class="input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-              <input v-model.number="productForm.stock" type="number" class="input" />
-            </div>
-          </div>
-
-          <div v-if="productError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ productError }}</div>
-
-          <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showProductModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="savingProduct" class="btn-primary">
-              {{ savingProduct ? 'Saving...' : 'Add Product' }}
+            <button v-for="p in visiblePages" :key="p" @click="currentPage = p"
+              :class="['px-3 py-1 rounded-lg border text-sm', p === currentPage
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50']">
+              {{ p }}
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Quick Add Customer Modal -->
-    <div v-if="showCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Quick Add Customer</h3>
-        
-        <form @submit.prevent="saveNewCustomer" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-            <input v-model="customerForm.name" required class="input" placeholder="Contact person name" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
-            <input v-model="customerForm.company" class="input" placeholder="Company name" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input v-model="customerForm.phone" class="input" placeholder="Phone number" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input v-model="customerForm.email" type="email" class="input" placeholder="email@company.com" />
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <textarea v-model="customerForm.address" rows="2" class="input" placeholder="Full address"></textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">NPWP</label>
-            <input v-model="customerForm.npwp" class="input" placeholder="Tax number (NPWP)" />
-          </div>
-
-          <div v-if="customerError" class="bg-red-50 text-red-600 p-2 rounded text-sm border border-red-200">{{ customerError }}</div>
-
-          <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showCustomerModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="savingCustomer" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all text-sm font-medium disabled:opacity-50">
-              {{ savingCustomer ? 'Saving...' : 'Add Customer' }}
+            <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
+              class="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm">
+              &rarr;
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Invoice Detail Modal -->
-    <div v-if="showDetailModal && viewingSale" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div class="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl">
-        <!-- Header -->
-        <div class="border-b border-gray-200 px-8 py-5 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-xl">
-          <div>
-            <h3 class="text-xl font-bold text-gray-900">{{ viewingSale.invoice_number }}</h3>
-            <div class="flex items-center gap-3 mt-1">
-              <span :class="getStatusBadgeClass(viewingSale.status)">{{ viewingSale.status }}</span>
-              <span class="text-sm text-gray-500">{{ formatDateLong(viewingSale.sale_date) }}</span>
-            </div>
-          </div>
-          <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="px-8 py-6 space-y-6">
-          <!-- Customer & Sale Info -->
-          <div class="grid grid-cols-2 gap-8">
-            <div>
-              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Customer</h4>
-              <p class="text-base font-semibold text-gray-900">{{ viewingSale.customer?.company || viewingSale.customer_name }}</p>
-              <p v-if="viewingSale.customer?.company" class="text-sm text-gray-600">{{ viewingSale.customer_name }}</p>
-              <p v-if="viewingSale.customer_phone" class="text-sm text-gray-500 mt-1">📞 {{ viewingSale.customer_phone }}</p>
-              <p v-if="viewingSale.customer_email" class="text-sm text-gray-500">✉️ {{ viewingSale.customer_email }}</p>
-              <p v-if="viewingSale.customer_address" class="text-sm text-gray-500 mt-1">📍 {{ viewingSale.customer_address }}</p>
-            </div>
-            <div>
-              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sale Details</h4>
-              <div class="space-y-1 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-gray-500">Invoice</span>
-                  <span class="font-medium text-gray-900">{{ viewingSale.invoice_number }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-500">Date</span>
-                  <span class="font-medium text-gray-900">{{ formatDateLong(viewingSale.sale_date) }}</span>
-                </div>
-                <div v-if="viewingSale.warehouse" class="flex justify-between">
-                  <span class="text-gray-500">Warehouse</span>
-                  <span class="font-medium text-gray-900">{{ viewingSale.warehouse.name }}</span>
-                </div>
-                <div v-if="viewingSale.sales_person" class="flex justify-between">
-                  <span class="text-gray-500">Sales Person</span>
-                  <span class="font-medium text-gray-900">{{ viewingSale.sales_person?.name || '—' }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Line Items Table -->
-          <div class="border border-gray-200 rounded-lg overflow-hidden">
-            <table class="min-w-full">
-              <thead>
-                <tr class="bg-gray-50 border-b border-gray-200">
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
-                  <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Price</th>
-                  <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="item in viewingSale.items" :key="item.id" class="hover:bg-gray-50 transition-colors">
-                  <td class="px-5 py-4">
-                    <span class="text-sm font-medium text-indigo-700 hover:text-indigo-900 cursor-default">{{ item.product?.title || 'Unknown Product' }}</span>
-                  </td>
-                  <td class="px-5 py-4">
-                    <span class="text-sm text-gray-600">{{ item.product?.brand || '—' }}</span>
-                    <span v-if="item.product?.sku" class="block text-xs text-gray-400 mt-0.5">SKU: {{ item.product.sku }}</span>
-                  </td>
-                  <td class="px-5 py-4 text-center text-sm text-gray-900">{{ item.quantity }}</td>
-                  <td class="px-5 py-4 text-right text-sm text-gray-900">Rp. {{ formatPrice(item.unit_price) }}</td>
-                  <td class="px-5 py-4 text-center">
-                    <span v-if="viewingSale.tax_type" class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium uppercase">{{ viewingSale.tax_type }}</span>
-                    <span v-else class="text-xs text-gray-400">—</span>
-                  </td>
-                  <td class="px-5 py-4 text-right text-sm font-semibold text-gray-900">Rp. {{ formatPrice(item.quantity * item.unit_price) }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="px-5 py-2 bg-gray-50 text-xs text-gray-500 border-t border-gray-200">
-              Showing {{ viewingSale.items?.length || 0 }} from {{ viewingSale.items?.length || 0 }} product
-            </div>
-          </div>
-
-          <!-- Summary Section -->
-          <div class="grid grid-cols-2 gap-8">
-            <!-- Left: Message, Memo -->
-            <div class="space-y-4">
-              <div>
-                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Message</h4>
-                <p class="text-sm text-gray-700">{{ viewingSale.notes || '—' }}</p>
-              </div>
-              <div v-if="viewingSale.delivery">
-                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Delivery</h4>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded font-medium">🚚 {{ viewingSale.delivery.courier }}</span>
-                  <span class="text-sm text-gray-700 font-mono">{{ viewingSale.delivery.tracking_number }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: Financial Summary -->
-            <div class="space-y-2">
-              <div class="flex justify-between items-center py-1">
-                <span class="text-sm font-semibold text-gray-700">Subtotal</span>
-                <span class="text-sm font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.subtotal || calcViewSubtotal()) }}</span>
-              </div>
-              <div v-if="viewingSale.discount_amount > 0" class="flex justify-between items-center py-1 text-sm">
-                <span class="text-gray-500">Discount</span>
-                <span class="text-red-600">- Rp. {{ formatPrice(viewingSale.discount_amount) }}</span>
-              </div>
-              <div v-if="viewingSale.tax_type" class="flex justify-between items-center py-1.5 text-sm bg-amber-50 px-3 rounded">
-                <span class="text-amber-700 font-medium">{{ taxDisplayName(viewingSale.tax_type) }} ({{ viewingSale.tax_rate }}%)</span>
-                <span class="text-amber-800 font-semibold">+ Rp. {{ formatPrice(viewingSale.tax_amount) }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2 border-t border-gray-200">
-                <span class="text-base font-bold text-gray-900">Grand Total</span>
-                <span class="text-base font-bold text-gray-900">Rp. {{ formatPrice(viewingSale.grand_total || viewingSale.total_amount) }}</span>
-              </div>
-              <div v-if="viewingSalePaidAmount > 0" class="flex justify-between items-center py-1 text-sm">
-                <span class="text-gray-500">Paid</span>
-                <span class="text-green-600">- Rp. {{ formatPrice(viewingSalePaidAmount) }}</span>
-              </div>
-              <div class="flex justify-between items-center py-3 border-t-2 border-gray-300">
-                <span class="text-base font-bold text-gray-900">Balance due</span>
-                <span class="text-lg font-bold" :class="viewingSaleBalance > 0 ? 'text-red-600' : 'text-green-600'">Rp. {{ formatPrice(viewingSaleBalance) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Last Updated -->
-          <div class="text-xs text-indigo-600 underline">
-            Last updated by {{ viewingSale.user?.name || 'System' }} on {{ formatDateTimeLong(viewingSale.updated_at) }}
-          </div>
-        </div>
-
-        <!-- Action Bar -->
-        <div class="border-t border-gray-200 px-8 py-4 flex items-center justify-between sticky bottom-0 bg-gray-50 rounded-b-xl">
-          <button @click="deleteSale(viewingSale.id); showDetailModal = false" class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">Delete</button>
-          <div class="flex items-center gap-3">
-            <button @click="showDetailModal = false; editSale(viewingSale)" class="px-5 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 text-sm font-medium transition-colors">Edit</button>
-            <button @click="exportExcel(viewingSale.id, viewingSale.invoice_number)" class="px-5 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 text-sm font-medium transition-colors">📊 Excel</button>
-            <button @click="downloadPdf(viewingSale.id, viewingSale.invoice_number)" class="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-sm transition-all">📄 PDF</button>
-            <button v-if="!viewingSale.delivery && ['pending', 'completed'].includes(viewingSale.status)" @click="showDetailModal = false; openDeliveryModal(viewingSale)" class="px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium shadow-sm transition-all">🚚 + Delivery</button>
+            <span class="ml-2 text-xs text-slate-400">
+              {{ filteredSales.length === 0 ? 0 : ((currentPage-1)*pageSize)+1 }}–{{ Math.min(currentPage*pageSize, filteredSales.length) }}
+              / {{ filteredSales.length }}
+            </span>
           </div>
         </div>
       </div>
+
+      <!-- Header: Title + Stats + Search -->
+      <div class="px-4 pt-4 pb-3 border-b border-slate-200">
+        <div class="grid items-center gap-3 md:grid-cols-[auto,1fr,auto]">
+          <h3 class="text-lg font-bold text-slate-800">Daftar Penjualan</h3>
+          <div class="justify-self-center">
+            <!-- <div class="flex flex-wrap items-center justify-center gap-2">
+              <span class="stat-badge">Total : <strong class="ml-1">{{ allSales.length }}</strong></span>
+              <span class="stat-badge">Filtered : <strong class="ml-1">{{ filteredSales.length }}</strong></span>
+              <span class="stat-badge">Total : <strong class="ml-1">Rp {{ formatInt(allTotal) }}</strong></span>
+              <span class="stat-badge">Filtered : <strong class="ml-1">Rp {{ formatInt(filteredTotal) }}</strong></span>
+            </div> -->
+          </div>
+          <div class="justify-self-end w-full max-w-sm">
+            <div class="flex items-center gap-2">
+              <button @click="exportExcel"
+                class="px-3 py-2 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 shadow-sm whitespace-nowrap flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 1.5L18.5 9H13zM8 13h2.5l1.5 2.5L13.5 13H16l-2.5 3.5L16 20h-2.5L12 17.5 10.5 20H8l2.5-3.5zm0 0"/></svg>
+                Excel
+              </button>
+              <input v-model="searchQuery" type="text"
+                class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-indigo-100"
+                placeholder="Cari invoice, customer..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Legend Row -->
+      <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/60">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="legend-label">Status</span>
+            <button v-for="s in statusOptions" :key="s"
+              @click="setStatusFilter(s)"
+              :class="['legend-btn', statusFilter === s ? 'active' : '']">
+              <span>{{ s === 'all' ? 'All' : capitalize(s) }}</span>
+              <span class="count-badge">{{ statusCount(s) }}</span>
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 ml-auto pl-3 border-l border-slate-200">
+            <span class="legend-label">Tanggal</span>
+            <input v-model="dateFrom" type="date" @change="currentPage=1"
+              class="rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-100" />
+            <span class="text-xs text-slate-400">-</span>
+            <input v-model="dateTo" type="date" @change="currentPage=1"
+              class="rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-100" />
+            <button @click="resetFilters"
+              class="px-3 py-1 rounded-lg border border-slate-200 bg-white text-xs font-semibold hover:bg-slate-50">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="loading" class="p-12 text-center">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-indigo-600"></div>
+        <p class="mt-3 text-sm text-gray-600">Memuat data penjualan...</p>
+      </div>
+
+      <!-- Table -->
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full text-sm vsep">
+          <thead class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+            <tr>
+              <th class="px-3 py-3 w-8"></th>
+              <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('invoice_number')">
+                Invoice <span v-if="sortKey==='invoice_number'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+              </th>
+              <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('customer_name')">
+                Customer <span v-if="sortKey==='customer_name'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+              </th>
+              <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('sale_date')">
+                Tanggal <span v-if="sortKey==='sale_date'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+              </th>
+              <th class="px-4 py-3 text-left">Produk</th>
+              <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('status')">
+                Status <span v-if="sortKey==='status'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+              </th>
+              <th class="px-4 py-3 text-left">Pajak</th>
+              <th class="px-4 py-3 text-left">Delivery</th>
+              <th class="px-4 py-3 text-right cursor-pointer select-none" @click="setSort('grand_total')">
+                Total <span v-if="sortKey==='grand_total'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+              </th>
+              <th class="px-4 py-3 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <template v-for="(sale, idx) in pagedSales" :key="sale.id">
+              <!-- Main Row -->
+              <tr :class="['transition-colors cursor-pointer', idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white', 'hover:bg-indigo-50/40']"
+                @click="toggleExpand(sale.id)">
+                <td class="px-3 py-3 text-center">
+                  <span class="inline-block text-slate-400 transition-transform duration-200"
+                    :style="expanded[sale.id] ? 'transform:rotate(90deg)' : ''">&#9658;</span>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <div class="font-semibold text-slate-900 whitespace-nowrap">{{ sale.invoice_number }}</div>
+                  <div class="text-[11px] text-slate-400">ID: {{ sale.id }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <div :class="['w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0', avatarColor(sale.customer_name)]">
+                      {{ (sale.customer_name || '?').charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="font-semibold truncate text-slate-900">{{ sale.customer_name || '-' }}</div>
+                      <div class="text-[11px] text-slate-400 truncate">{{ sale.customer_phone || '' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-slate-700">{{ formatDate(sale.sale_date) }}</td>
+                <td class="px-4 py-3">
+                  <template v-if="sale.items && sale.items.length">
+                    <div v-for="(item, i) in sale.items.slice(0,2)" :key="i" class="text-xs text-slate-700">
+                      {{ item.product ? item.product.title : 'Produk' }} <span class="text-slate-400">x{{ item.quantity }}</span>
+                    </div>
+                    <div v-if="sale.items.length > 2" class="text-[11px] text-slate-400">+{{ sale.items.length - 2 }} lainnya</div>
+                  </template>
+                  <span v-else class="text-slate-400 text-xs">-</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span :class="['inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
+                    {{ capitalize(sale.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span v-if="sale.tax_type"
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                    {{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%
+                  </span>
+                  <span v-else class="text-slate-300 text-xs">-</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span v-if="sale.delivery"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 ring-1 ring-teal-200">
+                    &#128666; {{ sale.delivery.tracking_number }}
+                  </span>
+                  <span v-else class="text-slate-300 text-xs">No delivery</span>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                  Rp {{ formatInt(sale.grand_total || sale.total_amount) }}
+                </td>
+                <td class="px-4 py-3 text-right" @click.stop>
+                  <div class="flex justify-end gap-1.5 flex-wrap">
+                    <button v-if="!sale.delivery && ['pending','completed'].includes(sale.status)"
+                      @click="$router.push({ name: 'SalesEdit', params: { id: sale.id } })"
+                      class="px-2 py-1 text-xs rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-medium">
+                      + Delivery
+                    </button>
+                    <button @click="editSale(sale)"
+                      class="px-2 py-1 text-xs rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">Edit</button>
+                    <button @click="$router.push({ name: 'SalesEdit', params: { id: sale.id } })"
+                      class="px-2 py-1 text-xs rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium">View</button>
+                    <button @click="deleteSale(sale.id)"
+                      class="px-2 py-1 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium">Hapus</button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Expand Detail Row -->
+              <tr v-if="expanded[sale.id]" class="bg-white">
+                <td colspan="10" class="px-0 py-0">
+                  <div class="p-4 bg-indigo-50/30">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Produk Dipesan</div>
+                        <ul class="space-y-1 text-sm">
+                          <li v-for="item in (sale.items || [])" :key="item.id"
+                            class="flex items-center justify-between text-slate-700">
+                            <span class="truncate mr-2">{{ item.product ? item.product.title : (item.product_name || 'Produk') }}</span>
+                            <span class="text-slate-400 shrink-0">x {{ item.quantity }}</span>
+                          </li>
+                          <li v-if="!sale.items || !sale.items.length" class="text-slate-400">Tidak ada item</li>
+                        </ul>
+                      </div>
+                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Info Transaksi</div>
+                        <div class="space-y-1.5 text-sm">
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Invoice</span>
+                            <span class="font-semibold">{{ sale.invoice_number }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Tanggal</span>
+                            <span>{{ formatDate(sale.sale_date) }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Subtotal</span>
+                            <span>Rp {{ formatInt(sale.subtotal || sale.total_amount) }}</span>
+                          </div>
+                          <div v-if="sale.tax_type" class="flex justify-between">
+                            <span class="text-slate-500">Pajak</span>
+                            <span>{{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%</span>
+                          </div>
+                          <div class="flex justify-between border-t pt-1.5 font-bold">
+                            <span class="text-slate-700">Grand Total</span>
+                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Pengiriman &amp; Gudang</div>
+                        <div class="space-y-1.5 text-sm">
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Gudang</span>
+                            <span>{{ sale.warehouse ? sale.warehouse.name : '-' }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Status</span>
+                            <span :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
+                              {{ capitalize(sale.status) }}
+                            </span>
+                          </div>
+                          <template v-if="sale.delivery">
+                            <div class="flex justify-between">
+                              <span class="text-slate-500">Tracking</span>
+                              <span class="font-mono text-xs">{{ sale.delivery.tracking_number }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                              <span class="text-slate-500">Kurir</span>
+                              <span>{{ sale.delivery.courier_name || '-' }}</span>
+                            </div>
+                          </template>
+                          <div v-else class="text-slate-400 text-xs">Belum ada pengiriman</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
+
+            <tr v-if="!loading && pagedSales.length === 0">
+              <td colspan="10" class="py-16 text-center text-slate-400">
+                <div class="text-4xl mb-3">&#128203;</div>
+                <div class="text-sm font-medium">Tidak ada data penjualan</div>
+                <div class="text-xs mt-1">Coba ubah filter atau buat penjualan baru</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      
     </div>
 
+    <!-- DELIVERY TAB -->
+    <div v-if="activeTab === 'deliveries'" class="mt-4">
+      <Deliveries />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '../../services/api';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import * as XLSX from 'xlsx'
+import api from '../../services/api'
+import Deliveries from './Deliveries.vue'
 
-const router = useRouter();
+const router = useRouter()
 
-const sales = ref({ data: [] });
-const products = ref([]);
-const salesPeople = ref([]);
-const warehouses = ref([]);
-const customerList = ref([]);
-const taxRates = ref([]);
-const loading = ref(true);
-const showModal = ref(false);
-const showProductModal = ref(false);
-const showDeliveryModal = ref(false);
-const showCustomerModal = ref(false);
-const showDetailModal = ref(false);
-const editMode = ref(false);
-const editId = ref(null);
-const saving = ref(false);
-const savingProduct = ref(false);
-const savingDelivery = ref(false);
-const savingCustomer = ref(false);
-const error = ref('');
-const productError = ref('');
-const deliveryError = ref('');
-const customerError = ref('');
-const productSearch = ref('');
-const selectedSale = ref(null);
-const viewingSale = ref(null);
+const allSales     = ref([])
+const loading      = ref(true)
+const activeTab    = ref('sales')
+const searchQuery  = ref('')
+const statusFilter = ref('all')
+const dateFrom     = ref('')
+const dateTo       = ref('')
+const sortKey      = ref('sale_date')
+const sortDir      = ref(-1)
+const currentPage  = ref(1)
+const pageSize     = ref(10)
+const expanded     = ref({})
 
-const filters = ref({
-  search: '',
-  status: '',
-  start_date: '',
-  end_date: '',
-});
+const statusOptions = ['all', 'pending', 'completed', 'cancelled']
 
-const form = ref({
-  invoice_number: '',
-  customer_id: '',
-  customer_name: '',
-  customer_email: '',
-  customer_phone: '',
-  customer_address: '',
-  sales_person_id: '',
-  warehouse_id: '',
-  sale_date: new Date().toISOString().split('T')[0],
-  status: 'pending',
-  notes: '',
-  items: [{ product_id: '', quantity: 1, unit_price: 0 }],
-});
-
-const productForm = ref({
-  title: '',
-  brand: '',
-  price: 0,
-  stock: 0,
-  sku: '',
-});
-
-const deliveryForm = ref({
-  courier: '',
-  tracking_number: '',
-  notes: '',
-});
-
-const customerForm = ref({
-  name: '',
-  company: '',
-  phone: '',
-  email: '',
-  address: '',
-  npwp: '',
-});
-
-
-
-const filteredProducts = computed(() => {
-  if (!productSearch.value) return products.value;
-  const search = productSearch.value.toLowerCase();
-  return products.value.filter(p =>
-    (p.title?.toLowerCase().includes(search)) ||
-    (p.name?.toLowerCase().includes(search)) ||
-    (p.brand?.toLowerCase().includes(search)) ||
-    (p.sku?.toLowerCase().includes(search))
-  );
-});
-
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('id-ID').format(price || 0);
-};
-
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    pending: 'badge-warning',
-    completed: 'badge-success',
-    cancelled: 'badge-danger',
-  };
-  return classes[status] || 'badge';
-};
-
-const loadSales = async (page = 1) => {
-  loading.value = true;
+const loadSales = async () => {
+  loading.value = true
   try {
-    const params = { page, ...filters.value };
-    // Load sales with delivery relationship
-    const response = await api.get('/sales', { params });
-    sales.value = response.data;
+    const response = await api.get('/sales', { params: { per_page: 1000 } })
+    allSales.value = response.data.data || response.data || []
   } catch (err) {
-    console.error('Failed to load sales:', err);
+    console.error('Failed to load sales:', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-const loadProducts = async () => {
-  try {
-    // Find the default warehouse
-    const whResponse = await api.get('/warehouses', { params: { per_page: 200 } });
-    const allWarehouses = whResponse.data.data || whResponse.data || [];
-    const defaultWarehouse = allWarehouses.find(w => w.is_default);
-
-    if (defaultWarehouse) {
-      // Load products from default warehouse stock
-      const response = await api.get('/stock', {
-        params: { warehouse_id: defaultWarehouse.id, per_page: 1000 }
-      });
-      const stocks = response.data.data || response.data || [];
-      // Map stock entries to product-like objects with warehouse quantity
-      products.value = stocks
-        .filter(s => s.product)
-        .map(s => ({
-          ...s.product,
-          stock: s.quantity || 0,
-        }));
-    } else {
-      // Fallback: load all products if no default warehouse
-      const response = await api.get('/products', { params: { per_page: 1000 } });
-      products.value = response.data.data;
+const filteredSales = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  return allSales.value.filter(s => {
+    if (statusFilter.value !== 'all' && s.status !== statusFilter.value) return false
+    if (dateFrom.value && s.sale_date < dateFrom.value) return false
+    if (dateTo.value   && s.sale_date > dateTo.value)   return false
+    if (q) {
+      const hay = ((s.invoice_number || '') + ' ' + (s.customer_name || '') + ' ' + (s.customer_phone || '')).toLowerCase()
+      if (!hay.includes(q)) return false
     }
-  } catch (err) {
-    console.error('Failed to load products:', err);
-  }
-};
+    return true
+  })
+})
 
-const loadWarehouses = async () => {
-  try {
-    const response = await api.get('/warehouses', { params: { per_page: 200 } });
-    warehouses.value = response.data.data || response.data || [];
-  } catch (err) {
-    console.error('Failed to load warehouses:', err);
-  }
-};
-
-const loadSalesPeople = async () => {
-  try {
-    const response = await api.get('/sales-people');
-    salesPeople.value = response.data;
-  } catch (err) {
-    console.error('Failed to load sales people:', err);
-  }
-};
-
-const loadTaxRates = async () => {
-  try {
-    const response = await api.get('/tax-rates/active');
-    taxRates.value = response.data;
-  } catch (err) {
-    console.error('Failed to load tax rates:', err);
-    // Fallback to default rates
-    taxRates.value = [
-      { id: 1, name: 'PPN', code: 'ppn', rate: '11.00' },
-      { id: 2, name: 'PPh 23', code: 'pph23', rate: '2.00' },
-    ];
-  }
-};
-
-const loadCustomers = async () => {
-  try {
-    const response = await api.get('/customers', { params: { all: true } });
-    customerList.value = response.data;
-  } catch (err) {
-    console.error('Failed to load customers:', err);
-  }
-};
-
-const onCustomerSelect = () => {
-  const cid = form.value.customer_id;
-  if (!cid) return;
-  const customer = customerList.value.find(c => c.id == cid);
-  if (customer) {
-    form.value.customer_name = customer.name;
-    form.value.customer_phone = customer.phone || '';
-    form.value.customer_email = customer.email || '';
-    form.value.customer_address = customer.address || '';
-  }
-};
-
-const addLineItem = () => {
-  form.value.items.push({ product_id: '', quantity: 1, unit_price: 0 });
-};
-
-const removeLineItem = (index) => {
-  form.value.items.splice(index, 1);
-};
-
-const updatePrice = (index) => {
-  const product = products.value.find(p => p.id == form.value.items[index].product_id);
-  if (product) {
-    form.value.items[index].unit_price = product.price;
-  }
-};
-
-const calculateTotal = () => {
-  if (!form.value.items || !Array.isArray(form.value.items)) {
-    return 0;
-  }
-  return form.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-};
-
-const getSelectedTaxRate = () => {
-  if (!form.value.tax_type) return 0;
-  const tax = taxRates.value.find(t => t.code === form.value.tax_type);
-  return tax ? parseFloat(tax.rate) : 0;
-};
-
-const calculateTax = () => {
-  const subtotal = calculateTotal();
-  const rate = getSelectedTaxRate();
-  return Math.round(subtotal * (rate / 100));
-};
-
-const calculateGrandTotal = () => {
-  const subtotal = calculateTotal();
-  const tax = calculateTax();
-  const discount = form.value.discount_amount || 0;
-  return subtotal + tax - discount;
-};
-
-const updateTaxCalculation = () => {
-  // This method triggers reactivity when tax type changes
-};
-
-const resetForm = () => {
-  editMode.value = false;
-  editId.value = null;
-  form.value = {
-    customer_id: '',
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
-    customer_address: '',
-    sales_person_id: '',
-    warehouse_id: '',
-    sale_date: new Date().toISOString().split('T')[0],
-    status: 'pending',
-    notes: '',
-    tax_type: '',
-    discount_amount: 0,
-    items: [{ product_id: '', quantity: 1, unit_price: 0 }],
-  };
-  error.value = '';
-};
-
-const saveSale = async () => {
-  saving.value = true;
-  error.value = '';
-
-  try {
-    if (editMode.value) {
-      // Only update status and notes when editing
-      await api.put(`/sales/${editId.value}`, {
-        status: form.value.status,
-        notes: form.value.notes
-      });
-    } else {
-      await api.post('/sales', form.value);
+const sortedSales = computed(() => {
+  const key = sortKey.value
+  return [...filteredSales.value].sort((a, b) => {
+    let va = a[key] != null ? a[key] : ''
+    let vb = b[key] != null ? b[key] : ''
+    if (key === 'grand_total' || key === 'total_amount') {
+      return (Number(va) - Number(vb)) * sortDir.value
     }
-    showModal.value = false;
-    loadSales();
-    resetForm();
-  } catch (err) {
-    error.value = err.response?.data?.message || `Failed to ${editMode.value ? 'update' : 'create'} sale`;
-  } finally {
-    saving.value = false;
-  }
-};
+    return String(va).localeCompare(String(vb)) * sortDir.value
+  })
+})
 
-const viewSale = async (sale) => {
-  try {
-    const response = await api.get(`/sales/${sale.id}`);
-    viewingSale.value = response.data;
-    showDetailModal.value = true;
-  } catch (err) {
-    console.error('Failed to load sale details:', err);
-    alert('Failed to load sale details');
-  }
-};
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredSales.value.length / pageSize.value)))
 
-const calcViewSubtotal = () => {
-  if (!viewingSale.value?.items) return 0;
-  return viewingSale.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-};
+const pagedSales = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return sortedSales.value.slice(start, start + pageSize.value)
+})
 
-const viewingSalePaidAmount = computed(() => {
-  if (!viewingSale.value?.payments) return 0;
-  return viewingSale.value.payments
-    .filter(p => p.status === 'paid')
-    .reduce((sum, p) => sum + Number(p.amount), 0);
-});
+const visiblePages = computed(() => {
+  const tp = totalPages.value, cp = currentPage.value
+  const pages = [], w = 7
+  let start = Math.max(1, cp - Math.floor(w / 2))
+  let end   = Math.min(tp, start + w - 1)
+  start = Math.max(1, end - w + 1)
+  for (let p = start; p <= end; p++) pages.push(p)
+  return pages
+})
 
-const viewingSaleBalance = computed(() => {
-  const total = Number(viewingSale.value?.grand_total || viewingSale.value?.total_amount || 0);
-  return Math.max(0, total - viewingSalePaidAmount.value);
-});
+const allTotal      = computed(() => allSales.value.reduce((s, x) => s + (Number(x.grand_total || x.total_amount) || 0), 0))
+const filteredTotal = computed(() => filteredSales.value.reduce((s, x) => s + (Number(x.grand_total || x.total_amount) || 0), 0))
 
-const taxDisplayName = (code) => {
-  const names = { ppn: 'PPN', pph23: 'PPh 23' };
-  return names[code] || code?.toUpperCase() || '';
-};
+// ── Pie / Donut chart data ───────────────────────────────────
+const salesStats = computed(() => {
+  const statuses = [
+    { key: 'pending',   label: 'Pending',   color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe' },
+    { key: 'completed', label: 'Completed', color: '#10b981', bg: '#f0fdf4', borderColor: '#a7f3d0' },
+    { key: 'cancelled', label: 'Cancelled', color: '#f43f5e', bg: '#fff1f2', borderColor: '#fecdd3' },
+  ]
+  return statuses.map(s => {
+    const items = allSales.value.filter(x => x.status === s.key)
+    return {
+      ...s,
+      count: items.length,
+      total: items.reduce((acc, x) => acc + (Number(x.grand_total || x.total_amount) || 0), 0)
+    }
+  })
+})
 
-const formatDateLong = (date) => {
-  if (!date) return '—';
-  return new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const donutSegments = computed(() => {
+  const total = allSales.value.length
+  if (!total) return []
+  let offset = 0
+  return salesStats.value.map(s => {
+    const pct = (s.count / total) * 100
+    const seg = { color: s.color, dash: pct, offset }
+    offset += pct
+    return seg
+  })
+})
 
-const formatDateTimeLong = (date) => {
-  if (!date) return '—';
-  return new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-const editSale = (sale) => {
-  router.push({ name: 'SalesEdit', params: { id: sale.id } });
-};
+const setStatusFilter = (s) => { statusFilter.value = s; currentPage.value = 1 }
+const statusCount = (s) => s === 'all' ? allSales.value.length : allSales.value.filter(x => x.status === s).length
+const resetFilters = () => { searchQuery.value = ''; statusFilter.value = 'all'; dateFrom.value = ''; dateTo.value = ''; currentPage.value = 1 }
+const setSort = (col) => { if (sortKey.value === col) sortDir.value *= -1; else { sortKey.value = col; sortDir.value = -1 }; currentPage.value = 1 }
+const toggleExpand = (id) => { expanded.value = { ...expanded.value, [id]: !expanded.value[id] } }
+const editSale = (sale) => { router.push({ name: 'SalesEdit', params: { id: sale.id } }) }
 
 const deleteSale = async (id) => {
-  if (!confirm('Are you sure you want to delete this sale?')) return;
-
+  if (!confirm('Yakin ingin menghapus penjualan ini?')) return
   try {
-    await api.delete(`/sales/${id}`);
-    loadSales();
+    await api.delete('/sales/' + id)
+    await loadSales()
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete sale');
+    alert((err.response && err.response.data && err.response.data.message) || 'Gagal menghapus penjualan')
   }
-};
+}
 
-const saveProduct = async () => {
-  savingProduct.value = true;
-  productError.value = '';
+const exportExcel = () => {
+  const rows = sortedSales.value
 
-  try {
-    productForm.value.sku = `SKU-${Date.now()}`;
-    const response = await api.post('/products', productForm.value);
+  // Build AOA (array of arrays) with header
+  const headers = ['Invoice', 'Customer', 'Telepon', 'Tanggal', 'Gudang', 'Status', 'Pajak', 'Subtotal (Rp)', 'Grand Total (Rp)']
+  const data = [headers]
+  rows.forEach(s => {
+    const items = (s.items || []).map(i => (i.product ? i.product.title : (i.product_name || 'Produk')) + ' x' + i.quantity).join('; ')
+    data.push([
+      s.invoice_number || '',
+      s.customer_name  || '',
+      s.customer_phone || '',
+      s.sale_date      || '',
+      s.warehouse ? s.warehouse.name : '',
+      s.status         || '',
+      s.tax_type ? (taxDisplayName(s.tax_type) + ' ' + s.tax_rate + '%') : '',
+      Number(s.subtotal || s.total_amount || 0),
+      Number(s.grand_total || s.total_amount || 0)
+    ])
+  })
 
-    // Add to products list
-    products.value.push(response.data);
+  const ws = XLSX.utils.aoa_to_sheet(data)
 
-    // Close modal and reset
-    showProductModal.value = false;
-    productForm.value = { title: '', brand: '', price: 0, stock: 0, sku: '' };
+  // Auto column width
+  const colWidths = headers.map((h, ci) => {
+    const max = data.reduce((m, row) => Math.max(m, String(row[ci] || '').length), h.length)
+    return { wch: Math.min(max + 2, 40) }
+  })
+  ws['!cols'] = colWidths
 
-    alert('Product added successfully!');
-  } catch (err) {
-    productError.value = err.response?.data?.message || 'Failed to add product';
-  } finally {
-    savingProduct.value = false;
-  }
-};
+  // Style header row (bold)
+  headers.forEach((_, ci) => {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: ci })
+    if (ws[cellRef]) ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: 'E8EEFF' } } }
+  })
 
-const openDeliveryModal = (sale) => {
-  selectedSale.value = sale;
-  deliveryForm.value = {
-    courier: '',
-    tracking_number: '',
-    notes: '',
-  };
-  deliveryError.value = '';
-  showDeliveryModal.value = true;
-};
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Sales')
+  XLSX.writeFile(wb, 'sales_' + new Date().toISOString().slice(0, 10) + '.xlsx')
+}
 
-const createDelivery = async () => {
-  savingDelivery.value = true;
-  deliveryError.value = '';
-  
-  try {
-    const payload = {
-      sale_id: selectedSale.value.id,
-      courier: deliveryForm.value.courier,
-      notes: deliveryForm.value.notes,
-    };
-    
-    // Only include tracking_number if provided
-    if (deliveryForm.value.tracking_number) {
-      payload.tracking_number = deliveryForm.value.tracking_number;
-    }
-    
-    const response = await api.post('/deliveries', payload);
-    
-    // Close modal and reload sales
-    showDeliveryModal.value = false;
-    loadSales();
-    
-    alert(`Delivery created successfully! Tracking: ${response.data.tracking_number}`);
-  } catch (err) {
-    deliveryError.value = err.response?.data?.message || 'Failed to create delivery';
-  } finally {
-    savingDelivery.value = false;
-  }
-};
+const formatDate = (d) => {
+  if (!d) return '-'
+  return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+const formatInt = (n) => Number(n || 0).toLocaleString('id-ID')
+const taxDisplayName = (code) => { const names = { ppn: 'PPN', pph23: 'PPh 23' }; return names[code] || (code ? code.toUpperCase() : '') }
+const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
 
+const avatarColors = ['bg-rose-500','bg-violet-600','bg-emerald-500','bg-cyan-600','bg-sky-600','bg-amber-600','bg-indigo-600','bg-pink-600']
+const avatarColor = (name) => { if (!name) return 'bg-slate-400'; return avatarColors[name.charCodeAt(0) % avatarColors.length] }
 
-const exportExcel = async (saleId, invoiceNumber) => {
-  try {
-    const response = await api.get(`/sales/${saleId}/export`, {
-      responseType: 'blob'
-    });
-    
-    // Create blob link to download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `invoice_${invoiceNumber}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Export error:', err);
-    alert('Failed to export Excel file');
-  }
-};
+const statusClr = (s) => {
+  const map = { pending: 'bg-blue-50 text-blue-700 ring-blue-200', completed: 'bg-emerald-50 text-emerald-700 ring-emerald-200', cancelled: 'bg-rose-50 text-rose-700 ring-rose-200', delivered: 'bg-teal-50 text-teal-700 ring-teal-200' }
+  return map[s] || 'bg-slate-100 text-slate-700 ring-slate-200'
+}
 
-const downloadPdf = async (saleId, invoiceNumber) => {
-  try {
-    const response = await api.get(`/sales/${saleId}/pdf`, {
-      responseType: 'blob'
-    });
-    
-    // Create blob link to download
-    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `invoice_${invoiceNumber}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('PDF download error:', err);
-    alert('Failed to download PDF file');
-  }
-};
-
-const saveNewCustomer = async () => {
-  savingCustomer.value = true;
-  customerError.value = '';
-  try {
-    const response = await api.post('/customers', customerForm.value);
-    // Add to the customer list and auto-select
-    customerList.value.push(response.data);
-    form.value.customer_id = response.data.id;
-    onCustomerSelect();
-    // Close modal and reset form
-    showCustomerModal.value = false;
-    customerForm.value = { name: '', company: '', phone: '', email: '', address: '', npwp: '' };
-  } catch (err) {
-    customerError.value = err.response?.data?.message || 'Failed to add customer';
-  } finally {
-    savingCustomer.value = false;
-  }
-};
-
-onMounted(() => {
-  loadSales();
-  loadProducts();
-  loadSalesPeople();
-  loadWarehouses();
-  loadCustomers();
-  loadTaxRates();
-});
+watch([searchQuery, statusFilter, dateFrom, dateTo], () => { currentPage.value = 1 })
+onMounted(loadSales)
 </script>
+
+<style scoped>
+.legend-btn { display:inline-flex; align-items:center; gap:.5rem; border-radius:9999px; padding:.25rem .75rem; font-size:.75rem; font-weight:600; border:1px solid #e5e7eb; background:#ffffff; color:#334155; transition:background .15s,color .15s,border-color .15s; cursor:pointer; }
+.legend-btn:hover { background:#f8fafc; }
+.legend-btn.active { background:#1e3a8a; color:#fff; border-color:#1e3a8a; }
+.legend-btn.active:hover { background:#1e40af; }
+.legend-label { display:inline-flex; align-items:center; border-radius:9999px; padding:.2rem .5rem; font-size:.65rem; font-weight:700; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+.count-badge { display:inline-flex; align-items:center; justify-content:center; min-width:1.2rem; height:1.2rem; padding:0 .3rem; border-radius:9999px; font-size:.7rem; font-weight:700; background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff; }
+.stat-badge { display:inline-flex; align-items:center; gap:.25rem; border-radius:9999px; padding:.3rem .6rem; font-size:.72rem; font-weight:600; background:#f8fafc; color:#334155; border:1px solid #e5e7eb; }
+.vsep th + th, .vsep td + td { border-left:1px solid #e5e7eb; }
+</style>

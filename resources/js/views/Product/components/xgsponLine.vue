@@ -150,6 +150,9 @@ const ANCHORS = {
   'XGSPON OLT': [
     { x: 170.7, y: 445.8, sizePct: 8 },
   ],
+  OLT: [
+    { x: 170.7, y: 445.8, sizePct: 8 },
+  ],
 
   // XGSPON ONU & ONU PoE:
   // - Ujung polyline kuning (334.1, 301.6)
@@ -160,7 +163,22 @@ const ANCHORS = {
     { x: 600, y: 265, sizePct: 8 },
     { x: 485, y: 475, sizePct: 8 },
   ],
+  ONU: [
+    { x: 370, y: 160, sizePct: 8 },
+    { x: 600, y: 265, sizePct: 8 },
+    { x: 485, y: 475, sizePct: 8 },
+  ],
   'XGSPON ONU PoE': [
+    { x: 365, y: 155, sizePct: 8 },
+    { x: 600, y: 260, sizePct: 8, mirror: true },
+    { x: 485, y: 470, sizePct: 8, mirror: true },
+  ],
+  'ONU PoE': [
+    { x: 365, y: 155, sizePct: 8 },
+    { x: 600, y: 260, sizePct: 8, mirror: true },
+    { x: 485, y: 470, sizePct: 8, mirror: true },
+  ],
+  'ONU POE': [
     { x: 365, y: 155, sizePct: 8 },
     { x: 600, y: 260, sizePct: 8, mirror: true },
     { x: 485, y: 470, sizePct: 8, mirror: true },
@@ -171,6 +189,11 @@ const ANCHORS = {
   // - Ujung polyline kuning bawah (334.1, 317.3)
   // - Ujung 3 cabang hijau bawah (532.9,491.2), (521.9,457.5), (528.6,423.9)
   'XGSPON ONT': [
+    { x: 350, y: 212.1, sizePct: 6 },
+    { x: 280, y: 340, sizePct: 6 },
+    { x: 590, y: 325, sizePct: 6 },
+  ],
+  ONT: [
     { x: 350, y: 212.1, sizePct: 6 },
     { x: 280, y: 340, sizePct: 6 },
     { x: 590, y: 325, sizePct: 6 },
@@ -198,8 +221,31 @@ const resolvedMarkers = computed(() => {
   const p = props.product
   if (!p) return []
 
-  const sub = p.subCategory || ''
-  const points = ANCHORS[sub] || FALLBACK
+  const sub = (p.subCategory || '').trim()
+  let points = ANCHORS[sub]
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    for (const [key, val] of Object.entries(ANCHORS)) {
+      if (key.toUpperCase() === subUpper) {
+        points = val
+        break
+      }
+    }
+  }
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    if (subUpper.includes('OLT')) {
+      points = ANCHORS['XGSPON OLT']
+    } else if (subUpper.includes('ONU')) {
+      points = ANCHORS['XGSPON ONU PoE'] || ANCHORS['XGSPON ONU']
+    } else if (subUpper.includes('ONT')) {
+      points = ANCHORS['XGSPON ONT']
+    }
+  }
+
+  points = points || FALLBACK
 
   const markers = points.map((pt) => {
     const style = toStyle(pt)

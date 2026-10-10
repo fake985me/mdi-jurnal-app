@@ -182,49 +182,49 @@
                 {{ sp.eligibility.reason }}
               </p>
 
-              <div class="grid grid-cols-2 gap-3">
-                <!-- Serial Number -->
-                <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">Serial Number (SN)</label>
-                  <div class="relative">
-                    <input v-model="sp.serial_number" type="text" class="input text-sm pr-8 font-mono"
-                      :placeholder="sp.warranty_sn ? 'SN: ' + sp.warranty_sn : 'No SN registered'"
-                      :required="!!sp.warranty_sn" />
-                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                      <span v-if="getSnStatus(sp) === 'match'" class="text-green-600">✓</span>
-                      <span v-else-if="getSnStatus(sp) === 'mismatch'" class="text-red-600">✗</span>
-                      <span v-else-if="getSnStatus(sp) === 'no_sn'" class="text-gray-400">—</span>
-                    </div>
-                  </div>
-                  <p v-if="sp.warranty_sn" class="text-xs mt-0.5"
-                    :class="getSnStatus(sp) === 'match' ? 'text-green-600' : getSnStatus(sp) === 'mismatch' ? 'text-red-600' : 'text-gray-400'">
-                    <span v-if="getSnStatus(sp) === 'match'">✓ SN cocok</span>
-                    <span v-else-if="getSnStatus(sp) === 'mismatch'">✗ SN tidak cocok ({{ sp.warranty_sn }})</span>
-                    <span v-else>Masukkan SN</span>
-                  </p>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
-                    <select v-model="form.reason" required class="input">
-                      <option value="">Select Reason</option>
-                      <option value="warranty_claim">Warranty Claim</option>
-                      <option value="damaged_shipment">Damaged Shipment</option>
-                      <option value="defective">Defective</option>
-                      <option value="dead_on_arrival">Dead on Arrival (DOA)</option>
-                    </select>
-                  </div>
-                </div>
+              <!-- Quantity -->
+              <div class="mb-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                <input v-model.number="sp.quantity" type="number" :min="1" :max="sp.available_qty || 999" required
+                  class="input text-sm" @input="updateSerialNumbersArray(sp)" />
+                <p v-if="sp.available_qty !== null" class="text-xs text-gray-500 mt-0.5">
+                  Max: {{ sp.available_qty }}
+                  <span v-if="sp.existing_rma_qty > 0" class="text-orange-600">
+                    (sudah diklaim: {{ sp.existing_rma_qty }})
+                  </span>
+                </p>
+              </div>
 
-                <!-- Quantity -->
-                <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
-                  <input v-model.number="sp.quantity" type="number" :min="1" :max="sp.available_qty || 999" required
-                    class="input text-sm" />
-                  <p v-if="sp.available_qty !== null" class="text-xs text-gray-500 mt-0.5">
-                    Max: {{ sp.available_qty }}
-                    <span v-if="sp.existing_rma_qty > 0" class="text-orange-600">
-                      (sudah diklaim: {{ sp.existing_rma_qty }})
-                    </span>
-                  </p>
+              <!-- Serial Numbers (multiple inputs based on quantity) -->
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">
+                  Serial Number (SN) 
+                  <span v-if="sp.quantity > 1" class="text-gray-500 font-normal">({{ sp.quantity }} unit)</span>
+                </label>
+                <div class="space-y-2">
+                  <div v-for="(sn, snIdx) in sp.serial_numbers" :key="snIdx" class="relative">
+                    <div class="flex items-center gap-2">
+                      <span v-if="sp.quantity > 1" class="text-xs text-gray-500 w-8">{{ snIdx + 1 }}.</span>
+                      <div class="relative flex-1">
+                        <input v-model="sp.serial_numbers[snIdx]" type="text" class="input text-sm pr-8 font-mono"
+                          :placeholder="getSnPlaceholder(sp, snIdx)"
+                          :required="sp.warranty_sns && sp.warranty_sns.length > 0 && sp.quantity === 1" />
+                        <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                          <span v-if="getSnStatusByIndex(sp, snIdx) === 'match'" class="text-green-600">✓</span>
+                          <span v-else-if="getSnStatusByIndex(sp, snIdx) === 'mismatch'" class="text-red-600">✗</span>
+                          <span v-else-if="getSnStatusByIndex(sp, snIdx) === 'no_sn'" class="text-gray-400">—</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p v-if="sp.warranty_sns && sp.warranty_sns.length > 0 && sp.quantity === 1 && sp.serial_numbers[snIdx]" class="text-xs mt-0.5"
+                      :class="getSnStatusByIndex(sp, snIdx) === 'match' ? 'text-green-600' : 'text-red-600'">
+                      <span v-if="getSnStatusByIndex(sp, snIdx) === 'match'">✓ SN cocok</span>
+                      <span v-else>✗ SN tidak cocok dengan warranty terdaftar</span>
+                    </p>
+                    <p v-else-if="sp.warranty_sns && sp.warranty_sns.length > 0 && !sp.serial_numbers[snIdx]" class="text-xs mt-0.5 text-gray-500">
+                      Valid SNs: {{ sp.warranty_sns.join(', ') }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -240,7 +240,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">Customer Contact</label>
               <input v-model="form.customer_contact" class="input" />
             </div>
-            <!-- <div>
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
               <select v-model="form.reason" required class="input">
                 <option value="">Select Reason</option>
@@ -249,7 +249,7 @@
                 <option value="defective">Defective</option>
                 <option value="dead_on_arrival">Dead on Arrival (DOA)</option>
               </select>
-            </div> -->
+            </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date *</label>
               <input v-model="form.issue_date" type="date" required class="input" />
@@ -258,6 +258,16 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea v-model="form.notes" rows="3" class="input"></textarea>
+          </div>
+
+          <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" v-model="form.replacement_requested" class="w-5 h-5 text-blue-600 rounded" />
+              <div>
+                <p class="font-medium text-gray-900">Request Product Replacement</p>
+                <p class="text-sm text-gray-600">Check this if customer requests product replacement</p>
+              </div>
+            </label>
           </div>
 
           <!-- Evidence Upload -->
@@ -331,54 +341,45 @@
 
         <div class="space-y-3">
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="conditionForm.condition === 'working' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
-            <input v-model="conditionForm.condition" type="radio" value="working" class="mr-3" />
+            :class="conditionForm.condition_level === 'working' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
+            <input v-model="conditionForm.condition_level" type="radio" value="working" class="mr-3" />
             <div>
               <p class="font-medium text-gray-900">✅ Working / Functional</p>
-              <p class="text-sm text-gray-500">Item is in good working condition</p>
+              <p class="text-sm text-gray-500">Return to normal stock - ready for resale</p>
             </div>
           </label>
 
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="conditionForm.condition === 'damaged' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'">
-            <input v-model="conditionForm.condition" type="radio" value="damaged" class="mr-3" />
+            :class="conditionForm.condition_level === 'repairable' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'">
+            <input v-model="conditionForm.condition_level" type="radio" value="repairable" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">⚠️ Damaged</p>
-              <p class="text-sm text-gray-500">Has physical damage but may be repairable</p>
+              <p class="font-medium text-gray-900">🔧 Repairable</p>
+              <p class="text-sm text-gray-500">Can be fixed - move to RMA warehouse</p>
             </div>
           </label>
 
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="conditionForm.condition === 'broken' ? 'border-red-500 bg-red-50' : 'border-gray-200'">
-            <input v-model="conditionForm.condition" type="radio" value="broken" class="mr-3" />
+            :class="conditionForm.condition_level === 'damaged_total' ? 'border-red-500 bg-red-50' : 'border-gray-200'">
+            <input v-model="conditionForm.condition_level" type="radio" value="damaged_total" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">❌ Broken / Not Working</p>
-              <p class="text-sm text-gray-500">Not functioning, needs repair or replacement</p>
+              <p class="font-medium text-gray-900">❌ Damaged Total</p>
+              <p class="text-sm text-gray-500">Cannot be repaired - total loss</p>
             </div>
           </label>
 
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="conditionForm.condition === 'parts_only' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'">
-            <input v-model="conditionForm.condition" type="radio" value="parts_only" class="mr-3" />
+            :class="conditionForm.condition_level === 'parts_only' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'">
+            <input v-model="conditionForm.condition_level" type="radio" value="parts_only" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">🔧 Parts Only</p>
-              <p class="text-sm text-gray-500">Can only be used for spare parts</p>
+              <p class="font-medium text-gray-900">🔩 Parts Only</p>
+              <p class="text-sm text-gray-500">For spare parts extraction</p>
             </div>
           </label>
 
-          <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="conditionForm.condition === 'other' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
-            <input v-model="conditionForm.condition" type="radio" value="other" class="mr-3" />
-            <div class="flex-1">
-              <p class="font-medium text-gray-900">✏️ Other / Custom</p>
-              <p class="text-sm text-gray-500">Describe condition manually</p>
-            </div>
-          </label>
-
-          <div v-if="conditionForm.condition === 'other'" class="ml-8 mt-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Describe Condition *</label>
-            <textarea v-model="conditionForm.customCondition" rows="3" class="input w-full"
-              placeholder="e.g., Screen cracked, battery swollen, etc." required></textarea>
+          <div v-if="conditionForm.condition_level" class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes (Optional)</label>
+            <textarea v-model="conditionForm.condition" rows="2" class="input w-full"
+              placeholder="e.g., Screen cracked, battery swollen, etc."></textarea>
           </div>
         </div>
 
@@ -437,7 +438,7 @@ import api from '../../services/api';
 const rmas = ref({ data: [] });
 const sales = ref([]);
 const saleItems = ref([]);
-const selectedProducts = ref([]); // Array of { product_id, product_title, serial_number, quantity, warranty_sn, available_qty, existing_rma_qty, eligibility }
+const selectedProducts = ref([]); // Array of { product_id, product_title, serial_number, serial_numbers, quantity, warranty_sn, warranty_sns, available_qty, existing_rma_qty, eligibility }
 const loading = ref(true);
 const showModal = ref(false);
 const showConditionModal = ref(false);
@@ -454,8 +455,8 @@ const evidenceLoading = ref(false);
 const filters = ref({ search: '', status: '', reason: '' });
 
 const conditionForm = ref({
-  condition: '',
-  customCondition: ''
+  condition_level: '',
+  condition: ''
 });
 
 const form = ref({
@@ -465,6 +466,7 @@ const form = ref({
   reason: '',
   issue_date: new Date().toISOString().split('T')[0],
   notes: '',
+  replacement_requested: false,
 });
 
 // Check if all products are selected
@@ -483,7 +485,54 @@ const getProductEligibility = (productId) => {
   return sp?.eligibility || null;
 };
 
-// Get SN match status for a selected product
+// Update serial numbers array when quantity changes
+const updateSerialNumbersArray = (sp) => {
+  const qty = sp.quantity || 1;
+  const currentLength = sp.serial_numbers?.length || 0;
+
+  if (!sp.serial_numbers) {
+    sp.serial_numbers = [];
+  }
+
+  if (qty > currentLength) {
+    for (let i = currentLength; i < qty; i++) {
+      sp.serial_numbers.push('');
+    }
+  } else if (qty < currentLength) {
+    sp.serial_numbers = sp.serial_numbers.slice(0, qty);
+  }
+};
+
+// Get SN match status for a specific index
+const getSnStatusByIndex = (sp, index) => {
+  const sn = sp.serial_numbers[index];
+  if (!sn || !sn.trim()) return 'pending';
+  
+  // If multiple warranty SNs exist, check against all
+  if (sp.warranty_sns && sp.warranty_sns.length > 0) {
+    const matched = sp.warranty_sns.some(wsn => 
+      wsn.trim().toLowerCase() === sn.trim().toLowerCase()
+    );
+    if (matched) return 'match';
+    return 'mismatch';
+  }
+  
+  // Single warranty SN fallback
+  if (!sp.warranty_sn) return 'no_sn';
+  if (sn.trim().toLowerCase() === sp.warranty_sn.trim().toLowerCase()) return 'match';
+  return 'mismatch';
+};
+
+// Get placeholder text for SN input
+const getSnPlaceholder = (sp, index) => {
+  if (sp.warranty_sns && sp.warranty_sns.length > 0) {
+    if (sp.quantity === 1 && sp.warranty_sns.length === 1) {
+      return 'SN: ' + sp.warranty_sns[0];
+    }
+    return 'Masukkan salah satu SN yang valid';
+  }
+  return 'Masukkan SN unit #' + (index + 1);
+};
 const getSnStatus = (sp) => {
   if (!sp.warranty_sn) return 'no_sn';
   if (!sp.serial_number) return 'pending';
@@ -495,25 +544,52 @@ const getSnStatus = (sp) => {
 const getProductCardClass = (sp) => {
   if (!sp.eligibility?.checked) return 'border-gray-200 bg-gray-50';
   if (!sp.eligibility?.valid) return 'border-red-200 bg-red-50';
-  if (sp.warranty_sn && getSnStatus(sp) === 'mismatch') return 'border-orange-200 bg-orange-50';
-  if (sp.warranty_sn && getSnStatus(sp) === 'match') return 'border-green-200 bg-green-50';
+  
+  if (sp.quantity === 1 && sp.warranty_sn) {
+    if (getSnStatusByIndex(sp, 0) === 'mismatch') return 'border-orange-200 bg-orange-50';
+    if (getSnStatusByIndex(sp, 0) === 'match') return 'border-green-200 bg-green-50';
+  }
+  
   return 'border-blue-200 bg-blue-50';
 };
 
 // Computed: can submit form
 const canSubmit = computed(() => {
   if (!selectedProducts.value.length) return false;
+  if (!form.value.reason) return false;
 
   // Check each selected product
   for (const sp of selectedProducts.value) {
     if (!sp.eligibility?.valid) return false;
-    // SN must match if warranty has SN
-    if (sp.warranty_sn && getSnStatus(sp) !== 'match') return false;
+    
+    // Check serial numbers if warranty SNs exist and quantity = 1
+    if (sp.warranty_sns && sp.warranty_sns.length > 0 && sp.quantity === 1) {
+      const hasValidSn = sp.serial_numbers.some(sn => {
+        if (!sn || !sn.trim()) return false;
+        return sp.warranty_sns.some(wsn => 
+          wsn.trim().toLowerCase() === sn.trim().toLowerCase()
+        );
+      });
+      if (!hasValidSn) return false;
+    }
+    
+    // For multiple quantities with warranty SNs
+    if (sp.warranty_sns && sp.warranty_sns.length > 0 && sp.quantity > 1) {
+      const validSnCount = sp.serial_numbers.filter(sn => {
+        if (!sn || !sn.trim()) return false;
+        return sp.warranty_sns.some(wsn => 
+          wsn.trim().toLowerCase() === sn.trim().toLowerCase()
+        );
+      }).length;
+      if (validSnCount < sp.quantity) return false;
+    }
+    
     // Qty must be valid
     if (sp.available_qty !== null && sp.quantity > sp.available_qty) return false;
     if (sp.available_qty !== null && sp.available_qty <= 0) return false;
     if (!sp.quantity || sp.quantity < 1) return false;
   }
+  
   return true;
 });
 
@@ -558,11 +634,7 @@ const getConditionBadge = (condition) => {
 };
 
 const canConfirmReceived = computed(() => {
-  if (!conditionForm.value.condition) return false;
-  if (conditionForm.value.condition === 'other') {
-    return conditionForm.value.customCondition && conditionForm.value.customCondition.trim().length > 0;
-  }
-  return true;
+  return !!conditionForm.value.condition_level;
 });
 
 const loadRMAs = async (page = 1) => {
@@ -614,8 +686,10 @@ const toggleProduct = async (item) => {
       product_id: item.product_id,
       product_title: item.product?.title || `Product #${item.product_id}`,
       serial_number: '',
+      serial_numbers: [''],
       quantity: 1,
       warranty_sn: null,
+      warranty_sns: [],
       available_qty: item.quantity,
       existing_rma_qty: 0,
       sale_item_qty: item.quantity,
@@ -654,6 +728,7 @@ const checkProductEligibility = async (sp) => {
 
     sp.eligibility = { checked: true, ...response.data };
     sp.warranty_sn = response.data.warranty_serial_number || null;
+    sp.warranty_sns = response.data.warranty_serial_numbers || [];
 
     if (response.data.available_quantity !== undefined) {
       sp.available_qty = response.data.available_quantity;
@@ -674,6 +749,7 @@ const resetForm = () => {
     reason: '',
     issue_date: new Date().toISOString().split('T')[0],
     notes: '',
+    replacement_requested: false,
   };
   saleItems.value = [];
   selectedProducts.value = [];
@@ -741,11 +817,11 @@ const saveRMA = async () => {
   error.value = '';
 
   try {
-    // Build items array
+    // Build items array with serial numbers
     const items = selectedProducts.value.map(sp => ({
       product_id: sp.product_id,
       product_title: sp.product_title,
-      serial_number: sp.serial_number || '',
+      serial_number: sp.serial_numbers.filter(sn => sn && sn.trim()).join(','),
       quantity: sp.quantity,
     }));
 
@@ -794,20 +870,17 @@ const approveRMA = async (rma) => {
 
 const markReceived = (rma) => {
   selectedRMA.value = rma;
+  conditionForm.value.condition_level = '';
   conditionForm.value.condition = '';
-  conditionForm.value.customCondition = '';
   showConditionModal.value = true;
 };
 
 const confirmReceived = async () => {
   saving.value = true;
   try {
-    const finalCondition = conditionForm.value.condition === 'other'
-      ? conditionForm.value.customCondition
-      : conditionForm.value.condition;
-
     await api.post(`/rmas/${selectedRMA.value.id}/mark-received`, {
-      condition: finalCondition
+      condition_level: conditionForm.value.condition_level,
+      condition: conditionForm.value.condition || ''
     });
     showConditionModal.value = false;
     loadRMAs();

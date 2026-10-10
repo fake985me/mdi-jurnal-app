@@ -17,7 +17,7 @@ window.axios.defaults.baseURL = import.meta.env.VITE_API_URL || window.location.
 // Add token to all requests
 window.axios.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('auth_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

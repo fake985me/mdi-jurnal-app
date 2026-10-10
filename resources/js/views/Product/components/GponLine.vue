@@ -153,6 +153,9 @@ const ANCHORS = {
   'GPON OLT': [
     { x: 170.7, y: 445.8, sizePct: 8 },
   ],
+  OLT: [
+    { x: 170.7, y: 445.8, sizePct: 8 },
+  ],
 
   // ONU & ONU PoE:
   // - Ujung polyline kuning (334.1, 301.6)
@@ -164,6 +167,11 @@ const ANCHORS = {
     { x: 480.1, y: 466.7, sizePct: 8 },
   ],
   'ONU PoE': [
+    { x: 370.1, y: 150.7, sizePct: 8 },
+    { x: 596.1, y: 258.7, sizePct: 8 },
+    { x: 480.1, y: 466.7, sizePct: 8 },
+  ],
+  'ONU POE': [
     { x: 370.1, y: 150.7, sizePct: 8 },
     { x: 596.1, y: 258.7, sizePct: 8 },
     { x: 480.1, y: 466.7, sizePct: 8 },
@@ -201,8 +209,31 @@ const resolvedMarkers = computed(() => {
   const p = props.product
   if (!p) return []
 
-  const sub = p.subCategory || ''
-  const points = ANCHORS[sub] || FALLBACK
+  const sub = (p.subCategory || '').trim()
+  let points = ANCHORS[sub]
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    for (const [key, val] of Object.entries(ANCHORS)) {
+      if (key.toUpperCase() === subUpper) {
+        points = val
+        break
+      }
+    }
+  }
+
+  if (!points) {
+    const subUpper = sub.toUpperCase()
+    if (subUpper.includes('ONU')) {
+      points = ANCHORS['ONU POE'] || ANCHORS['ONU']
+    } else if (subUpper.includes('OLT')) {
+      points = ANCHORS['GPON OLT']
+    } else if (subUpper.includes('ONT')) {
+      points = ANCHORS['ONT']
+    }
+  }
+
+  points = points || FALLBACK
 
   console.log('=== GponLine Debug ===')
   console.log('Product:', p.title)

@@ -29,10 +29,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, defineComponent, h } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
-import { SECTION_COMPONENTS } from '@/components/sections/index.js'
+import { SECTION_COMPONENTS } from '../../components/sections/index.js'
+
+const FallbackSection = defineComponent({
+  props: ['content', 'settings'],
+  render() {
+    return h('div', { class: 'p-4 bg-gray-100 rounded-lg text-center text-gray-500' }, 
+      'Section content not available')
+  }
+})
 
 const route = useRoute()
 const page = ref(null)
@@ -84,7 +92,7 @@ const getSectionComponent = (type) => {
   const component = SECTION_COMPONENTS[type]
   if (!component) {
     console.warn(`Unknown section type: ${type}`)
-    return null
+    return FallbackSection
   }
   return component
 }

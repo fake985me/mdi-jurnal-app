@@ -76,7 +76,11 @@ class StockTransferService
 
         $product = Product::find($productId);
         if ($product) {
-            $product->stock = max(0, ($product->stock ?? 0) + $quantityChange);
+            // Read the actual value from current_stocks (source of truth) instead of computing incrementally
+            $actualStock = CurrentStock::where('warehouse_id', $warehouseId)
+                ->where('product_id', $productId)
+                ->value('quantity') ?? 0;
+            $product->stock = max(0, $actualStock);
             $product->save();
         }
     }

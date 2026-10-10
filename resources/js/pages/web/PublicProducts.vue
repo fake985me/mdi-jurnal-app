@@ -3,6 +3,10 @@
     <div class="page-header">
       <h1>Public Products</h1>
       <div class="header-actions">
+        <button @click="syncFromProducts" :disabled="syncingFromProducts" class="btn btn-primary" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; color: white;">
+          <i :class="['fas', syncingFromProducts ? 'fa-spinner fa-spin' : 'fa-sync-alt']"></i>
+          {{ syncingFromProducts ? 'Syncing...' : 'Sync dari Products' }}
+        </button>
         <button @click="exportAll" class="btn btn-secondary">
           <i class="fas fa-download"></i> Export All
         </button>
@@ -15,7 +19,7 @@
         <input 
           ref="fileInput" 
           type="file" 
-          accept=".csv" 
+          accept=".xlsx,.xls,.csv" 
           @change="handleFileImport" 
           style="display: none" 
         />
@@ -52,60 +56,78 @@
       </select>
     </div>
 
-    <!-- Products Table -->
+    <!-- Products Table with ALL Database Specification Fields -->
     <div class="table-container">
       <table class="products-table">
         <thead>
           <tr>
+            <th class="sticky-col first-col">Actions</th>
+            <th class="sticky-col second-col">ID</th>
+            <th>Module</th>
             <th>Image</th>
+            <th>SKU</th>
             <th>Title</th>
-            <th>Categories</th>
+            <th>Subtitle</th>
+            <th>Category</th>
+            <th>Subcategory</th>
             <th>Brand</th>
+            <th>Stock</th>
+            <th>Descriptions</th>
+            <!-- Specs 1-20 -->
+            <th v-for="i in 20" :key="'h-spec' + i">Spec {{ i }}</th>
+            <!-- Features 1-20 -->
+            <th v-for="i in 20" :key="'h-fitur' + i">Fitur {{ i }}</th>
+            <!-- Wireless -->
+            <th>Wireless Standard</th>
+            <th>Wireless Stream</th>
+            <th v-for="i in 5" :key="'h-ws' + i">Wireless Stream {{ i }}</th>
+            <!-- Controller / AP -->
+            <th>Manageable APs</th>
+            <th>AP Number</th>
+            <th>Number of Clients</th>
+            <th>Capacity</th>
+            <th>IP Rating</th>
+            <!-- Switch -->
+            <th>Switching Capacity</th>
+            <th>Throughput</th>
+            <!-- Memory -->
+            <th>Flash Memory</th>
+            <th>SDRAM Memory</th>
+            <!-- Interfaces -->
+            <th>Interface Main</th>
+            <th v-for="i in 5" :key="'h-if' + i">Interface {{ i }}</th>
+            <th>Antenna</th>
+            <th>CU</th>
+            <th v-for="i in 5" :key="'h-cu' + i">CU {{ i }}</th>
+            <th v-for="i in 5" :key="'h-addif' + i">Additional Interface {{ i }}</th>
+            <!-- Network -->
+            <th>MAC Address</th>
+            <th>Routing Table</th>
+            <!-- Environment -->
+            <th>Dustproof & Waterproof</th>
+            <th>Noise</th>
+            <th>MTBF</th>
+            <th>Operating Temp</th>
+            <th>Storage Temp</th>
+            <th>Operating Humidity</th>
+            <!-- Power -->
+            <th v-for="i in 5" :key="'h-pwr' + i">Power {{ i }}</th>
+            <th>Power Consumptions</th>
+            <th>Power Consumption (with PoE)</th>
+            <th>Power Consumption (Excl PoE)</th>
+            <th>PoE Budget</th>
+            <!-- Dimensions & Diagrams -->
+            <th>Dimensions</th>
+            <th>Diagram</th>
+            <th>Network Diagram</th>
             <th>Status</th>
             <th>Sort Order</th>
-            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="product in products.data" :key="product.id">
-            <td>
-              <img v-if="product.image" :src="product.image" :alt="product.title" class="product-image" />
-              <span v-else class="no-image">No Image</span>
-            </td>
-            <td>
-              <div class="product-title">{{ product.title }}</div>
-              <div class="product-subtitle">{{ product.subtitle }}</div>
-            </td>
-            <td>
-              <!-- Display category pairs as tags -->
-              <div class="category-tags">
-                <template v-if="product.category_pairs && product.category_pairs.length > 0">
-                  <span v-for="(pair, idx) in product.category_pairs" :key="idx" class="category-tag">
-                    {{ pair.category_name }}
-                    <span v-if="pair.sub_category_name" class="sub-category">
-                      / {{ pair.sub_category_name }}
-                    </span>
-                  </span>
-                </template>
-                <template v-else-if="product.category">
-                  <span class="category-tag legacy">
-                    {{ product.category }}
-                    <span v-if="product.sub_category" class="sub-category">
-                      / {{ product.sub_category }}
-                    </span>
-                  </span>
-                </template>
-                <span v-else class="no-category">-</span>
-              </div>
-            </td>
-            <td>{{ product.brand }}</td>
-            <td>
-              <span :class="['status-badge', product.is_active ? 'active' : 'inactive']">
-                {{ product.is_active ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td>{{ product.sort_order }}</td>
-            <td class="actions">
+            <!-- Actions -->
+            <td class="sticky-col first-col actions">
               <button @click="toggleActive(product)" class="btn-icon" :title="product.is_active ? 'Deactivate' : 'Activate'">
                 <i :class="['fas', product.is_active ? 'fa-eye-slash' : 'fa-eye']"></i>
               </button>
@@ -116,12 +138,107 @@
                 <i class="fas fa-trash"></i>
               </button>
             </td>
+            <!-- ID -->
+            <td class="sticky-col second-col font-mono font-bold">{{ product.id }}</td>
+            <td>{{ product.module || '-' }}</td>
+            <!-- Image -->
+            <td>
+              <img v-if="product.image" :src="product.image" :alt="product.title" class="product-image" @error="(e) => e.target.style.display = 'none'" />
+              <span v-else class="no-image">No Image</span>
+            </td>
+            <!-- SKU -->
+            <td class="font-mono">{{ product.sku || '-' }}</td>
+            <!-- Title -->
+            <td class="font-semibold">{{ product.title }}</td>
+            <!-- Subtitle -->
+            <td>{{ product.subtitle || '-' }}</td>
+            <!-- Category -->
+            <td>
+              <template v-if="product.category_pairs && product.category_pairs.length > 0">
+                <span v-for="(pair, idx) in product.category_pairs" :key="idx" class="category-tag">
+                  {{ pair.category_name }}
+                </span>
+              </template>
+              <span v-else>{{ product.category || '-' }}</span>
+            </td>
+            <!-- Subcategory -->
+            <td>
+              <template v-if="product.category_pairs && product.category_pairs.length > 0">
+                <span v-for="(pair, idx) in product.category_pairs" :key="idx" class="category-tag">
+                  {{ pair.sub_category_name || '-' }}
+                </span>
+              </template>
+              <span v-else>{{ product.sub_category || '-' }}</span>
+            </td>
+            <!-- Brand -->
+            <td>{{ product.brand || '-' }}</td>
+            <!-- Stock -->
+            <td>
+              <span class="stock-badge">{{ product.stock ?? 0 }}</span>
+            </td>
+            <!-- Descriptions -->
+            <td class="cell-truncate" :title="product.descriptions">{{ product.descriptions || '-' }}</td>
+            <!-- Specs 1-20 -->
+            <td v-for="i in 20" :key="'c-spec' + i" class="cell-truncate" :title="product['spec' + i]">{{ product['spec' + i] || '-' }}</td>
+            <!-- Features 1-20 -->
+            <td v-for="i in 20" :key="'c-fitur' + i" class="cell-truncate" :title="product['fitur' + i]">{{ product['fitur' + i] || '-' }}</td>
+            <!-- Wireless -->
+            <td>{{ product.wireless_standard || product.wirelessStandard || '-' }}</td>
+            <td>{{ product.wireless_stream || product.wirelessStream || '-' }}</td>
+            <td v-for="i in 5" :key="'c-ws' + i">{{ product['wireless_stream' + i] || product['wirelessStream' + i] || '-' }}</td>
+            <!-- Controller / AP -->
+            <td>{{ product.manageable_aps || product.manageableAps || '-' }}</td>
+            <td>{{ product.ap_number || product.APnumber || '-' }}</td>
+            <td>{{ product.number_of_clients || product.numberOfClients || '-' }}</td>
+            <td>{{ product.capacity || '-' }}</td>
+            <td>{{ product.ip_rating || product.iprating || '-' }}</td>
+            <!-- Switch -->
+            <td>{{ product.switching || '-' }}</td>
+            <td>{{ product.throughput || '-' }}</td>
+            <!-- Memory -->
+            <td>{{ product.flash_memory || product.flashmemory || '-' }}</td>
+            <td>{{ product.sdram_memory || product.sdrammemory || '-' }}</td>
+            <!-- Interface -->
+            <td>{{ product.interface_main || product.Interface || '-' }}</td>
+            <td v-for="i in 5" :key="'c-if' + i">{{ product['interface' + i] || product['Interface' + i] || '-' }}</td>
+            <td>{{ product.antena || product.antenna || '-' }}</td>
+            <td>{{ product.cu || '-' }}</td>
+            <td v-for="i in 5" :key="'c-cu' + i">{{ product['cu' + i] || '-' }}</td>
+            <td v-for="i in 5" :key="'c-addif' + i">{{ product['additional_interface' + i] || product['aditionalinterface' + i] || '-' }}</td>
+            <!-- Network -->
+            <td>{{ product.mac_address || product.macaddress || '-' }}</td>
+            <td>{{ product.routing_table || product.routingtable || '-' }}</td>
+            <!-- Environment -->
+            <td>{{ product.dustproof_waterproof || product.dustproofwaterproof || '-' }}</td>
+            <td>{{ product.noise || '-' }}</td>
+            <td>{{ product.mtbf || '-' }}</td>
+            <td>{{ product.operating_temperature || product.operatingtemperature || '-' }}</td>
+            <td>{{ product.storage_temperature || product.storagetemperature || '-' }}</td>
+            <td>{{ product.operating_humidity || product.operatinghumidity || '-' }}</td>
+            <!-- Power -->
+            <td v-for="i in 5" :key="'c-pwr' + i">{{ product['power' + i] || '-' }}</td>
+            <td>{{ product.power_consumptions || product.powercomsumptions || '-' }}</td>
+            <td>{{ product.power_consumption_with_poe || product['PowerConsumption(withPoE)'] || '-' }}</td>
+            <td>{{ product.power_consumption_excluding_poe || product['PowerConsumption(ExcludingPoE)'] || '-' }}</td>
+            <td>{{ product.poe_budget || product.PoEBudget || '-' }}</td>
+            <!-- Dimensions & Diagrams -->
+            <td>{{ product.dimensions || '-' }}</td>
+            <td>{{ product.diagram || '-' }}</td>
+            <td>{{ product.network_diagram || product.networkDIagram || '-' }}</td>
+            <!-- Status -->
+            <td>
+              <span :class="['status-badge', product.is_active ? 'active' : 'inactive']">
+                {{ product.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <!-- Sort Order -->
+            <td>{{ product.sort_order ?? 0 }}</td>
           </tr>
           <tr v-if="loading">
-            <td colspan="8" class="text-center">Loading...</td>
+            <td colspan="100" class="text-center">Loading...</td>
           </tr>
           <tr v-if="!loading && products.data?.length === 0">
-            <td colspan="8" class="text-center">No products found</td>
+            <td colspan="100" class="text-center">No products found</td>
           </tr>
         </tbody>
       </table>
@@ -627,8 +744,25 @@ function getSubcategoriesForCategory(categoryId) {
 }
 
 // Initialize specs and features
-for (let i = 1; i <= 7; i++) form[`spec${i}`] = '';
-for (let i = 1; i <= 15; i++) form[`fitur${i}`] = '';
+for (let i = 1; i <= 20; i++) form[`spec${i}`] = '';
+for (let i = 1; i <= 20; i++) form[`fitur${i}`] = '';
+
+const syncingFromProducts = ref(false);
+
+async function syncFromProducts() {
+  if (!confirm('Sync semua data dari Products (/dashboard/products) ke Public Products?')) return;
+  syncingFromProducts.value = true;
+  try {
+    const res = await api.post('/public-products/sync-from-products');
+    alert(res.data.message || 'Data berhasil disinkronkan dari Products.');
+    await fetchProducts(products.value.current_page || 1);
+  } catch (err) {
+    console.error('Failed to sync from products:', err);
+    alert(err.response?.data?.message || 'Gagal melakukan sinkronisasi dari Products');
+  } finally {
+    syncingFromProducts.value = false;
+  }
+}
 
 onMounted(() => {
   fetchProducts();
@@ -781,11 +915,16 @@ function resetForm() {
   form.powercomsumptions = '';
   // Reset physical specs
   form.dimensions = '';
-  // Reset diagram
-  form.diagram = '';
-  form.networkDIagram = '';
-  for (let i = 1; i <= 7; i++) form[`spec${i}`] = '';
-  for (let i = 1; i <= 15; i++) form[`fitur${i}`] = '';
+  form.stock = 0;
+  form.cu5 = '';
+  form.aditionalinterface5 = '';
+  form.power4 = '';
+  form.power5 = '';
+  form.power_consumption_with_poe = '';
+  form.power_consumption_excluding_poe = '';
+  form.poe_budget = '';
+  for (let i = 1; i <= 20; i++) form[`spec${i}`] = '';
+  for (let i = 1; i <= 20; i++) form[`fitur${i}`] = '';
 }
 
 async function saveProduct() {
@@ -954,14 +1093,58 @@ async function handleFileImport(event) {
 
 .products-table th,
 .products-table td {
-  padding: 12px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  font-size: 13px;
 }
 
 .products-table th {
-  background: #f5f5f5;
+  background: #f8fafc;
   font-weight: 600;
+  color: #334155;
+}
+
+.sticky-col {
+  position: sticky;
+  background: white;
+  z-index: 2;
+}
+
+thead .sticky-col {
+  background: #f8fafc;
+  z-index: 3;
+}
+
+.first-col {
+  left: 0;
+  box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.second-col {
+  left: 95px;
+  box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.cell-truncate {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .product-image {

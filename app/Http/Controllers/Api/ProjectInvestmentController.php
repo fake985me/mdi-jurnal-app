@@ -15,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ProjectInvestmentController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     public function index(Request $request)
     {
         try {
@@ -230,7 +231,7 @@ class ProjectInvestmentController extends Controller
 
         DB::beginTransaction();
         try {
-            $stockService = new StockSyncService();
+            $stockService = $this->stockService;
             $transferService = new StockTransferService();
             $defaultWarehouseId = Warehouse::getDefault()?->id;
             $projectWarehouseId = $project->warehouse_id;
@@ -405,7 +406,7 @@ class ProjectInvestmentController extends Controller
 
     private function returnItemsToStock(ProjectInvestment $project)
     {
-        $stockService = new StockSyncService();
+        $stockService = $this->stockService;
         $transferService = new StockTransferService();
         $defaultWarehouseId = Warehouse::getDefault()?->id;
         $projectWarehouseId = $project->warehouse_id;

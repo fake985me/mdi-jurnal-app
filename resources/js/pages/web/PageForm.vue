@@ -242,8 +242,8 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../../services/api'
-import DragDropBuilder from '../components/PageBuilder/DragDropBuilder.vue'
-import SectionRenderer from '../components/PageBuilder/SectionRenderer.vue'
+import DragDropBuilder from '../../components/PageBuilder/DragDropBuilder.vue'
+import SectionRenderer from '../../components/PageBuilder/SectionRenderer.vue'
 import { useNavigationStore } from '../../stores/navigation'
 
 const route = useRoute()

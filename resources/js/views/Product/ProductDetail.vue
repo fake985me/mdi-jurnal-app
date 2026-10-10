@@ -86,24 +86,41 @@
         <div class="w-full mt-10 px-2 sm:px-4">
           <h2 class="text-lg sm:text-xl font-semibold text-center mb-2">
             {{ selectedProduct?.title || product.title }}<br />
-            {{ selectedProduct?.category || product.category }} {{ selectedProduct?.subCategory || product.subCategory }} Network Diagram
+            {{ diagramCategoryLabel }} {{ diagramSubCategoryLabel }} Network Diagram
           </h2>
+          <!-- Multi-Diagram Tabs -->
+          <div v-if="diagramList.length > 1" class="flex justify-center gap-2 mb-4 flex-wrap">
+            <button
+              v-for="(diag, idx) in diagramList"
+              :key="idx"
+              @click="activeDiagramIndex = idx"
+              :class="[
+                'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                activeDiagramIndex === idx
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ]"
+            >
+              Diagram {{ idx + 1 }} ({{ diag }})
+            </button>
+          </div>
+
           <Transition name="fade-scale">
             <template v-if="effectiveProduct">
               <OpticLine 
                 v-if="diagramType.includes('xgspon') || diagramType.includes('optical')" 
-                :product="effectiveProduct"
-                :diagram="effectiveProduct.diagram" 
+                :product="effectiveProductForDiagram"
+                :diagram="activeDiagram" 
               />
               <GponLine 
                 v-else-if="diagramType.includes('gpon')" 
-                :product="effectiveProduct"
-                :diagram="effectiveProduct.diagram" 
+                :product="effectiveProductForDiagram"
+                :diagram="activeDiagram" 
               />
               <SwitchLine 
                 v-else-if="diagramType.includes('switch')" 
-                :product="effectiveProduct"
-                :diagram="effectiveProduct.diagram" 
+                :product="effectiveProductForDiagram"
+                :diagram="activeDiagram" 
               />
               <div v-else class="text-center text-gray-500 mt-4">
                 Diagram belum tersedia untuk produk ini.
@@ -128,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import useProducts from '@/composable/useProducts.js'
 import OpticLine from './components/xgsponLine.vue'
@@ -141,6 +158,14 @@ const props = defineProps({
   product: {
     type: Object,
     required: true,
+  },
+  category: {
+    type: String,
+    default: '',
+  },
+  sub: {
+    type: String,
+    default: '',
   },
 })
 
@@ -156,34 +181,177 @@ const selectedProduct = computed(() => {
 
 const effectiveProduct = computed(() => selectedProduct.value || props.product || null)
 
-// Tentukan tipe diagram
-const diagramType = computed(() => {
+// Kategori & subkategori kontekstual dari tab/route query yang dipilih
+const targetCategory = computed(() => {
+  return (props.category || route.query.category || '').toString().trim()
+})
+
+const targetSubCategory = computed(() => {
+  return (props.sub || route.query.sub || '').toString().trim()
+})
+
+// Label kategori untuk judul diagram
+const diagramCategoryLabel = computed(() => {
+  if (targetCategory.value) return targetCategory.value
   const p = effectiveProduct.value || {}
-  
-  // Prioritas dari networkDiagram / network_diagram / diagram
-  const raw = (
-    p.networkDiagram ||
-    p.network_diagram ||
-    p.diagram
-  )?.toString().trim().toLowerCase()
-  
-  if (raw) return raw
-  
-  // Fallback dari kategori
-  const cat = (p.category || '').toString().trim().toLowerCase()
-  const sub = (p.subCategory || '').toString().trim().toLowerCase()
-  
-  if (cat.includes('xgsp') || sub.includes('xgsp')) return 'xgspon'
-  if (cat.includes('gpon') || sub.includes('gpon')) return 'gpon'
-  if (cat.includes('switch') || sub.includes('switch')) return 'switch'
-  
+  return p.category || ''
+})
+
+// Label subkategori untuk judul diagram & diagram marker
+const diagramSubCategoryLabel = computed(() => {
+  if (targetSubCategory.value) return targetSubCategory.value
+  const p = effectiveProduct.value || {}
+  const targetCat = targetCategory.value.toLowerCase()
+  if (targetCat && p.category_pairs && p.category_pairs.length > 0) {
+    const pair = p.category_pairs.find(cp => cp.category_name?.toLowerCase() === targetCat)
+    if (pair?.sub_category_name) return pair.sub_category_name
+  }
+  return p.subCategory || ''
+})
+
+// Multi-Diagram Handling: representasi setiap diagram produk dipetakan ke kategorinya
+const allDiagramEntries = computed(() => {
+  const p = effectiveProduct.value || {}
+  const rawDiag = p.diagram || ''
+  const rawNet = p.networkDiagram || p.network_diagram || ''
+
+  const diags = (p.diagrams && p.diagrams.length > 0)
+    ? p.diagrams
+    : rawDiag.split('|').map(s => s.trim()).filter(Boolean)
+  const nets = (p.networkDiagrams && p.networkDiagrams.length > 0)
+    ? p.networkDiagrams
+    : rawNet.split('|').map(s => s.trim()).filter(Boolean)
+
+  const rawCats = (p.rawCategory || p.category || '').split('|').map(s => s.trim()).filter(Boolean)
+  const rawSubs = (p.rawSubCategory || p.subCategory || '').split('|').map(s => s.trim()).filter(Boolean)
+
+  const count = Math.max(diags.length, nets.length, rawCats.length, 1)
+  const entries = []
+
+  for (let i = 0; i < count; i++) {
+    const d = diags[i] || diags[0] || rawDiag || ''
+    const n = nets[i] || nets[0] || rawNet || ''
+    const cat = rawCats[i] || rawCats[0] || ''
+    const sub = rawSubs[i] || rawSubs[0] || ''
+
+    let type = ''
+    const lowerD = d.toLowerCase()
+    const lowerN = n.toLowerCase()
+    const lowerC = cat.toLowerCase()
+
+    if (lowerD.includes('xgsp') || lowerN.includes('xgsp') || lowerC.includes('xgsp') || lowerD.includes('optic') || lowerN.includes('optic')) {
+      type = 'xgspon'
+    } else if (lowerD.includes('gpon') || lowerN.includes('gpon') || lowerC.includes('gpon')) {
+      type = 'gpon'
+    } else if (lowerD.includes('switch') || lowerN.includes('switch') || lowerC.includes('switch') || lowerD.includes('access') || lowerN.includes('access') || lowerD.includes('core') || lowerN.includes('core')) {
+      type = 'switch'
+    } else {
+      type = lowerC || ''
+    }
+
+    entries.push({
+      diagram: d,
+      networkDiagram: n,
+      category: cat,
+      subCategory: sub,
+      type: type,
+    })
+  }
+
+  return entries
+})
+
+// Filter diagram entries hanya yang sesuai kategori aktif yang dipilih
+const diagramEntries = computed(() => {
+  const all = allDiagramEntries.value
+  const targetCat = targetCategory.value.toLowerCase()
+  if (!targetCat) return all
+
+  const matched = all.filter(entry => {
+    const entryCat = entry.category?.toLowerCase() || ''
+    const entryType = entry.type?.toLowerCase() || ''
+    const entryDiag = entry.diagram?.toLowerCase() || ''
+    const entryNet = entry.networkDiagram?.toLowerCase() || ''
+
+    if (entryCat && (entryCat === targetCat || entryCat.includes(targetCat) || targetCat.includes(entryCat))) {
+      return true
+    }
+    if (entryType && (entryType === targetCat || entryType.includes(targetCat) || targetCat.includes(entryType))) {
+      return true
+    }
+    if (targetCat.includes('gpon') && !targetCat.includes('xgsp') && (entryDiag.includes('gpon') || entryNet.includes('gpon'))) {
+      return true
+    }
+    if ((targetCat.includes('xgsp') || targetCat.includes('optic')) && (entryDiag.includes('xgsp') || entryNet.includes('xgsp') || entryDiag.includes('optic') || entryNet.includes('optic'))) {
+      return true
+    }
+    if (targetCat.includes('switch') && (entryDiag.includes('switch') || entryNet.includes('switch') || entryDiag.includes('access') || entryNet.includes('access') || entryDiag.includes('core') || entryNet.includes('core'))) {
+      return true
+    }
+    return false
+  })
+
+  return matched.length > 0 ? matched : all
+})
+
+const activeDiagramIndex = ref(0)
+
+// Reset index saat kategori / diagram berubah
+watch(diagramEntries, () => {
+  activeDiagramIndex.value = 0
+})
+
+const diagramList = computed(() => {
+  return diagramEntries.value.map(e => e.diagram).filter(Boolean)
+})
+
+const currentEntry = computed(() => {
+  return diagramEntries.value[activeDiagramIndex.value] || diagramEntries.value[0] || null
+})
+
+const activeDiagram = computed(() => {
+  return currentEntry.value?.diagram || ''
+})
+
+const activeNetworkDiagram = computed(() => {
+  return currentEntry.value?.networkDiagram || ''
+})
+
+const diagramType = computed(() => {
+  if (currentEntry.value?.type) return currentEntry.value.type
+
+  const activeNet = (activeNetworkDiagram.value || '').toLowerCase()
+  const activeDiag = (activeDiagram.value || '').toLowerCase()
+  const raw = activeNet || activeDiag
+
+  if (raw.includes('xgsp') || raw.includes('optical')) return 'xgspon'
+  if (raw.includes('gpon')) return 'gpon'
+  if (raw.includes('switch') || raw.includes('access') || raw.includes('core')) return 'switch'
+
+  const cat = targetCategory.value.toLowerCase() || (effectiveProduct.value?.category || '').toLowerCase()
+  if (cat.includes('xgsp')) return 'xgspon'
+  if (cat.includes('gpon')) return 'gpon'
+  if (cat.includes('switch')) return 'switch'
+
   return ''
 })
 
-// FEATURES: ambil dari fitur1..fitur15
+// Objek produk khusus diagram dengan category & subCategory kontekstual agar marker akurat
+const effectiveProductForDiagram = computed(() => {
+  const p = effectiveProduct.value
+  if (!p) return null
+  return {
+    ...p,
+    category: diagramCategoryLabel.value || p.category,
+    subCategory: diagramSubCategoryLabel.value || p.subCategory,
+  }
+})
+
+// FEATURES: ambil dari fitur1..fitur20
 const features = computed(() => {
-  return Array.from({ length: 15 }, (_, i) => props.product?.[`fitur${i + 1}`])
-    .filter((f) => f && f !== 'null')
+  const p = effectiveProduct.value || props.product || {}
+  return Array.from({ length: 20 }, (_, i) => p[`fitur${i + 1}`])
+    .filter((f) => f && f !== 'null' && f !== '-')
 })
 
 // DYNAMIC SPECIFICATION LIST
@@ -276,17 +444,24 @@ const specificationList = computed(() => {
   }
   addSpec('Power Consumption', p.powercomsumptions)
   
-  // Dimensions
-  addSpec('Dimensions', p.dimensions)
-  
+  // General specs (spec1 to spec20) if available
+  for (let i = 1; i <= 20; i++) {
+    const val = p[`spec${i}`]
+    if (val && val !== 'null' && val !== '-' && typeof val === 'string' && val.trim()) {
+      addSpec(`Spec ${i}`, val.trim())
+    }
+  }
+
   return specs
 })
 
 function openFullscreenTab() {
   const p = effectiveProduct.value
-  const diagram = p?.diagram || ''
+  const diagram = activeDiagram.value || p?.diagram || ''
   const slug = encodeURIComponent(p?.slug || '')
-  const url = `/diagram-fullscreen?slug=${slug}&diagram=${diagram}`
+  const cat = encodeURIComponent(diagramCategoryLabel.value || '')
+  const sub = encodeURIComponent(diagramSubCategoryLabel.value || '')
+  const url = `/diagram-fullscreen?slug=${slug}&diagram=${encodeURIComponent(diagram)}&category=${cat}&sub=${sub}`
   window.open(url, '_blank')
 }
 </script>

@@ -13,6 +13,8 @@ class StockController extends Controller
     public function index(Request $request)
     {
         try {
+            $showAllWarehouses = !$request->filled('warehouse_id');
+
             $query = CurrentStock::with([
                     'product.productCategories.category',
                     'product.productCategories.subCategory',
@@ -36,21 +38,25 @@ class StockController extends Controller
 
             // Filter by low stock (uses product minimum_stock, fallback to 10)
             if ($request->has('low_stock') && $request->low_stock == 'true') {
-                $query->where(function ($q) {
-                    $q->whereHas('product', function ($pq) {
-                        $pq->whereColumn('current_stocks.quantity', '<=', 'products.minimum_stock');
-                    })->orWhere(function ($q2) {
-                        $q2->where('quantity', '<=', 10)
-                            ->whereHas('product', function ($pq2) {
-                                $pq2->whereNull('minimum_stock');
-                            });
+                if (!$showAllWarehouses) {
+                    $query->where(function ($q) {
+                        $q->whereHas('product', function ($pq) {
+                            $pq->whereColumn('current_stocks.quantity', '<=', 'products.minimum_stock');
+                        })->orWhere(function ($q2) {
+                            $q2->where('quantity', '<=', 10)
+                                ->whereHas('product', function ($pq2) {
+                                    $pq2->whereNull('minimum_stock');
+                                });
+                        });
                     });
-                });
+                }
             }
 
             // Filter by out of stock
             if ($request->has('out_of_stock') && $request->out_of_stock == 'true') {
-                $query->where('quantity', '<=', 0);
+                if (!$showAllWarehouses) {
+                    $query->where('quantity', '<=', 0);
+                }
             }
 
             // Search by product title, brand, or SKU
@@ -61,6 +67,28 @@ class StockController extends Controller
                         ->orWhere('brand', 'like', "%{$search}%")
                         ->orWhere('sku', 'like', "%{$search}%");
                 });
+            }
+
+            if ($showAllWarehouses) {
+                $query->join('products', 'products.id', '=', 'current_stocks.product_id')
+                    ->selectRaw('
+                        MIN(current_stocks.id) as id,
+                        current_stocks.product_id,
+                        SUM(current_stocks.quantity) as quantity,
+                        MAX(current_stocks.last_updated) as last_updated,
+                        MAX(current_stocks.updated_at) as updated_at
+                    ')
+                    ->groupBy('current_stocks.product_id');
+
+                if ($request->has('low_stock') && $request->low_stock == 'true') {
+                    $query->havingRaw(
+                        'SUM(current_stocks.quantity) > 0 AND SUM(current_stocks.quantity) <= COALESCE(MAX(products.minimum_stock), 10)'
+                    );
+                }
+
+                if ($request->has('out_of_stock') && $request->out_of_stock == 'true') {
+                    $query->havingRaw('SUM(current_stocks.quantity) <= 0');
+                }
             }
 
             $stocks = $query->paginate($request->per_page ?? 15);

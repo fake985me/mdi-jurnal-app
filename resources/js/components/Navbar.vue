@@ -24,7 +24,8 @@
               </svg>
             </RouterLink>
           </div>
-          <div class="ml-10 flex items-baseline space-x-4">
+          <div class="ml-10 flex items-baseline space-x-4 flex-1">
+            <RouterLink v-if="authStore.isAuthenticated" to="/dashboard" class="text-white hover:bg-gray-700 hover:text-white rounded-md px-4 py-2 text-lg font-medium">Dashboard</RouterLink>
             <template v-for="item in navigation">
               <RouterLink v-if="!item.children" :key="item.name" :to="item.href" :class="[
                 isCurrent(item)
@@ -92,6 +93,9 @@
   <!-- Mobile Bottom Nav -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-800 z-50 shadow-md">
     <div class="flex justify-around items-center h-14">
+      <RouterLink v-if="authStore.isAuthenticated" to="/dashboard" class="flex flex-col items-center text-sm text-gray-400 hover:text-white">
+        <span>Dashboard</span>
+      </RouterLink>
       <template v-for="item in navigation">
         <RouterLink v-if="!item.children" :key="item.name" :to="item.href" :class="[
           isCurrent(item)
@@ -165,9 +169,11 @@ import { Disclosure } from '@headlessui/vue'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 import { useNavigationStore } from '../stores/navigation'
+import { useAuthStore } from '../stores/auth'
 
 const route = useRoute()
 const navigationStore = useNavigationStore()
+const authStore = useAuthStore()
 const dropdownOpen = ref(null)
 
 // Use navigation from store (combines default + dynamic items)

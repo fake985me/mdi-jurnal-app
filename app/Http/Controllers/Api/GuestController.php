@@ -76,25 +76,55 @@ class GuestController extends Controller
     }
 
     /**
-     * Get categories for public product
+     * Get categories for public product (synced with database Category & SubCategory models)
+     * Returns sub_categories as array of objects { id, name } for frontend compatibility.
      */
     public function categories()
     {
-        // Get unique categories from products
-        $categories = Product::whereNotNull('category')
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->sort()
-            ->values()
-            ->map(function ($category) {
-                return [
-                    'name' => $category,
-                    'value' => $category
-                ];
-            });
+        $dbCategories = \App\Models\Category::with(['subCategories' => function ($q) {
+            $q->orderBy('name');
+        }])->orderBy('name')->get();
 
-        return response()->json($categories);
+        $result = [];
+
+        foreach ($dbCategories as $cat) {
+            $subsObjects = $cat->subCategories->map(function ($sub) {
+                return ['id' => $sub->id, 'name' => $sub->name];
+            })->filter(fn($s) => !empty($s['name']))->values()->toArray();
+
+            $result[$cat->name] = [
+                'id'             => $cat->id,
+                'name'           => $cat->name,
+                'title'          => $cat->name,
+                'sub_categories' => $subsObjects,
+            ];
+        }
+
+        // Also ensure categories from active PublicProduct (including multi-category with |) are included
+        $publicProducts = \App\Models\PublicProduct::where('is_active', true)->get(['category', 'sub_category']);
+        foreach ($publicProducts as $p) {
+            $catNames = array_map('trim', explode('|', $p->category ?? ''));
+            $subNames = array_map('trim', explode('|', $p->sub_category ?? ''));
+
+            foreach ($catNames as $idx => $cName) {
+                if (empty($cName)) continue;
+                if (!isset($result[$cName])) {
+                    $result[$cName] = [
+                        'id'             => null,
+                        'name'           => $cName,
+                        'title'          => $cName,
+                        'sub_categories' => [],
+                    ];
+                }
+                $sName = $subNames[$idx] ?? ($subNames[0] ?? null);
+                $existingNames = array_column($result[$cName]['sub_categories'], 'name');
+                if ($sName && !in_array($sName, $existingNames)) {
+                    $result[$cName]['sub_categories'][] = ['id' => null, 'name' => $sName];
+                }
+            }
+        }
+
+        return response()->json(array_values($result));
     }
 
     /**

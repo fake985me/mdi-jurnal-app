@@ -149,6 +149,11 @@ const routes = [
                 component: () => import("../pages/admin/RMAs.vue"),
             },
             {
+                path: "rma-shipments",
+                name: "RMAShipments",
+                component: () => import("../pages/admin/RMAShipments.vue"),
+            },
+            {
                 path: "project-investments",
                 name: "ProjectInvestments",
                 component: () => import("../pages/admin/ProjectInvestments.vue"),
@@ -179,6 +184,11 @@ const routes = [
                 component: () => import("../pages/admin/Deliveries.vue"),
             },
             {
+                path: "deliveries/:id/serial-numbers",
+                name: "DeliverySerialNumbers",
+                component: () => import("../pages/admin/DeliverySerialNumbers.vue"),
+            },
+            {
                 path: "history",
                 name: "History",
                 component: () => import("../pages/admin/History.vue"),
@@ -192,6 +202,11 @@ const routes = [
                 path: "bank-accounts",
                 name: "BankAccounts",
                 component: () => import("../pages/admin/BankAccounts.vue"),
+            },
+            {
+                path: "tax-rates",
+                name: "TaxRates",
+                component: () => import("../pages/admin/TaxRates.vue"),
             },
             // CMS Content Management
             {

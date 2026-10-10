@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* Tailwind v4 theme customization (migrated from tailwind.config.js) */
+@theme {
+    /* Primary color palette */
+    --color-primary-50: #eef2ff;
+    --color-primary-100: #e0e7ff;
+    --color-primary-200: #c7d2fe;
+    --color-primary-300: #a5b4fc;
+    --color-primary-400: #818cf8;
+    --color-primary-500: #6366f1;
+    --color-primary-600: #4f46e5;
+    --color-primary-700: #4338ca;
+    --color-primary-800: #3730a3;
+    --color-primary-900: #312e81;
+
+    /* Font family */
+    --font-sans: 'Inter', system-ui, sans-serif;
+
+    /* Custom animations */
+    --animate-fade-in: fadeIn 0.3s ease-in-out;
+    --animate-slide-in: slideIn 0.3s ease-out;
+    --animate-bounce-slow: bounce 2s infinite;
+
+    /* Custom box shadows */
+    --shadow-custom: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-custom-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
 /* @import './base.css'; */
 
 html {

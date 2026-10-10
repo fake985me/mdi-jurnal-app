@@ -497,4 +497,13 @@ class PublicProductController extends Controller
             'errors' => $errors
         ]);
     }
+
+    /**
+     * Sync all public products from internal products table
+     */
+    public function syncFromProducts()
+    {
+        $productController = app(\App\Http\Controllers\Api\ProductController::class);
+        return $productController->syncAllToPublic();
+    }
 }

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RMA extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'rmas';
 
@@ -27,7 +28,10 @@ class RMA extends Model
         'issue_date',
         'received_date',
         'condition',
+        'condition_level',
+        'rma_warehouse_id',
         'resolution',
+        'replacement_requested',
         'notes',
         'evidence_files',
         'user_id'
@@ -88,10 +92,16 @@ class RMA extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Check if RMA is valid based on warranty or MSA
-     * @return array ['valid' => bool, 'reason' => string]
-     */
+    public function rmaWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'rma_warehouse_id');
+    }
+
+    public function shipments()
+    {
+        return $this->hasMany(RMAShipment::class);
+    }
+
     public static function validateEligibility($saleId, $saleItemId = null, $productId = null)
     {
         $sale = Sale::with('warranties', 'items')->find($saleId);

@@ -4,7 +4,7 @@ import ProductView from '../views/partial/ProductView.vue'
 import SolutionsView from '../views/partial/SolutionsView.vue'
 import ProjectView from '../views/partial/ProjectView.vue'
 import AboutUs from '../views/partial/AboutUs.vue'
-import FirmwareModification from '../views/partial/Firmware Modification.vue'
+import FirmwareModification from '../views/partial/FirmwareModification.vue'
 </script>
 
 <template>

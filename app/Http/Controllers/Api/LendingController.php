@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class LendingController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     public function index(Request $request)
     {
         try {
@@ -60,7 +61,7 @@ class LendingController extends Controller
 
         DB::beginTransaction();
         try {
-            $stockService = new StockSyncService();
+            $stockService = $this->stockService;
             
             // Check stock availability and deduct
             $stockService->deductStock(
@@ -120,7 +121,7 @@ class LendingController extends Controller
 
         DB::beginTransaction();
         try {
-            $stockService = new StockSyncService();
+            $stockService = $this->stockService;
             
             // Create return record
             LendingReturn::create([

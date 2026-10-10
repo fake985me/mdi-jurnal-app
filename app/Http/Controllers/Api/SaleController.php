@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     /**
      * Generate sequential invoice number
      */
@@ -162,8 +163,7 @@ class SaleController extends Controller
                 ]);
 
                 // Always reduce stock when sale is created (even if pending)
-                $stockService = new StockSyncService();
-                $stockService->deductStock(
+                $this->stockService->deductStock(
                     $item['product_id'],
                     $item['quantity'],
                     'sale',
@@ -218,8 +218,23 @@ class SaleController extends Controller
                 'user_id' => auth()->id(),
             ]);
 
+            // Auto-create delivery record
+            $deliveryInfo = $request->input('delivery_info');
+            $trackingNumber = $deliveryInfo['tracking_number'] ?? null;
+            if (empty($trackingNumber)) {
+                $trackingNumber = 'TRK-' . date('Ymd') . '-' . str_pad($sale->id, 4, '0', STR_PAD_LEFT);
+            }
+            \App\Models\Delivery::create([
+                'sale_id' => $sale->id,
+                'status' => 'preparing',
+                'courier' => $deliveryInfo['courier'] ?? null,
+                'tracking_number' => $trackingNumber,
+                'user_id' => auth()->id(),
+                'notes' => "Auto-created from Sale #{$invoiceNumber}",
+            ]);
+
             DB::commit();
-            return response()->json($sale->load(['items.product', 'salesPerson', 'user', 'customer']), 201);
+            return response()->json($sale->load(['items.product', 'salesPerson', 'user', 'customer', 'delivery']), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -241,13 +256,15 @@ class SaleController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:pending,completed,cancelled',
             'notes' => 'nullable|string',
+            'tax_type' => 'nullable|string',
+            'discount_amount' => 'nullable|numeric|min:0',
         ]);
 
         $newStatus = $validated['status'];
 
         DB::beginTransaction();
         try {
-            $stockService = new StockSyncService();
+            $stockService = $this->stockService;
 
             // Stock already deducted on create. Only restore when cancelling.
             // Handle status change: completed -> cancelled (restore stock)
@@ -264,7 +281,43 @@ class SaleController extends Controller
                 }
             }
 
-            $sale->update($validated);
+            $sale->update([
+                'status' => $validated['status'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // Recalculate financial values when the tax or discount is changed.
+            if (array_key_exists('tax_type', $validated) || array_key_exists('discount_amount', $validated)) {
+                $subtotal = $sale->items->sum(fn ($item) => $item->quantity * $item->unit_price);
+                $taxType = $validated['tax_type'] ?? $sale->tax_type;
+                $taxRateValue = 0;
+                $taxAmount = 0;
+
+                if ($taxType) {
+                    $taxRate = TaxRate::getByCode($taxType);
+                    if ($taxRate) {
+                        $taxRateValue = $taxRate->rate;
+                        $taxAmount = $taxRate->calculateTax($subtotal);
+                    }
+                }
+
+                $discountAmount = $validated['discount_amount'] ?? $sale->discount_amount ?? 0;
+                $grandTotal = $subtotal + $taxAmount - $discountAmount;
+
+                $sale->update([
+                    'total_amount' => $subtotal,
+                    'subtotal' => $subtotal,
+                    'tax_type' => $taxType ?: null,
+                    'tax_rate' => $taxRateValue,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => $discountAmount,
+                    'grand_total' => $grandTotal,
+                ]);
+
+                $sale->payments()
+                    ->where('status', 'unpaid')
+                    ->update(['amount' => $grandTotal > 0 ? $grandTotal : $subtotal]);
+            }
             DB::commit();
 
             return response()->json($sale->load(['items.product', 'salesPerson', 'user', 'customer']));
@@ -282,7 +335,7 @@ class SaleController extends Controller
         try {
             // If sale was completed, restore stock before deletion
             if (in_array($sale->status, ['completed', 'pending'])) {
-                $stockService = new StockSyncService();
+                $stockService = $this->stockService;
                 foreach ($sale->items as $item) {
                     $stockService->addStock(
                         $item->product_id,

@@ -20,7 +20,8 @@ class DashboardController extends Controller
 
         $lowStockQuery = DB::table('current_stocks')
             ->join('products', 'current_stocks.product_id', '=', 'products.id')
-            ->whereRaw('current_stocks.quantity < 10');
+            // Gunakan minimum_stock per produk, bukan nilai hardcoded
+            ->whereRaw('current_stocks.quantity <= products.minimum_stock');
 
         if ($defaultWarehouse) {
             $lowStockQuery->where('current_stocks.warehouse_id', $defaultWarehouse->id);
@@ -114,13 +115,22 @@ class DashboardController extends Controller
         $salesData = Sale::where('status', 'completed')
             ->where('sale_date', '>=', now()->subMonths($months))
             ->select(
-                DB::raw('DATE_FORMAT(sale_date, "%Y-%m") as month'),
+                // Portable SQL: gunakan YEAR/MONTH daripada DATE_FORMAT yang MySQL-specific
+                DB::raw('YEAR(sale_date) as year'),
+                DB::raw('MONTH(sale_date) as month_num'),
+                DB::raw('DATE(sale_date) as month'),
                 DB::raw('COUNT(*) as total_sales'),
                 DB::raw('SUM(total_amount) as total_amount')
             )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+            ->groupBy('year', 'month_num', 'month')
+            ->orderBy('year')
+            ->orderBy('month_num')
+            ->get()
+            // Format month ke YYYY-MM di PHP level untuk portabilitas
+            ->map(function ($item) {
+                $item->month = str_pad($item->year, 4, '0', STR_PAD_LEFT) . '-' . str_pad($item->month_num, 2, '0', STR_PAD_LEFT);
+                return $item;
+            });
 
         $data = [
             'categories' => $salesData->pluck('month')->toArray(),

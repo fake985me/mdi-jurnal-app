@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
+    public function __construct(private StockSyncService $stockService) {}
     public function index(Request $request)
     {
         try {
@@ -203,7 +204,7 @@ class PurchaseController extends Controller
         try {
             // If purchase was paid, deduct stock before deletion
             if ($purchase->status === 'paid') {
-                $stockService = new StockSyncService();
+                $stockService = $this->stockService;
                 foreach ($purchase->items as $item) {
                     $itemIsForAsset = $item->is_for_asset ?? $purchase->is_for_asset ?? false;
                     if (!$itemIsForAsset) {
