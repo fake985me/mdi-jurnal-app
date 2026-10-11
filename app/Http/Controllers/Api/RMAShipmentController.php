@@ -58,34 +58,37 @@ class RMAShipmentController extends Controller
 
         DB::beginTransaction();
         try {
-            $rma = RMA::findOrFail($validated['rma_id']);
-            
-            if (!in_array($rma->status, ['processed'])) {
+            $rma = RMA::whereKey($validated['rma_id'])->lockForUpdate()->firstOrFail();
+
+            if ($rma->status !== 'processed') {
+                DB::rollBack();
                 return response()->json([
                     'message' => 'RMA harus dalam status processed untuk membuat shipment'
                 ], 422);
             }
 
             if ($rma->resolution !== 'replace') {
+                DB::rollBack();
                 return response()->json([
                     'message' => 'Hanya RMA dengan resolution replace yang bisa dibuat shipment'
                 ], 422);
             }
 
-            $stockService = $this->stockService;
-            
-            if (!$stockService->hasStock($validated['product_id'], $validated['quantity'])) {
-                throw new \Exception("Stock tidak mencukupi untuk shipment");
+            $rma->loadMissing('sale');
+            $existingShipment = RMAShipment::where('rma_id', $rma->id)->first();
+            if ($existingShipment) {
+                DB::commit();
+                return response()->json($existingShipment->load(['rma', 'product', 'user']));
             }
 
             $shipment = RMAShipment::create([
                 'shipment_code' => RMAShipment::generateCode(),
                 'rma_id' => $validated['rma_id'],
-                'product_id' => $validated['product_id'],
-                'quantity' => $validated['quantity'],
-                'recipient_name' => $validated['recipient_name'],
-                'recipient_address' => $validated['recipient_address'],
-                'recipient_phone' => $validated['recipient_phone'],
+                'product_id' => $rma->product_id,
+                'quantity' => $rma->quantity,
+                'recipient_name' => $rma->customer_name,
+                'recipient_address' => $rma->sale?->customer_address ?? $validated['recipient_address'],
+                'recipient_phone' => $rma->customer_contact ?: ($rma->sale?->customer_phone ?? $validated['recipient_phone']),
                 'courier' => $validated['courier'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'status' => 'pending',
@@ -115,10 +118,18 @@ class RMAShipmentController extends Controller
 
         DB::beginTransaction();
         try {
-            $shipment = RMAShipment::findOrFail($id);
-            $stockService = $this->stockService;
+            $shipment = RMAShipment::whereKey($id)->lockForUpdate()->firstOrFail();
 
-            $stockService->deductStock(
+            if ($shipment->status !== 'pending') {
+                throw new \RuntimeException('Shipment hanya bisa dikonfirmasi satu kali saat berstatus pending');
+            }
+
+            $rma = RMA::whereKey($shipment->rma_id)->lockForUpdate()->firstOrFail();
+            if ($rma->status !== 'processed' || $rma->resolution !== 'replace') {
+                throw new \RuntimeException('RMA harus diproses dengan resolution replace sebelum shipment dikonfirmasi');
+            }
+
+            $this->stockService->deductStock(
                 $shipment->product_id,
                 $shipment->quantity,
                 'rma_shipment',
@@ -145,14 +156,18 @@ class RMAShipmentController extends Controller
     {
         DB::beginTransaction();
         try {
-            $shipment = RMAShipment::findOrFail($id);
+            $shipment = RMAShipment::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            if (!in_array($shipment->status, ['shipped', 'in_transit'], true)) {
+                throw new \RuntimeException('Hanya shipment yang sudah dikirim yang dapat ditandai delivered');
+            }
 
             $shipment->update([
                 'status' => 'delivered',
                 'delivered_date' => now(),
             ]);
 
-            $shipment->rma->update([
+            $shipment->rma()->update([
                 'status' => 'completed'
             ]);
 

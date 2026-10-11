@@ -40,6 +40,7 @@ class ProductsTemplateSheet implements FromArray, WithHeadings, WithColumnWidths
                 'OLT', // subCategory (use | for multi-subcategory: e.g. ONU | L2 SWITCH)
                 'dasan', // brand
                 '10', // Stock
+                '12', // Warranty period in months
                 'Chassis PON Optical Line Termination', // descriptions
                 '8 port GPON/XGSPON Combo', // spec1
                 '16p GPON/XGSPON Combo', // spec2
@@ -90,6 +91,7 @@ class ProductsTemplateSheet implements FromArray, WithHeadings, WithColumnWidths
             'subCategory',
             'brand',
             'Stock',
+            'warranty_period_months',
             'descriptions',
         ];
 
@@ -174,7 +176,8 @@ class ProductsTemplateSheet implements FromArray, WithHeadings, WithColumnWidths
             'H' => 20,
             'I' => 15,
             'J' => 10,
-            'K' => 35,
+            'K' => 20,
+            'L' => 35,
         ];
     }
 

@@ -213,8 +213,8 @@ const loadWarranty = async () => {
       serial_number: warranty.serial_number || '',
       sale_id: warranty.sale_id,
       product_id: warranty.product_id,
-      start_date: warranty.start_date,
-      end_date: warranty.end_date,
+      start_date: warranty.start_date?.split('T')[0] || '',
+      end_date: warranty.end_date?.split('T')[0] || '',
       status: warranty.status,
       notes: warranty.notes || '',
     };

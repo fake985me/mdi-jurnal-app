@@ -31,6 +31,16 @@ class Lending extends Model
         'actual_return_date' => 'date',
     ];
 
+    protected $appends = ['remaining_quantity'];
+
+    public function getRemainingQuantityAttribute()
+    {
+        $returned = $this->relationLoaded('returns')
+            ? $this->returns->sum('quantity_returned')
+            : ($this->returns_sum_quantity_returned ?? $this->returns()->sum('quantity_returned'));
+        return max(0, $this->quantity - $returned);
+    }
+
     /**
      * Get the product
      */

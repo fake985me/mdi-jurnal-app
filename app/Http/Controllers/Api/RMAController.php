@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Warranty;
 use App\Models\MSAProject;
+use App\Models\RMAShipment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class RMAController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = RMA::with(['warranty', 'product', 'user']);
+            $query = RMA::with(['warranty', 'product', 'user', 'shipment']);
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -52,6 +53,26 @@ class RMAController extends Controller
         }
     }
 
+    private function createReplacementShipment(RMA $rma): RMAShipment
+    {
+        $rma->loadMissing('sale');
+
+        return RMAShipment::firstOrCreate(
+            ['rma_id' => $rma->id],
+            [
+                'shipment_code' => RMAShipment::generateCode(),
+                'product_id' => $rma->product_id,
+                'quantity' => $rma->quantity,
+                'recipient_name' => $rma->customer_name,
+                'recipient_address' => $rma->sale?->customer_address ?? '',
+                'recipient_phone' => $rma->customer_contact ?: ($rma->sale?->customer_phone ?? ''),
+                'status' => 'pending',
+                'user_id' => auth()->id(),
+                'notes' => "Permintaan penggantian otomatis dari {$rma->rma_code}",
+            ]
+        );
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -66,6 +87,7 @@ class RMAController extends Controller
             'quantity' => 'required|integer|min:1',
             'reason' => 'required|in:warranty_claim,damaged_shipment,defective,dead_on_arrival',
             'issue_date' => 'required|date',
+            'replacement_requested' => 'nullable|boolean',
             'notes' => 'nullable|string',
             'evidence' => 'nullable|array|max:5',
             'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
@@ -83,6 +105,7 @@ class RMAController extends Controller
             );
 
             if (!$eligibility['valid']) {
+                DB::rollBack();
                 return response()->json([
                     'message' => 'RMA tidak dapat dibuat: ' . $eligibility['reason']
                 ], 422);
@@ -98,20 +121,14 @@ class RMAController extends Controller
 
             // Validate serial number against warranties
             if (isset($eligibility['warranty_id']) && !empty($validated['serial_number'])) {
-                $validSns = Warranty::where('sale_id', $validated['sale_id'])
-                    ->where('product_id', $validated['product_id'])
-                    ->where(function ($q) {
-                        $q->whereNull('end_date')
-                          ->orWhere('end_date', '>=', now());
-                    })
-                    ->whereNotNull('serial_number')
-                    ->pluck('serial_number')
+                $validSns = collect($eligibility['warranty_serial_numbers'] ?? [])
                     ->map(fn($sn) => strtolower(trim($sn)))
                     ->toArray();
 
                 if (!empty($validSns)) {
                     $inputSN = strtolower(trim($validated['serial_number']));
                     if (!in_array($inputSN, $validSns)) {
+                        DB::rollBack();
                         return response()->json([
                             'message' => 'Serial Number tidak valid. Valid SNs: ' . implode(', ', $validSns)
                         ], 422);
@@ -134,6 +151,7 @@ class RMAController extends Controller
                 $availableQty = $saleItem->quantity - $existingRmaQty;
 
                 if ($validated['quantity'] > $availableQty) {
+                    DB::rollBack();
                     return response()->json([
                         'message' => "Quantity melebihi batas. Qty tersedia untuk RMA: {$availableQty} (dari {$saleItem->quantity} qty penjualan, sudah diklaim: {$existingRmaQty})"
                     ], 422);
@@ -143,6 +161,7 @@ class RMAController extends Controller
             // Check if sufficient stock available
             if (!$stockService->hasStock($validated['product_id'], $validated['quantity'])) {
                 $available = $stockService->getStockQuantity($validated['product_id']);
+                DB::rollBack();
                 return response()->json([
                     'message' => "Stock tidak mencukupi untuk RMA. Stock tersedia: {$available}"
                 ], 422);
@@ -176,29 +195,16 @@ class RMAController extends Controller
                 'evidence_files' => !empty($evidenceFiles) ? $evidenceFiles : null,
             ]);
 
-            // Reserve stock for RMA (deduct from available)
-            $stockService->deductStock(
-                $validated['product_id'],
-                $validated['quantity'],
-                'rma_pending',
-                $rma->id,
-                "RMA Created: {$rmaCode} - Stock reserved for return process"
-            );
-
-            // Auto-create shipment if replacement requested
-            if (!empty($validated['replacement_requested']) && $validated['replacement_requested']) {
-                $shipment = \App\Models\RMAShipment::create([
-                    'shipment_code' => \App\Models\RMAShipment::generateCode(),
-                    'rma_id' => $rma->id,
-                    'product_id' => $validated['product_id'],
-                    'quantity' => $validated['quantity'],
-                    'recipient_name' => $validated['customer_name'],
-                    'recipient_phone' => $validated['customer_contact'] ?? '',
-                    'recipient_address' => $rma->sale->customer_address ?? 'Address to be provided',
-                    'status' => 'pending',
-                    'user_id' => auth()->id(),
-                    'notes' => 'Auto-created from RMA replacement request'
-                ]);
+            if ($rma->replacement_requested) {
+                $this->createReplacementShipment($rma);
+            } else {
+                $stockService->deductStock(
+                    $validated['product_id'],
+                    $validated['quantity'],
+                    'rma_pending',
+                    $rma->id,
+                    "RMA Created: {$rmaCode} - Stock reserved for return process"
+                );
             }
 
             DB::commit();
@@ -220,6 +226,7 @@ class RMAController extends Controller
             'customer_contact' => 'nullable|string',
             'reason' => 'required|in:warranty_claim,damaged_shipment,defective,dead_on_arrival',
             'issue_date' => 'required|date',
+            'replacement_requested' => 'nullable|boolean',
             'notes' => 'nullable|string',
             'items' => 'required|string', // JSON string of items array
             'evidence' => 'nullable|array|max:5',
@@ -282,15 +289,7 @@ class RMAController extends Controller
                 $msaProjectId = $eligibility['msa_project_id'] ?? null;
 
                 if ($warrantyId && $serialNumber) {
-                    // Get all valid warranty SNs for this product
-                    $validSns = Warranty::where('sale_id', $validated['sale_id'])
-                        ->where('product_id', $productId)
-                        ->where(function ($q) {
-                            $q->whereNull('end_date')
-                              ->orWhere('end_date', '>=', now());
-                        })
-                        ->whereNotNull('serial_number')
-                        ->pluck('serial_number')
+                    $validSns = collect($eligibility['warranty_serial_numbers'] ?? [])
                         ->map(fn($sn) => strtolower(trim($sn)))
                         ->toArray();
 
@@ -354,24 +353,28 @@ class RMAController extends Controller
                     'reason' => $validated['reason'],
                     'issue_date' => $validated['issue_date'],
                     'notes' => $validated['notes'],
+                    'replacement_requested' => $validated['replacement_requested'] ?? false,
                     'user_id' => auth()->id(),
                     'status' => 'pending',
                     'evidence_files' => !empty($evidenceFiles) ? $evidenceFiles : null,
                 ]);
 
-                // Reserve stock for this RMA
-                try {
-                    $stockService->deductStock(
-                        $productId,
-                        $quantity,
-                        'rma_pending',
-                        $rma->id,
-                        "RMA Created: {$rmaCode} - Stock reserved for return process"
-                    );
-                } catch (\Exception $stockError) {
-                    $errors[] = "{$productTitle}: Gagal reserve stock - {$stockError->getMessage()}";
-                    $rma->delete();
-                    continue;
+                if ($rma->replacement_requested) {
+                    $this->createReplacementShipment($rma);
+                } else {
+                    try {
+                        $stockService->deductStock(
+                            $productId,
+                            $quantity,
+                            'rma_pending',
+                            $rma->id,
+                            "RMA Created: {$rmaCode} - Stock reserved for return process"
+                        );
+                    } catch (\Exception $stockError) {
+                        $errors[] = "{$productTitle}: Gagal reserve stock - {$stockError->getMessage()}";
+                        $rma->delete();
+                        continue;
+                    }
                 }
 
                 $createdRMAs[] = $rma;
@@ -425,14 +428,19 @@ class RMAController extends Controller
             $newStatus = $validated['status'] ?? $oldStatus;
 
             if ($oldStatus !== 'rejected' && $newStatus === 'rejected') {
-                $stockService = new \App\Services\StockSyncService();
-                $stockService->addStock(
-                    $rma->product_id,
-                    $rma->quantity,
-                    'rma_rejected',
-                    $rma->id,
-                    "RMA Rejected: {$rma->rma_code} - Stock returned to available"
-                );
+                if (!$rma->replacement_requested) {
+                    $stockService = new \App\Services\StockSyncService();
+                    $stockService->addStock(
+                        $rma->product_id,
+                        $rma->quantity,
+                        'rma_rejected',
+                        $rma->id,
+                        "RMA Rejected: {$rma->rma_code} - Stock returned to available"
+                    );
+                }
+                $rma->shipment()
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled']);
             }
 
             $rma->update($validated);
@@ -453,7 +461,7 @@ class RMAController extends Controller
         try {
             $stockService = new \App\Services\StockSyncService();
 
-            if (!in_array($rma->status, ['rejected', 'completed'])) {
+            if (!$rma->replacement_requested && !in_array($rma->status, ['rejected', 'completed'])) {
                 $stockService->addStock(
                     $rma->product_id,
                     $rma->quantity,
@@ -484,15 +492,18 @@ class RMAController extends Controller
      */
     public function markReceived(Request $request, $id)
     {
-        $rma = RMA::findOrFail($id);
-        
         $validated = $request->validate([
-            'condition' => 'required|string|max:255',
+            'condition' => 'nullable|string|max:255',
             'condition_level' => 'required|in:working,repairable,damaged_total,parts_only'
         ]);
         
         DB::beginTransaction();
         try {
+            $rma = RMA::whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($rma->status !== 'approved') {
+                throw new \RuntimeException('RMA harus berstatus approved sebelum barang dapat dikonfirmasi diterima');
+            }
+
             $stockService = new \App\Services\StockSyncService();
             $rmaWarehouse = \App\Models\Warehouse::where('name', 'like', '%RMA%')->orWhere('code', 'RMA')->first();
             
@@ -522,7 +533,7 @@ class RMAController extends Controller
             $rma->update([
                 'status' => 'received',
                 'received_date' => now(),
-                'condition' => $validated['condition'],
+                'condition' => $validated['condition'] ?? null,
                 'condition_level' => $conditionLevel,
                 'rma_warehouse_id' => ($conditionLevel === 'repairable' && $rmaWarehouse) ? $rmaWarehouse->id : null
             ]);
@@ -540,8 +551,6 @@ class RMAController extends Controller
      */
     public function process(Request $request, $id)
     {
-        $rma = RMA::findOrFail($id);
-
         $validated = $request->validate([
             'resolution' => 'required|in:repair,replace,refund',
             'notes' => 'nullable|string',
@@ -549,6 +558,7 @@ class RMAController extends Controller
 
         DB::beginTransaction();
         try {
+            $rma = RMA::whereKey($id)->lockForUpdate()->firstOrFail();
             $stockService = new \App\Services\StockSyncService();
 
             switch ($validated['resolution']) {
@@ -572,18 +582,6 @@ class RMAController extends Controller
                     break;
 
                 case 'replace':
-                    if (!$stockService->hasStock($rma->product_id, $rma->quantity)) {
-                        throw new \Exception("Stock tidak mencukupi untuk replacement. Product: {$rma->product->title}");
-                    }
-
-                    $stockService->deductStock(
-                        $rma->product_id,
-                        $rma->quantity,
-                        'rma_replacement',
-                        $rma->id,
-                        "RMA Replacement: {$rma->rma_code} - Product sent to customer"
-                    );
-
                     if ($rma->rma_warehouse_id && $rma->condition_level === 'repairable') {
                         $stockService->deductStock(
                             $rma->product_id,
@@ -600,6 +598,7 @@ class RMAController extends Controller
                         'resolution' => 'replace',
                         'notes' => $validated['notes'] ?? $rma->notes,
                     ]);
+                    $this->createReplacementShipment($rma);
                     break;
 
                 case 'refund':
@@ -636,14 +635,14 @@ class RMAController extends Controller
     public function getSalesWithWarranty(Request $request)
     {
         try {
-            // Get sales that have warranties that haven't expired
-            $sales = Sale::with(['items.product', 'warranties'])
-                ->whereHas('warranties', function ($q) {
-                    $q->where(function ($w) {
-                        $w->whereNull('end_date')
-                          ->orWhere('end_date', '>=', now());
-                    });
-                })
+            $activeMsaProductIds = \Illuminate\Support\Facades\DB::table('msa_projects')
+                ->where('status', 'active')
+                ->pluck('product_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $sales = Sale::with(['items.product', 'warranties.product', 'invoice'])
+                ->whereHas('warranties')
                 ->orWhereHas('items', function ($q) {
                     // Also include sales whose items have active MSA
                     $q->whereHas('product', function ($p) {
@@ -656,7 +655,19 @@ class RMAController extends Controller
                 })
                 ->orderBy('sale_date', 'desc')
                 ->limit(100)
-                ->get();
+                ->get()
+                ->filter(function ($sale) use ($activeMsaProductIds) {
+                    $purchaseDate = $sale->invoice?->invoice_date ?? $sale->sale_date;
+                    $hasActiveWarranty = $sale->warranties->contains(
+                        fn ($warranty) => $warranty->isActiveOn($purchaseDate)
+                    );
+                    $hasActiveMsa = $sale->items->contains(
+                        fn ($item) => in_array((int) $item->product_id, $activeMsaProductIds, true)
+                    );
+
+                    return $hasActiveWarranty || $hasActiveMsa;
+                })
+                ->values();
 
             return response()->json($sales);
         } catch (\Exception $e) {
@@ -684,13 +695,7 @@ class RMAController extends Controller
         );
 
         // Get all warranty serial numbers for this sale + product
-        $warranties = Warranty::where('sale_id', $validated['sale_id'])
-            ->where('product_id', $validated['product_id'])
-            ->where(function ($q) {
-                $q->whereNull('end_date')
-                  ->orWhere('end_date', '>=', now());
-            })
-            ->pluck('serial_number')
+        $warranties = collect($eligibility['warranty_serial_numbers'] ?? [])
             ->filter()
             ->toArray();
 

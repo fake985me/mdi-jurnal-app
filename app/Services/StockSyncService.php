@@ -56,7 +56,7 @@ class StockSyncService
         DB::beginTransaction();
         try {
             // Get product
-            $product = Product::findOrFail($productId);
+            $product = Product::lockForUpdate()->findOrFail($productId);
             
             // Use provided warehouse or default
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();
@@ -118,7 +118,7 @@ class StockSyncService
         DB::beginTransaction();
         try {
             // Get product
-            $product = Product::findOrFail($productId);
+            $product = Product::lockForUpdate()->findOrFail($productId);
             
             // Use provided warehouse or default
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();
@@ -253,7 +253,7 @@ class StockSyncService
         DB::beginTransaction();
         try {
             // Get product
-            $product = Product::findOrFail($productId);
+            $product = Product::lockForUpdate()->findOrFail($productId);
             
             // Use provided warehouse or default
             $warehouseId = $warehouseId ?? $this->getDefaultWarehouseId();

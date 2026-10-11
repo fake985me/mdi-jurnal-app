@@ -69,7 +69,7 @@ const menuSections = computed(() => [
     items: [
       { name: t('nav.sales'), icon: 'chart', to: '/dashboard/sales', roles: ['admin', 'staff'] },
       { name: t('nav.purchases'), icon: 'purchases', to: '/dashboard/purchases', roles: ['admin', 'staff'] },
-      // { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] },
+      { name: t('nav.deliveries'), icon: 'deliveries', to: '/dashboard/deliveries', roles: ['admin', 'staff'] },
       { name: t('nav.salesPeople'), icon: 'users', to: '/dashboard/sales-people', roles: ['admin', 'staff'] },
       { name: t('nav.customers'), icon: 'contacts', to: '/dashboard/customers', roles: ['admin', 'staff'] },
       { name: t('nav.suppliers'), icon: 'warehouse', to: '/dashboard/suppliers', roles: ['admin', 'staff'] },
@@ -81,13 +81,13 @@ const menuSections = computed(() => [
       { name: t('nav.accounts'), icon: 'accounts', to: '/dashboard/accounting', roles: ['admin', 'staff'] },
       { name: t('nav.bankAccounts'), icon: 'wallet', to: '/dashboard/bank-accounts', roles: ['admin', 'staff'] },
       { name: t('nav.taxRates'), icon: 'tax', to: '/dashboard/tax-rates', roles: ['admin', 'staff'] },
-      { name: t('nav.history'), icon: 'history', to: '/dashboard/history', roles: ['admin', 'staff'] },
     ]
   },
   {
     title: t('nav.products'),
     items: [
       { name: t('nav.productList'), icon: 'products', to: '/dashboard/products', roles: ['admin', 'staff'] },
+      { name: t('nav.history'), icon: 'history', to: '/dashboard/history', roles: ['admin', 'staff'] },
       // { name: t('nav.categories'), icon: 'categories', to: '/dashboard/categories', roles: ['admin', 'staff'] },
     ]
   },
@@ -104,6 +104,8 @@ const menuSections = computed(() => [
     title: t('nav.services'),
     items: [
       { name: t('nav.warranties'), icon: 'forms', to: '/dashboard/warranties', roles: ['admin', 'staff'] },
+
+      { name: t('nav.warrantiesCopy'), icon: 'forms', to: '/dashboard/warranties-copy', roles: ['admin', 'staff'] },
       { name: t('nav.lendings'), icon: 'components', to: '/dashboard/lendings', roles: ['admin', 'staff'] },
       { name: t('nav.rmaManagement'), icon: 'elements', to: '/dashboard/rmas', roles: ['admin', 'staff'] },
       { name: t('nav.rmaShipments'), icon: 'elements', to: '/dashboard/rma-shipments', roles: ['admin', 'staff'] },
@@ -117,23 +119,31 @@ const menuSections = computed(() => [
       { name: t('nav.msaProject'), icon: 'settings', to: '/dashboard/msa-projects', roles: ['admin', 'staff'] },
     ]
   },
+  // {
+  //   title: t('nav.cms'),
+  //   items: [
+  //     {
+  //       name: t('nav.websiteContent'),
+  //       icon: 'pages',
+  //       roles: ['admin'],
+  //       children: [
+  //         { name: t('nav.solutions'), to: '/dashboard/cms/solutions', roles: ['admin'] },
+  //         { name: t('nav.projects'), to: '/dashboard/cms/projects', roles: ['admin'] },
+  //         { name: t('nav.siteSettings'), to: '/dashboard/cms/settings', roles: ['admin'] },
+  //         { name: t('nav.contactInfo'), to: '/dashboard/cms/contact', roles: ['admin'] },
+  //         { name: t('nav.carousel'), to: '/dashboard/cms/carousel', roles: ['admin'] },
+  //         { name: t('nav.publicProducts'), to: '/dashboard/cms/public-products', roles: ['admin'] },
+  //         { name: t('nav.pages'), to: '/dashboard/pages', roles: ['admin'] }
+  //       ]
+  //     }
+  //   ]
+  // },
   {
     title: t('nav.cms'),
     items: [
-      {
-        name: t('nav.websiteContent'),
-        icon: 'pages',
-        roles: ['admin'],
-        children: [
-          { name: t('nav.solutions'), to: '/dashboard/cms/solutions', roles: ['admin'] },
-          { name: t('nav.projects'), to: '/dashboard/cms/projects', roles: ['admin'] },
-          { name: t('nav.siteSettings'), to: '/dashboard/cms/settings', roles: ['admin'] },
-          { name: t('nav.contactInfo'), to: '/dashboard/cms/contact', roles: ['admin'] },
-          { name: t('nav.carousel'), to: '/dashboard/cms/carousel', roles: ['admin'] },
-          { name: t('nav.publicProducts'), to: '/dashboard/cms/public-products', roles: ['admin'] },
-          { name: t('nav.pages'), to: '/dashboard/pages', roles: ['admin'] }
-        ]
-      }
+      { name: t('nav.siteSettings'), to: '/dashboard/cms/settings', roles: ['admin'], icon: 'settings' },
+      { name: t('nav.websiteContent'), to: '/dashboard/cms/website-content', roles: ['admin'], icon: 'pages' },
+      
     ]
   },
   {

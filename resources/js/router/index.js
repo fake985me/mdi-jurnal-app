@@ -139,6 +139,11 @@ const routes = [
                 component: () => import("../pages/admin/WarrantyCreate.vue"),
             },
             {
+                path: "warranties-copy",
+                name: "WarrantiesCopy",
+                component: () => import("../pages/admin/Warranties copy.vue"),
+            },
+            {
                 path: "lendings",
                 name: "Lendings",
                 component: () => import("../pages/admin/Lendings.vue"),
@@ -209,6 +214,12 @@ const routes = [
                 component: () => import("../pages/admin/TaxRates.vue"),
             },
             // CMS Content Management
+            {
+                // Halaman Website Content — unified CMS page (Pages + Products + Carousel + Contact)
+                path: "cms/website-content",
+                name: "WebsiteContent",
+                component: () => import("../pages/web/WebsiteContent.vue"),
+            },
             {
                 path: "cms/solutions",
                 name: "CmsSolutions",

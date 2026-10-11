@@ -41,6 +41,7 @@ class RMA extends Model
         'quantity' => 'integer',
         'issue_date' => 'date',
         'received_date' => 'date',
+        'replacement_requested' => 'boolean',
         'evidence_files' => 'array',
     ];
 
@@ -99,12 +100,17 @@ class RMA extends Model
 
     public function shipments()
     {
-        return $this->hasMany(RMAShipment::class);
+        return $this->hasMany(RMAShipment::class, 'rma_id');
+    }
+
+    public function shipment()
+    {
+        return $this->hasOne(RMAShipment::class, 'rma_id');
     }
 
     public static function validateEligibility($saleId, $saleItemId = null, $productId = null)
     {
-        $sale = Sale::with('warranties', 'items')->find($saleId);
+        $sale = Sale::with(['invoice', 'warranties.product', 'items'])->find($saleId);
         
         if (!$sale) {
             return ['valid' => false, 'reason' => 'Sale not found'];
@@ -130,22 +136,19 @@ class RMA extends Model
         }
 
         // Check warranty
-        $warranty = Warranty::where('sale_id', $saleId);
-        
-        if ($productId) {
-            $warranty->where('product_id', $productId);
-        }
-        
-        $activeWarranty = $warranty->where(function ($q) {
-            $q->whereNull('end_date')
-              ->orWhere('end_date', '>=', now());
-        })->first();
+        $purchaseDate = $sale->invoice?->invoice_date ?? $sale->sale_date;
+        $activeWarranties = $sale->warranties->filter(fn ($warranty) =>
+            (!$productId || (int) $warranty->product_id === (int) $productId)
+            && $warranty->isActiveOn($purchaseDate)
+        );
+        $activeWarranty = $activeWarranties->first();
 
         if ($activeWarranty) {
             return [
                 'valid' => true, 
-                'reason' => 'Covered by warranty until: ' . ($activeWarranty->end_date ?? 'Unlimited'),
-                'warranty_id' => $activeWarranty->id
+                'reason' => 'Covered by warranty until: ' . ($activeWarranty->coverageEndDate($purchaseDate)?->toDateString() ?? 'Unlimited'),
+                'warranty_id' => $activeWarranty->id,
+                'warranty_serial_numbers' => $activeWarranties->pluck('serial_number')->filter()->values()->all(),
             ];
         }
 

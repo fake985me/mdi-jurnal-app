@@ -433,8 +433,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import api from '../../services/api';
 
+const route = useRoute();
 const rmas = ref({ data: [] });
 const sales = ref([]);
 const saleItems = ref([]);
@@ -452,7 +454,11 @@ const evidenceRMA = ref(null);
 const evidenceItems = ref([]);
 const evidenceLoading = ref(false);
 
-const filters = ref({ search: '', status: '', reason: '' });
+const filters = ref({
+  search: typeof route.query.search === 'string' ? route.query.search : '',
+  status: '',
+  reason: ''
+});
 
 const conditionForm = ref({
   condition_level: '',
@@ -833,6 +839,7 @@ const saveRMA = async () => {
     formData.append('reason', form.value.reason);
     formData.append('issue_date', form.value.issue_date);
     formData.append('notes', form.value.notes || '');
+    formData.append('replacement_requested', form.value.replacement_requested ? '1' : '0');
     formData.append('items', JSON.stringify(items));
 
     // Append evidence files
@@ -885,7 +892,11 @@ const confirmReceived = async () => {
     showConditionModal.value = false;
     loadRMAs();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to mark as received');
+    const validationErrors = err.response?.data?.errors;
+    const firstValidationError = validationErrors
+      ? Object.values(validationErrors).flat()[0]
+      : null;
+    alert(firstValidationError || err.response?.data?.message || 'Failed to mark as received');
   } finally {
     saving.value = false;
   }

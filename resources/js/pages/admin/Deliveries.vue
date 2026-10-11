@@ -2,7 +2,47 @@
   <div class="space-y-5">
     <div>
       <h2 class="text-2xl font-bold text-gray-900">Delivery</h2>
-      <p class="mt-1 text-sm text-gray-500">Pantau pengiriman dan perbarui statusnya.</p>
+      <p class="mt-1 text-sm text-gray-500">Permintaan keluar barang dari seluruh transaksi dan pemantauan pengiriman.</p>
+    </div>
+
+    <div class="table-wrapper">
+      <div class="card-header flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Permintaan Keluar Barang</h3>
+        <button @click="refresh" class="btn-secondary">Perbarui</button>
+      </div>
+      <p v-if="requestError" class="p-4 text-red-700">{{ requestError }}</p>
+      <p v-else-if="requestsLoading" class="p-6 text-gray-500">Memuat permintaan...</p>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="table-header"><tr>
+            <th class="px-6 py-3 text-left">Transaksi / Dokumen</th>
+            <th class="px-6 py-3 text-left">Penerima / Tujuan</th>
+            <th class="px-6 py-3 text-left">Barang</th>
+            <th class="px-6 py-3 text-left">Status</th>
+            <th class="px-6 py-3 text-right">Aksi</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <tr v-for="request in requests.data" :key="request.id">
+              <td class="px-6 py-4"><p class="font-semibold">{{ request.number }}</p><p class="text-xs text-gray-500">{{ request.type }}</p></td>
+              <td class="px-6 py-4">{{ request.party || '-' }}</td>
+              <td class="px-6 py-4"><p v-for="(item, index) in request.items" :key="index">{{ item.product || 'Produk dihapus' }} × {{ item.quantity }}</p></td>
+              <td class="px-6 py-4">{{ formatStatus(request.status) }}</td>
+              <td class="px-6 py-4 text-right">
+                <button v-if="['preparing', 'shipped', 'in_transit'].includes(request.status)" @click="openRequestModal(request)" class="mr-4 font-semibold text-green-600">{{ request.status === 'preparing' ? 'Proses Pengiriman' : 'Konfirmasi Diterima' }}</button>
+                <router-link :to="request.route" class="text-indigo-600">Buka Transaksi</router-link>
+              </td>
+            </tr>
+            <tr v-if="!requests.data?.length"><td colspan="5" class="p-6 text-center text-gray-500">Tidak ada permintaan keluar barang.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between px-6 py-4">
+        <span class="text-sm text-gray-500">{{ requests.total || 0 }} permintaan</span>
+        <div class="flex gap-2">
+          <button @click="loadRequests(requests.current_page - 1)" :disabled="!requests.prev_page_url" class="btn-secondary disabled:opacity-50">Sebelumnya</button>
+          <button @click="loadRequests(requests.current_page + 1)" :disabled="!requests.next_page_url" class="btn-secondary disabled:opacity-50">Berikutnya</button>
+        </div>
+      </div>
     </div>
 
     <div class="card p-4">
@@ -76,23 +116,27 @@
       <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div class="mb-5">
           <h3 class="text-lg font-bold text-gray-900">Perbarui Status Pengiriman</h3>
-          <p class="mt-1 text-sm text-gray-500">{{ selectedDelivery?.sale?.invoice_number }}</p>
+          <p class="mt-1 text-sm text-gray-500">{{ selectedDelivery?.number || selectedDelivery?.sale?.invoice_number }}</p>
         </div>
         <form @submit.prevent="saveStatus" class="space-y-4">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Status</label>
             <select v-model="statusForm.status" required class="input">
-              <option value="preparing">Preparing</option>
-              <option value="shipped">Shipped</option>
-              <option value="in_transit">In Transit</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option v-if="!requestMode" value="preparing">Preparing</option>
+              <option v-if="!requestMode || selectedDelivery?.status === 'preparing'" value="shipped">Dikirim</option>
+              <option v-if="!requestMode" value="in_transit">In Transit</option>
+              <option v-if="!requestMode || selectedDelivery?.status !== 'preparing'" value="delivered">Diterima</option>
+              <option v-if="!requestMode" value="cancelled">Cancelled</option>
             </select>
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Nomor Resi</label>
-            <input v-model="statusForm.tracking_number" class="input" />
+            <input v-model="statusForm.tracking_number" :required="requestMode && statusForm.status === 'shipped'" class="input" />
           </div>
+          <template v-if="requestMode">
+            <div><label class="mb-1 block text-sm font-medium">Kurir / Pengantar</label><input v-model="statusForm.courier" :required="statusForm.status === 'shipped'" class="input" /></div>
+            <div><label class="mb-1 block text-sm font-medium">Alamat / Tujuan Pengiriman</label><textarea v-model="statusForm.destination" :required="statusForm.status === 'shipped'" class="input" rows="2"></textarea></div>
+          </template>
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Catatan</label>
             <textarea v-model="statusForm.notes" rows="3" class="input"></textarea>
@@ -109,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../services/api';
 
@@ -118,11 +162,28 @@ const deliveries = ref({ data: [] });
 const loading = ref(true);
 const saving = ref(false);
 const statusModal = ref(false);
+const requestMode = ref(false);
 const selectedDelivery = ref(null);
 const error = ref('');
 const filters = ref({ search: '' });
 const statusForm = ref({ status: '', tracking_number: '', notes: '' });
 let searchTimer;
+let refreshTimer;
+const requests = ref({ data: [] });
+const requestsLoading = ref(false);
+const requestError = ref('');
+const loadRequests = async (page = 1) => {
+  requestsLoading.value = !requests.value.data?.length;
+  requestError.value = '';
+  try {
+    requests.value = (await api.get('/delivery-requests', { params: { page, ...filters.value } })).data;
+  } catch (err) {
+    requestError.value = err.response?.data?.message || 'Gagal memuat permintaan keluar barang.';
+  } finally {
+    requestsLoading.value = false;
+  }
+};
+const refresh = () => Promise.all([loadRequests(requests.value.current_page || 1), loadDeliveries(deliveries.value.current_page || 1)]);
 
 const formatStatus = (status) => (status || '').replace(/_/g, ' ').toUpperCase();
 const getDeliveryBadge = (status) => ({
@@ -134,7 +195,7 @@ const getDeliveryBadge = (status) => ({
 }[status] || 'badge');
 
 const loadDeliveries = async (page = 1) => {
-  loading.value = true;
+  loading.value = !deliveries.value.data?.length;
   try {
     const response = await api.get('/deliveries', { params: { page, ...filters.value } });
     deliveries.value = response.data;
@@ -147,7 +208,7 @@ const loadDeliveries = async (page = 1) => {
 
 const debouncedLoadDeliveries = () => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadDeliveries(), 300);
+  searchTimer = setTimeout(() => { loadDeliveries(); loadRequests(); }, 300);
 };
 
 const copyTrackingNumber = async (trackingNumber) => {
@@ -159,6 +220,7 @@ const copyTrackingNumber = async (trackingNumber) => {
 };
 
 const openStatusModal = (delivery) => {
+  requestMode.value = false;
   selectedDelivery.value = delivery;
   statusForm.value = {
     status: delivery.status,
@@ -169,13 +231,25 @@ const openStatusModal = (delivery) => {
   statusModal.value = true;
 };
 
+const openRequestModal = (request) => {
+  requestMode.value = true;
+  selectedDelivery.value = request;
+  statusForm.value = {
+    status: request.status === 'preparing' ? 'shipped' : 'delivered',
+    courier: request.courier || '', tracking_number: request.tracking_number || '',
+    destination: request.destination || request.party || '', notes: request.notes || '',
+  };
+  error.value = '';
+  statusModal.value = true;
+};
+
 const saveStatus = async () => {
   saving.value = true;
   error.value = '';
   try {
-    await api.put(`/deliveries/${selectedDelivery.value.id}`, statusForm.value);
+    await api.put(requestMode.value ? `/delivery-requests/${selectedDelivery.value.id}` : `/deliveries/${selectedDelivery.value.id}`, statusForm.value);
     statusModal.value = false;
-    await loadDeliveries(deliveries.value.current_page || 1);
+    await refresh();
   } catch (err) {
     error.value = err.response?.data?.message || 'Gagal memperbarui status pengiriman.';
   } finally {
@@ -185,5 +259,9 @@ const saveStatus = async () => {
 
 const openSerialPage = (deliveryId) => router.push({ name: 'DeliverySerialNumbers', params: { id: deliveryId } });
 
-onMounted(loadDeliveries);
+onMounted(() => {
+  refresh();
+  refreshTimer = setInterval(() => { if (!document.hidden && !statusModal.value) refresh(); }, 30000);
+});
+onUnmounted(() => { clearTimeout(searchTimer); clearInterval(refreshTimer); });
 </script>

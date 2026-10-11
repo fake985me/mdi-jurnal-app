@@ -1,5 +1,5 @@
 <template>
-    <div class="space-y-6">
+    <div class="space-y-6" :class="{ 'products-form-tab': formPage }">
         <!-- Header -->
         <div class="flex justify-between items-center">
             <div>
@@ -48,7 +48,7 @@
                     </svg>
                     {{ syncAllLoading ? 'Syncing...' : 'Sync Semua ke Publik' }}
                 </button>
-                <button v-if="activeTab === 'products'" @click="showModal = true; editingProduct = null; resetForm()"
+                <button v-if="activeTab === 'products'" @click="openProductForm()"
                     class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
                     + Add Product
                 </button>
@@ -325,15 +325,17 @@
         </div><!-- End Products Tab Content -->
 
         <!-- Product Form Modal -->
-        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-            @click.self="showModal = false">
-            <div class="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div v-if="showModal" class="product-form-tab tab-form-page"
+            :class="formPage ? 'max-w-6xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'"
+            @click.self="cancelProductForm">
+            <div class="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl"
+                :class="formPage ? 'max-h-none' : ''">
                 <div class="flex justify-between items-center mb-6">
                     <h3
                         class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {{ editingProduct ? 'Edit Product' : 'Add New Product' }}
                     </h3>
-                    <button @click="showModal = false; editingProduct = null"
+                    <button @click="cancelProductForm"
                         class="text-gray-400 hover:text-gray-600 text-3xl leading-none transition-colors">&times;</button>
                 </div>
                 <!-- Modal Tabs -->
@@ -387,6 +389,11 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
                                     <input v-model.number="form.price" type="number" min="0" step="0.01" class="input"
                                         placeholder="0" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Warranty (Months)</label>
+                                    <input v-model.number="form.warranty_period_months" type="number" min="0" step="1"
+                                        class="input" placeholder="12" />
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
@@ -673,7 +680,7 @@
 
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-3 pt-4 border-t">
-                        <button type="button" @click="showModal = false; editingProduct = null"
+                        <button type="button" @click="cancelProductForm"
                             class="btn-secondary">Cancel</button>
                         <button type="submit" :disabled="saving" class="btn-primary disabled:opacity-50">
                             {{ saving ? 'Saving...' : (editingProduct ? 'Update Product' : 'Save Product') }}
@@ -769,13 +776,13 @@
         </div>
 
         <!-- Adjustment Modal -->
-        <div v-if="showAdjustModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-            @click.self="showAdjustModal = false">
-            <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl">
+        <div v-if="showAdjustModal" class="tab-form-page"
+            :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'"
+            @click.self="closeProductSubview">
+            <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl" :class="formPage ? 'max-w-4xl' : ''">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-gray-900">Stock Adjustment</h3>
-                    <button @click="showAdjustModal = false"
+                    <button @click="closeProductSubview"
                         class="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors">&times;</button>
                 </div>
 
@@ -816,7 +823,7 @@
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-4 border-t">
-                        <button type="button" @click="showAdjustModal = false" class="btn-secondary">Cancel</button>
+                        <button type="button" @click="closeProductSubview" class="btn-secondary">Cancel</button>
                         <button type="submit" :disabled="adjustSaving"
                             class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 disabled:opacity-50 font-medium">
                             {{ adjustSaving ? 'Saving...' : 'Save Adjustment' }}
@@ -827,10 +834,10 @@
         </div>
 
         <!-- Stock Breakdown Modal -->
-        <div v-if="showStockModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div v-if="showStockModal" class="tab-form-page"
+            :class="formPage ? 'max-w-6xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'"
             @click.self="closeStockModal">
-            <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" :class="formPage ? 'max-w-6xl max-h-none' : ''">
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-xl font-bold text-gray-900">Stock Breakdown</h3>
@@ -940,12 +947,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated, computed } from 'vue';
+import { ref, onMounted, onActivated, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../services/api';
 import Categories from './Categories.vue'
 
 const route = useRoute();
+const formPage = ref(false);
 
 const products = ref({ data: [] });
 const loading = ref(true);
@@ -1091,6 +1099,44 @@ const filters = ref({
 
 const formModalTab = ref('basic');
 
+const openProductForm = (productId = null) => {
+    const target = productId
+        ? `/dashboard/products?edit=${encodeURIComponent(productId)}`
+        : '/dashboard/products?create=1';
+    window.open(target, '_blank');
+};
+
+const cancelProductForm = () => {
+    if (!formPage.value) {
+        showModal.value = false;
+        editingProduct.value = null;
+        return;
+    }
+    if (window.opener) {
+        window.opener.postMessage({ type: 'admin-data-saved', resource: 'products' }, window.location.origin);
+        window.close();
+        window.setTimeout(() => {
+            if (!window.closed) window.location.replace('/dashboard/products');
+        }, 150);
+        return;
+    }
+    window.location.replace('/dashboard/products');
+};
+
+const closeProductSubview = () => {
+    if (formPage.value) {
+        cancelProductForm();
+        return;
+    }
+    showAdjustModal.value = false;
+};
+
+const onProductSaved = (event) => {
+    if (event.origin === window.location.origin && event.data?.type === 'admin-data-saved' && event.data.resource === 'products') {
+        loadProducts();
+    }
+};
+
 const getEmptyForm = () => {
     const f = {
         title: '',
@@ -1103,6 +1149,7 @@ const getEmptyForm = () => {
         price: 0,
         stock: 0,
         minimum_stock: 0,
+        warranty_period_months: 12,
         is_asset: false,
         categories: [],
         wireless_standard: '',
@@ -1198,6 +1245,15 @@ const getSubcategoryOptions = (categoryId) => {
 const getCategoryPath = (categoryId) => buildPath(categoryId, categoryMap.value, 'parent_id');
 const getSubcategoryPath = (subCategoryId) => buildPath(subCategoryId, subcategoryMap.value, 'parent_id');
 
+const loadCategories = async () => {
+    try {
+        const response = await api.get('/categories');
+        categories.value = response.data || [];
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+    }
+};
+
 const loadFilterOptions = async () => {
     try {
         const [categoriesResponse, filterResponse] = await Promise.all([
@@ -1239,6 +1295,11 @@ const onFilterCategoryChange = () => {
 };
 
 const editProduct = (product) => {
+    if (!formPage.value) {
+        openProductForm(product.id);
+        return;
+    }
+
     editingProduct.value = product;
     formModalTab.value = 'basic';
 
@@ -1260,6 +1321,7 @@ const editProduct = (product) => {
     f.price = product.price || 0;
     f.stock = product.stock || 0;
     f.minimum_stock = product.minimum_stock || 0;
+    f.warranty_period_months = product.warranty_period_months ?? 12;
     f.is_asset = product.is_asset || false;
     f.categories = formCategories.length > 0 ? formCategories : [];
 
@@ -1335,6 +1397,7 @@ const editProduct = (product) => {
 const saveProduct = async () => {
     saving.value = true;
     try {
+        const wasEditing = Boolean(editingProduct.value);
         // Filter out empty category pairs
         const validCategories = form.value.categories.filter(c => c.category_id);
         const payload = {
@@ -1347,6 +1410,19 @@ const saveProduct = async () => {
         } else {
             await api.post('/products', payload);
         }
+        if (formPage.value) {
+            if (window.opener) {
+                window.opener.postMessage({ type: 'admin-data-saved', resource: 'products' }, window.location.origin);
+                window.close();
+                window.setTimeout(() => {
+                    if (!window.closed) window.location.replace('/dashboard/products');
+                }, 150);
+                return;
+            }
+            window.location.replace('/dashboard/products');
+            return;
+        }
+
         showModal.value = false;
         editingProduct.value = null;
         resetForm();
@@ -1354,7 +1430,7 @@ const saveProduct = async () => {
 
         uploadMessage.value = {
             type: 'success',
-            title: editingProduct.value ? 'Product Updated' : 'Product Created',
+            title: wasEditing ? 'Product Updated' : 'Product Created',
             message: 'Product saved successfully'
         };
         setTimeout(() => { uploadMessage.value = null; }, 3000);
@@ -1568,16 +1644,19 @@ const uploadExcel = async (event) => {
         }, 5000);
     } catch (error) {
         console.error('Failed to upload Excel:', error);
+        const validationErrors = Object.values(error.response?.data?.errors || {}).flat();
         uploadMessage.value = {
             type: 'error',
             title: 'Upload Failed',
-            message: error.response?.data?.message || 'Failed to upload file'
+            message: validationErrors.join(' ') || error.response?.data?.message || 'Failed to upload file'
         };
 
         // Auto-hide error after 8 seconds
         setTimeout(() => {
             uploadMessage.value = null;
         }, 8000);
+    } finally {
+        event.target.value = '';
     }
 };
 
@@ -1620,6 +1699,10 @@ const loadAdjustmentReasons = async () => {
 };
 
 const openAdjustModal = (product) => {
+    if (!formPage.value) {
+        window.open(`/dashboard/products?adjust=${encodeURIComponent(product.id)}`, '_blank');
+        return;
+    }
     adjustingProduct.value = product;
     resetAdjustForm();
     showAdjustModal.value = true;
@@ -1647,8 +1730,12 @@ const submitAdjustment = async () => {
             notes: adjustForm.value.notes
         });
 
-        showAdjustModal.value = false;
-        loadProducts(); // Reload to update stock
+        if (formPage.value) {
+            cancelProductForm();
+        } else {
+            showAdjustModal.value = false;
+            loadProducts(); // Reload to update stock
+        }
 
         // Show success message
         uploadMessage.value = {
@@ -1671,12 +1758,20 @@ const submitAdjustment = async () => {
 };
 
 const openStockModal = async (product) => {
+    if (!formPage.value) {
+        window.open(`/dashboard/products?stock=${encodeURIComponent(product.id)}`, '_blank');
+        return;
+    }
     stockProduct.value = product;
     showStockModal.value = true;
     await loadProductStocks(product.id);
 };
 
 const closeStockModal = () => {
+    if (formPage.value) {
+        cancelProductForm();
+        return;
+    }
     showStockModal.value = false;
     stockProduct.value = null;
     productStocks.value = [];
@@ -1698,24 +1793,58 @@ const loadProductStocks = async (productId) => {
 };
 
 onMounted(() => {
+    window.addEventListener('message', onProductSaved);
+    const adjustId = Array.isArray(route.query.adjust) ? route.query.adjust[0] : route.query.adjust;
+    const stockId = Array.isArray(route.query.stock) ? route.query.stock[0] : route.query.stock;
+    formPage.value = route.query.create === '1' || Boolean(route.query.edit) || Boolean(adjustId) || Boolean(stockId);
     const editId = Array.isArray(route.query.edit) ? route.query.edit[0] : route.query.edit;
 
     const openEditFromRoute = async () => {
-        if (!editId) return;
-        try {
-            const response = await api.get(`/products/${editId}`);
-            editProduct(response.data);
-        } catch (error) {
-            console.error('Failed to load product for edit:', error);
+        if (editId) {
+            try {
+                const response = await api.get(`/products/${editId}`);
+                editProduct(response.data);
+            } catch (error) {
+                console.error('Failed to load product for edit:', error);
+            }
+        } else if (formPage.value) {
+            if (adjustId || stockId) {
+                try {
+                    const response = await api.get(`/products/${adjustId || stockId}`);
+                    if (adjustId) {
+                        adjustingProduct.value = response.data;
+                        resetAdjustForm();
+                        showAdjustModal.value = true;
+                    } else {
+                        stockProduct.value = response.data;
+                        showStockModal.value = true;
+                        await loadProductStocks(response.data.id);
+                    }
+                } catch (error) {
+                    console.error('Failed to load product stock details:', error);
+                    uploadMessage.value = {
+                        type: 'error',
+                        title: 'Unable to open product',
+                        message: error.response?.data?.message || 'Failed to load product details'
+                    };
+                }
+            } else {
+                editingProduct.value = null;
+                resetForm();
+                showModal.value = true;
+            }
         }
     };
 
     loadFilterOptions().then(() => {
         openEditFromRoute();
     });
+
     loadProducts();
     loadAdjustmentReasons();
 });
+
+onBeforeUnmount(() => window.removeEventListener('message', onProductSaved));
 
 // Reload stock when navigating back to this page (e.g., after approving a project investment)
 onActivated(() => {
@@ -1733,5 +1862,9 @@ onActivated(() => {
 .fade-leave-to {
     opacity: 0;
     transform: translateY(-4px);
+}
+
+.products-form-tab > :not(.tab-form-page) {
+    display: none !important;
 }
 </style>

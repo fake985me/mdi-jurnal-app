@@ -22,7 +22,8 @@ Route::prefix('guest')->group(function () {
     Route::get('/categories', [\App\Http\Controllers\Api\GuestController::class, 'categories']);
 
     // CMS Content - Public Access
-    Route::get('/solutions', [\App\Http\Controllers\Api\SolutionController::class, 'index']);
+    Route::get('/solutions', [\App\Http\Controllers\Api\SolutionController::class, 'publicIndex']);
+    Route::get('/projects', [\App\Http\Controllers\Api\ProjectController::class, 'publicIndex']);
     Route::get('/site-settings', [\App\Http\Controllers\Api\SiteSettingController::class, 'index']);
     Route::get('/contact-info', [\App\Http\Controllers\Api\ContactInfoController::class, 'index']);
     Route::get('/carousel-slides', [\App\Http\Controllers\Api\CarouselController::class, 'index']);
@@ -37,7 +38,7 @@ Route::prefix('guest')->group(function () {
 });
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
@@ -66,7 +67,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/{product}/sync-to-public', [App\Http\Controllers\Api\ProductController::class, 'syncToPublic']);
     Route::post('/products/bulk-sync-to-public', [App\Http\Controllers\Api\ProductController::class, 'bulkSyncToPublic']);
     Route::post('/products/sync-all-to-public', [App\Http\Controllers\Api\ProductController::class, 'syncAllToPublic']);
-    Route::get('/products/{product}/export/all', [App\Http\Controllers\Api\ProductController::class, 'exportAll']);
     Route::get('/products/{product}/export/template', [App\Http\Controllers\Api\ProductController::class, 'exportTemplate']);
 
     // Stock Management
@@ -114,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('warranties', App\Http\Controllers\Api\WarrantyController::class);
 
     // Lendings
-    Route::apiResource('lendings', App\Http\Controllers\Api\LendingController::class);
+    Route::apiResource('lendings', App\Http\Controllers\Api\LendingController::class)->except(['update']);
     Route::post('/lendings/{lending}/return', [App\Http\Controllers\Api\LendingController::class, 'processReturn']);
 
     // RMAs (Return Merchandise Authorization)
@@ -127,7 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/rmas/{rma}/evidence', [App\Http\Controllers\Api\RMAController::class, 'getEvidence']);
     
     // RMA Shipments
-    Route::apiResource('rma-shipments', App\Http\Controllers\Api\RMAShipmentController::class);
+    Route::apiResource('rma-shipments', App\Http\Controllers\Api\RMAShipmentController::class)->except(['update', 'destroy']);
     Route::post('/rma-shipments/{id}/ship', [App\Http\Controllers\Api\RMAShipmentController::class, 'ship']);
     Route::post('/rma-shipments/{id}/mark-delivered', [App\Http\Controllers\Api\RMAShipmentController::class, 'markDelivered']);
 
@@ -231,6 +231,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Deliveries
     Route::post('/deliveries/{id}/import-serials', [App\Http\Controllers\Api\DeliveryController::class, 'importSerialNumbers']);
     Route::get('/deliveries/{id}/serial-template', [App\Http\Controllers\Api\DeliveryController::class, 'downloadSerialTemplate']);
+    Route::get('/delivery-requests', [App\Http\Controllers\Api\DeliveryRequestController::class, 'index']);
+    Route::put('/delivery-requests/{key}', [App\Http\Controllers\Api\DeliveryRequestController::class, 'update']);
     Route::apiResource('deliveries', App\Http\Controllers\Api\DeliveryController::class);
 
     // History
@@ -247,6 +249,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // CMS Content Management - Admin Only
     Route::apiResource('solutions', App\Http\Controllers\Api\SolutionController::class);
+    Route::apiResource('projects', App\Http\Controllers\Api\ProjectController::class);
     Route::apiResource('site-settings', App\Http\Controllers\Api\SiteSettingController::class);
     Route::post('/site-settings/bulk-update', [App\Http\Controllers\Api\SiteSettingController::class, 'bulkUpdate']);
     Route::apiResource('contact-info', App\Http\Controllers\Api\ContactInfoController::class);

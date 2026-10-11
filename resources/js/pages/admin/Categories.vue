@@ -1,5 +1,6 @@
 <template>
   <div class="space-y-6">
+    <template v-if="!formPage && !confirmPage">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-900">Category Management</h2>
@@ -140,10 +141,23 @@
         </div>
       </div>
     </div>
+    </template>
+
+    <section v-if="confirmPage" class="max-w-2xl mx-auto mt-8 rounded-lg bg-white p-6 shadow-md">
+      <h3 class="text-xl font-bold text-gray-900">Confirm deletion</h3>
+      <p class="mt-3 text-gray-600">{{ confirmMessage }}</p>
+      <p v-if="confirmError" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ confirmError }}</p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" @click="closeFormPage" class="rounded-lg bg-gray-200 px-4 py-2 text-gray-700">Cancel</button>
+        <button type="button" @click="confirmDelete" :disabled="saving" class="rounded-lg bg-red-600 px-4 py-2 text-white disabled:opacity-50">
+          {{ saving ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </section>
 
     <!-- Category Modal -->
-    <div v-if="showCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div v-if="showCategoryModal" :class="formPage ? 'max-w-2xl mx-auto mt-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md" :class="formPage ? 'max-w-2xl shadow-md' : ''">
         <h3 class="text-xl font-bold mb-4">{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</h3>
         
         <form @submit.prevent="saveCategory" class="space-y-4">
@@ -174,7 +188,7 @@
           <div class="flex justify-end space-x-3">
             <button
               type="button"
-              @click="showCategoryModal = false"
+              @click="closeFormPage"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
               Cancel
@@ -192,8 +206,8 @@
     </div>
 
     <!-- Subcategory Modal -->
-    <div v-if="showSubcategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div v-if="showSubcategoryModal" :class="formPage ? 'max-w-2xl mx-auto mt-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md" :class="formPage ? 'max-w-2xl shadow-md' : ''">
         <h3 class="text-xl font-bold mb-4">
           {{ editingSubcategory ? 'Edit Subcategory' : 'Add New Subcategory' }}
         </h3>
@@ -229,7 +243,7 @@
           <div class="flex justify-end space-x-3">
             <button
               type="button"
-              @click="showSubcategoryModal = false"
+              @click="closeFormPage"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
               Cancel
@@ -249,8 +263,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute();
+const router = useRouter();
+const formPage = ref(false);
+const confirmPage = ref(false);
+const confirmType = ref('');
+const confirmItem = ref(null);
+const confirmError = ref('');
+const confirmMessage = ref('');
 
 const categories = ref([]);
 const loading = ref(true);
@@ -312,8 +336,42 @@ const getCategoryProductCount = (category) => {
   );
 };
 
+const openFormTab = (query) => {
+  const target = router.resolve({ path: '/dashboard/categories', query }).href;
+  window.open(target, '_blank');
+};
+
+const closeFormPage = () => {
+  if (!formPage.value) {
+    showCategoryModal.value = false;
+    showSubcategoryModal.value = false;
+    return;
+  }
+
+  if (window.opener) {
+    window.opener.postMessage({ type: 'admin-data-saved', resource: 'categories' }, window.location.origin);
+    window.close();
+    window.setTimeout(() => {
+      if (!window.closed) router.replace('/dashboard/categories');
+    }, 150);
+    return;
+  }
+  router.replace('/dashboard/categories');
+};
+
+const syncWithFormTab = (event) => {
+  if (event.origin === window.location.origin && event.data?.type === 'admin-data-saved' && event.data.resource === 'categories') {
+    loadCategories();
+  }
+};
+
 // Category CRUD
 const openCategoryModal = (category) => {
+  if (!formPage.value) {
+    openFormTab({ form: 'category', ...(category ? { id: category.id } : {}) });
+    return;
+  }
+
   editingCategory.value = category;
   error.value = '';
   if (category) {
@@ -337,8 +395,12 @@ const saveCategory = async () => {
     } else {
       await api.post('/categories', categoryForm.value);
     }
-    showCategoryModal.value = false;
-    loadCategories();
+    if (formPage.value) {
+      closeFormPage();
+    } else {
+      showCategoryModal.value = false;
+      loadCategories();
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to save category';
   } finally {
@@ -347,18 +409,44 @@ const saveCategory = async () => {
 };
 
 const deleteCategory = async (category) => {
-  if (!confirm(`Are you sure you want to delete "${category.name}"? This will also delete all subcategories.`)) return;
-  
+  if (!formPage.value) {
+    window.open(`/dashboard/categories?confirm=category&id=${encodeURIComponent(category.id)}`, '_blank');
+    return;
+  }
+  confirmType.value = 'category';
+  confirmItem.value = category;
+  await confirmDelete();
+};
+
+const confirmDelete = async () => {
+  if (!confirmItem.value) return;
+  saving.value = true;
+  confirmError.value = '';
   try {
-    await api.delete(`/categories/${category.id}`);
-    loadCategories();
+    await api.delete(`/${confirmType.value === 'category' ? 'categories' : 'subcategories'}/${confirmItem.value.id}`);
+    if (confirmPage.value) {
+      closeFormPage();
+    } else {
+      loadCategories();
+    }
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete category');
+    confirmError.value = err.response?.data?.message || 'Failed to delete item';
+  } finally {
+    saving.value = false;
   }
 };
 
 // Subcategory CRUD
 const openSubcategoryModal = (category, subcategory) => {
+  if (!formPage.value) {
+    openFormTab({
+      form: 'subcategory',
+      categoryId: category.id,
+      ...(subcategory ? { subcategoryId: subcategory.id } : {}),
+    });
+    return;
+  }
+
   selectedCategory.value = category;
   editingSubcategory.value = subcategory;
   error.value = '';
@@ -388,8 +476,12 @@ const saveSubcategory = async () => {
     } else {
       await api.post('/subcategories', payload);
     }
-    showSubcategoryModal.value = false;
-    loadCategories();
+    if (formPage.value) {
+      closeFormPage();
+    } else {
+      showSubcategoryModal.value = false;
+      loadCategories();
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to save subcategory';
   } finally {
@@ -398,17 +490,55 @@ const saveSubcategory = async () => {
 };
 
 const deleteSubcategory = async (subcategory) => {
-  if (!confirm(`Are you sure you want to delete subcategory "${subcategory.name}"?`)) return;
-  
-  try {
-    await api.delete(`/subcategories/${subcategory.id}`);
-    loadCategories();
-  } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete subcategory');
+  if (!formPage.value) {
+    window.open(`/dashboard/categories?confirm=subcategory&id=${encodeURIComponent(subcategory.id)}`, '_blank');
+    return;
   }
+  confirmType.value = 'subcategory';
+  confirmItem.value = subcategory;
+  await confirmDelete();
 };
 
-onMounted(() => {
-  loadCategories();
+onMounted(async () => {
+  window.addEventListener('message', syncWithFormTab);
+  await loadCategories();
+
+  const confirm = route.query.confirm;
+  if (confirm === 'category' || confirm === 'subcategory') {
+    formPage.value = true;
+    confirmPage.value = true;
+    confirmType.value = confirm;
+    const id = String(route.query.id || '');
+    confirmItem.value = confirm === 'category'
+      ? categories.value.find((item) => String(item.id) === id)
+      : categories.value.flatMap((item) => item.sub_categories || []).find((item) => String(item.id) === id);
+    if (!confirmItem.value) {
+      closeFormPage();
+      return;
+    }
+    confirmMessage.value = confirm === 'category'
+      ? `Are you sure you want to delete "${confirmItem.value.name}"? This will also delete all subcategories.`
+      : `Are you sure you want to delete subcategory "${confirmItem.value.name}"?`;
+    return;
+  }
+
+  if (route.query.form === 'category') {
+    formPage.value = true;
+    const category = categories.value.find((item) => String(item.id) === String(route.query.id));
+    openCategoryModal(category || null);
+  } else if (route.query.form === 'subcategory') {
+    formPage.value = true;
+    const category = categories.value.find((item) => String(item.id) === String(route.query.categoryId));
+    const subcategory = category?.sub_categories?.find(
+      (item) => String(item.id) === String(route.query.subcategoryId),
+    );
+    if (category) {
+      openSubcategoryModal(category, subcategory || null);
+    } else {
+      closeFormPage();
+    }
+  }
 });
+
+onBeforeUnmount(() => window.removeEventListener('message', syncWithFormTab));
 </script>

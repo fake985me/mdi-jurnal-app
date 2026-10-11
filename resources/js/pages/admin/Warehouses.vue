@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6" :class="{ 'form-page': formPage }">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
@@ -15,7 +15,7 @@
           + Add Product to Warehouse
         </button>
         <button
-          @click="showModal = true; resetForm()"
+          @click="openWarehouseForm()"
           class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
           + New Warehouse
         </button>
@@ -334,7 +334,7 @@
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-4">
             <h4 class="font-semibold text-gray-800">Locations ({{ selectedWarehouse.locations?.length || 0 }})</h4>
-            <button @click="showLocationModal = true; resetLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
+            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
           </div>
 
           <table v-if="selectedWarehouse.locations?.length" class="min-w-full text-sm">
@@ -378,8 +378,8 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div v-if="showModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-md" :class="formPage ? 'max-w-4xl max-h-none' : ''">
         <h3 class="text-2xl font-bold mb-6">{{ editingId ? 'Edit Warehouse' : 'New Warehouse' }}</h3>
         
         <form @submit.prevent="saveWarehouse" class="space-y-4">
@@ -429,7 +429,7 @@
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
             <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Saving...' : 'Save Warehouse' }}</button>
           </div>
         </form>
@@ -437,8 +437,8 @@
     </div>
 
     <!-- View Warehouse Modal -->
-    <div v-if="showViewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div v-if="showViewModal" class="tab-form" :class="formPage ? 'max-w-6xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-md" :class="formPage ? 'max-w-6xl max-h-none' : ''">
         <div class="flex justify-between items-start mb-6">
           <div>
             <h3 class="text-2xl font-bold text-gray-900">{{ selectedWarehouse?.name }}</h3>
@@ -462,7 +462,7 @@
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-4">
             <h4 class="font-semibold text-gray-800">Locations ({{ selectedWarehouse?.locations?.length || 0 }})</h4>
-            <button @click="showLocationModal = true; resetLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
+            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
           </div>
 
           <table v-if="selectedWarehouse?.locations?.length" class="min-w-full text-sm">
@@ -546,14 +546,14 @@
         </div>
 
         <div class="flex justify-end mt-6">
-          <button @click="showViewModal = false" class="btn-secondary">Close</button>
+          <button @click="closeFormTab" class="btn-secondary">Close</button>
         </div>
       </div>
     </div>
 
     <!-- Location Modal -->
-    <div v-if="showLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md">
+    <div v-if="showLocationModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-md" :class="formPage ? 'max-w-4xl' : ''">
         <h3 class="text-xl font-bold mb-4">{{ editingLocationId ? 'Edit Location' : 'New Location' }}</h3>
         
         <form @submit.prevent="saveLocation" class="space-y-4">
@@ -600,7 +600,7 @@
           <div v-if="locationError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ locationError }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showLocationModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
             <button type="submit" :disabled="savingLocation" class="btn-primary">{{ savingLocation ? 'Saving...' : 'Save Location' }}</button>
           </div>
         </form>
@@ -608,8 +608,8 @@
     </div>
 
     <!-- Add Product Stock Modal -->
-    <div v-if="showAddProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+    <div v-if="showAddProductModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-md" :class="formPage ? 'max-w-4xl' : ''">
         <h3 class="text-xl font-bold mb-4">Add Product to Default Warehouse</h3>
         
         <div v-if="!defaultWarehouse" class="bg-yellow-50 text-yellow-700 p-4 rounded-lg mb-4">
@@ -647,7 +647,7 @@
           <div v-if="addProductError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ addProductError }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showAddProductModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
             <button type="submit" :disabled="addingProduct || !defaultWarehouse || !addProductForm.product_id" class="btn-primary">
               {{ editingProduct ? 'Edit Product' : 'Add Product' }}
             </button>
@@ -659,11 +659,49 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import api from '../../services/api';
 
 const router = useRouter();
+const route = useRoute();
+const formPage = ref(false);
+const formType = ref('');
+
+const openFormTab = (query) => {
+  window.open(router.resolve({ path: '/dashboard/warehouses', query }).href, '_blank');
+};
+
+const closeFormTab = () => {
+  if (!formPage.value) {
+    showModal.value = false;
+    showViewModal.value = false;
+    showLocationModal.value = false;
+    showAddProductModal.value = false;
+    return;
+  }
+  if (window.opener) {
+    window.opener.postMessage({ type: 'admin-data-saved', resource: 'warehouses' }, window.location.origin);
+    window.close();
+    window.setTimeout(() => {
+      if (!window.closed) window.location.replace('/dashboard/warehouses');
+    }, 150);
+    return;
+  }
+  router.replace('/dashboard/warehouses');
+};
+
+const onWarehouseSaved = (event) => {
+  if (event.origin === window.location.origin && event.data?.type === 'admin-data-saved' &&
+      ['warehouses', 'products'].includes(event.data.resource)) {
+    loadWarehouses();
+    loadStats();
+    if (formType.value === 'view' && selectedWarehouse.value) {
+      selectWarehouseTab(selectedWarehouse.value);
+      loadWarehouseStocks(selectedWarehouse.value.id);
+    }
+  }
+};
 
 const warehouses = ref({ data: [] });
 const stats = ref({});
@@ -789,6 +827,40 @@ const resetLocationForm = () => {
   locationError.value = '';
 };
 
+const openWarehouseForm = (warehouse = null) => {
+  if (!formPage.value || formType.value !== 'warehouse') {
+    openFormTab({ form: 'warehouse', ...(warehouse ? { id: warehouse.id } : {}) });
+    return;
+  }
+  if (warehouse) {
+    form.value = { ...warehouse };
+    editingId.value = warehouse.id;
+    error.value = '';
+  } else {
+    resetForm();
+  }
+  showModal.value = true;
+};
+
+const openLocationForm = (location = null) => {
+  if (!formPage.value || formType.value === 'view') {
+    openFormTab({
+      form: 'location',
+      warehouseId: selectedWarehouse.value.id,
+      ...(location ? { locationId: location.id } : {}),
+    });
+    return;
+  }
+  if (location) {
+    locationForm.value = { ...location };
+    editingLocationId.value = location.id;
+    locationError.value = '';
+  } else {
+    resetLocationForm();
+  }
+  showLocationModal.value = true;
+};
+
 const saveWarehouse = async () => {
   saving.value = true;
   error.value = '';
@@ -798,9 +870,13 @@ const saveWarehouse = async () => {
     } else {
       await api.post('/warehouses', form.value);
     }
-    showModal.value = false;
-    loadWarehouses();
-    loadStats();
+    if (formPage.value) {
+      closeFormTab();
+    } else {
+      showModal.value = false;
+      loadWarehouses();
+      loadStats();
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to save warehouse';
   } finally {
@@ -809,10 +885,7 @@ const saveWarehouse = async () => {
 };
 
 const editWarehouse = (warehouse) => {
-  form.value = { ...warehouse };
-  editingId.value = warehouse.id;
-  showModal.value = true;
-  error.value = '';
+  openWarehouseForm(warehouse);
 };
 
 // Warehouse stocks
@@ -844,6 +917,10 @@ const loadWarehouseStocks = async (warehouseId) => {
 };
 
 const viewWarehouse = async (warehouse) => {
+  if (!formPage.value) {
+    openFormTab({ form: 'view', id: warehouse.id });
+    return;
+  }
   try {
     const response = await api.get(`/warehouses/${warehouse.id}`);
     selectedWarehouse.value = response.data;
@@ -885,9 +962,13 @@ const saveLocation = async () => {
     } else {
       await api.post(`/warehouses/${selectedWarehouse.value.id}/locations`, locationForm.value);
     }
-    showLocationModal.value = false;
-    viewWarehouse(selectedWarehouse.value); // Refresh
-    loadStats();
+    if (formPage.value) {
+      closeFormTab();
+    } else {
+      showLocationModal.value = false;
+      viewWarehouse(selectedWarehouse.value); // Refresh
+      loadStats();
+    }
   } catch (err) {
     locationError.value = err.response?.data?.message || 'Failed to save location';
   } finally {
@@ -896,10 +977,7 @@ const saveLocation = async () => {
 };
 
 const editLocation = (location) => {
-  locationForm.value = { ...location };
-  editingLocationId.value = location.id;
-  showLocationModal.value = true;
-  locationError.value = '';
+  openLocationForm(location);
 };
 
 const deleteLocation = async (location) => {
@@ -919,7 +997,7 @@ const editProduct = (product) => {
         return;
     }
 
-    router.push({ name: 'Products', query: { edit: product.id } });
+    window.open(`/dashboard/products?edit=${encodeURIComponent(product.id)}`, '_blank');
 };
 
 const saveProduct = async () => {
@@ -1005,6 +1083,10 @@ const loadDefaultWarehouse = async () => {
 };
 
 const openAddProductModal = () => {
+  if (!formPage.value) {
+    openFormTab({ form: 'add-product' });
+    return;
+  }
   showAddProductModal.value = true;
   resetAddProductForm();
   loadProducts();
@@ -1070,10 +1152,14 @@ const submitAddProduct = async () => {
       quantity: addProductForm.value.quantity,
       notes: addProductForm.value.notes
     });
-    showAddProductModal.value = false;
-    loadWarehouses();
-    loadStats();
-    alert('Product stock added successfully!');
+    if (formPage.value) {
+      closeFormTab();
+    } else {
+      showAddProductModal.value = false;
+      loadWarehouses();
+      loadStats();
+      alert('Product stock added successfully!');
+    }
   } catch (err) {
     addProductError.value = err.response?.data?.message || 'Failed to add product stock';
   } finally {
@@ -1210,9 +1296,49 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString();
 };
 
-onMounted(() => {
-  loadWarehouses();
+onMounted(async () => {
+  window.addEventListener('message', onWarehouseSaved);
+  formType.value = typeof route.query.form === 'string' ? route.query.form : '';
+  formPage.value = Boolean(formType.value);
+
+  await loadWarehouses();
   loadStats();
-  loadDefaultWarehouse();
+  await loadDefaultWarehouse();
+
+  if (formType.value === 'warehouse') {
+    const warehouse = route.query.id
+      ? allWarehouses.value.find((item) => String(item.id) === String(route.query.id))
+      : null;
+    if (route.query.id && !warehouse) {
+      closeFormTab();
+      return;
+    }
+    openWarehouseForm(warehouse);
+  } else if (formType.value === 'view') {
+    const warehouse = allWarehouses.value.find((item) => String(item.id) === String(route.query.id));
+    if (warehouse) await viewWarehouse(warehouse);
+    else closeFormTab();
+  } else if (formType.value === 'location') {
+    const warehouse = allWarehouses.value.find((item) => String(item.id) === String(route.query.warehouseId));
+    if (!warehouse) {
+      closeFormTab();
+      return;
+    }
+    await selectWarehouseTab(warehouse);
+    const location = selectedWarehouse.value?.locations?.find(
+      (item) => String(item.id) === String(route.query.locationId),
+    );
+    openLocationForm(location || null);
+  } else if (formType.value === 'add-product') {
+    openAddProductModal();
+  }
 });
+
+onBeforeUnmount(() => window.removeEventListener('message', onWarehouseSaved));
 </script>
+
+<style scoped>
+.form-page > :not(.tab-form) {
+  display: none !important;
+}
+</style>

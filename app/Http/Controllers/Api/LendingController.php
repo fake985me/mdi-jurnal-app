@@ -17,7 +17,7 @@ class LendingController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Lending::with(['product', 'user']);
+            $query = Lending::with(['product', 'user'])->withSum('returns', 'quantity_returned');
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -63,15 +63,6 @@ class LendingController extends Controller
         try {
             $stockService = $this->stockService;
             
-            // Check stock availability and deduct
-            $stockService->deductStock(
-                $validated['product_id'],
-                $validated['quantity'],
-                'lending',
-                0, // Will be updated after lending created
-                "Lending to {$validated['borrower_name']}"
-            );
-
             // Create lending
             $lending = Lending::create([
                 ...$validated,
@@ -79,16 +70,10 @@ class LendingController extends Controller
                 'status' => 'borrowed',
             ]);
             
-            // Update the stock transaction with actual lending ID
-            $transaction = StockTransaction::where('reference_type', 'lending')
-                ->where('product_id', $validated['product_id'])
-                ->whereNull('reference_id')
-                ->latest()
-                ->first();
-                
-            if ($transaction) {
-                $transaction->update(['reference_id' => $lending->id]);
-            }
+            $stockService->deductStock(
+                $lending->product_id, $lending->quantity, 'lending', $lending->id,
+                "Lending to {$lending->borrower_name}"
+            );
 
             DB::commit();
             return response()->json($lending->load(['product', 'user']), 201);
@@ -108,7 +93,7 @@ class LendingController extends Controller
     {
         $lending = Lending::findOrFail($id);
 
-        if ($lending->status === 'returned') {
+        if ($lending->remaining_quantity === 0) {
             return response()->json(['message' => 'Lending already returned'], 422);
         }
 
@@ -122,8 +107,13 @@ class LendingController extends Controller
         DB::beginTransaction();
         try {
             $stockService = $this->stockService;
-            
             // Create return record
+            $lending = Lending::lockForUpdate()->findOrFail($id);
+            $returned = (int) $lending->returns()->sum('quantity_returned');
+            $remaining = $lending->quantity - $returned;
+            if ($validated['quantity_returned'] > $remaining) {
+                throw new \RuntimeException("Jumlah pengembalian melebihi sisa pinjaman ({$remaining}).");
+            }
             LendingReturn::create([
                 'lending_id' => $lending->id,
                 'return_date' => $validated['return_date'],
@@ -133,8 +123,9 @@ class LendingController extends Controller
             ]);
 
             // Update lending status
-            $lending->status = 'returned';
-            $lending->actual_return_date = $validated['return_date'];
+            $complete = $returned + $validated['quantity_returned'] >= $lending->quantity;
+            $lending->status = $complete ? 'returned' : 'borrowed';
+            $lending->actual_return_date = $complete ? $validated['return_date'] : null;
             $lending->save();
 
             // Add stock back if condition is good

@@ -33,6 +33,7 @@ class ProductsExport implements FromCollection, WithColumnWidths, WithHeadings, 
             'subCategory',
             'brand',
             'Stock',
+            'warranty_period_months',
             'descriptions',
         ];
 
@@ -143,6 +144,7 @@ class ProductsExport implements FromCollection, WithColumnWidths, WithHeadings, 
             $subCategoryString,
             $product->brand,
             $stockQty,
+            $product->warranty_period_months ?? 12,
             $product->descriptions,
         ];
 
@@ -230,7 +232,8 @@ class ProductsExport implements FromCollection, WithColumnWidths, WithHeadings, 
             'H' => 20,  // subCategory
             'I' => 15,  // brand
             'J' => 10,  // Stock
-            'K' => 40,  // descriptions
+            'K' => 20,  // warranty_period_months
+            'L' => 40,  // descriptions
         ];
     }
 

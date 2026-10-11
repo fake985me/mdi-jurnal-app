@@ -57,6 +57,6 @@ class User extends Authenticatable
      */
     public function canManageUsers()
     {
-        return in_array($this->role, ['superadmin', 'admin']);
+        return $this->isSuperAdmin();
     }
 }

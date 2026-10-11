@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class Warranty extends Model
 {
@@ -51,5 +52,37 @@ class Warranty extends Model
     public function rmas()
     {
         return $this->hasMany(RMA::class);
+    }
+
+    public function isActiveOn(Carbon|string|null $purchaseDate = null): bool
+    {
+        if ($this->status === 'void') {
+            return false;
+        }
+
+        $months = $this->warranty_period_months
+            ?? $this->product?->warranty_period_months;
+        $startDate = $purchaseDate ?? $this->start_date;
+
+        if ($months !== null && $startDate) {
+            $coverageEndDate = $this->coverageEndDate($purchaseDate);
+            return (int) $months > 0
+                && $coverageEndDate?->toDateString() >= today()->toDateString();
+        }
+
+        return !$this->end_date || $this->end_date->toDateString() >= today()->toDateString();
+    }
+
+    public function coverageEndDate(Carbon|string|null $purchaseDate = null): ?Carbon
+    {
+        $months = $this->warranty_period_months
+            ?? $this->product?->warranty_period_months;
+        $startDate = $purchaseDate ?? $this->start_date;
+
+        if ($months === null || !$startDate || (int) $months <= 0) {
+            return $this->end_date;
+        }
+
+        return Carbon::parse($startDate)->addMonthsNoOverflow((int) $months);
     }
 }

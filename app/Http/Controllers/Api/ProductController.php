@@ -14,6 +14,7 @@ use App\Models\CurrentStock;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProductsExport;
@@ -116,6 +117,7 @@ class ProductController extends Controller
             'price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
+            'warranty_period_months' => 'nullable|integer|min:0',
             'is_asset' => 'nullable|boolean',
             // Categories array
             'categories' => 'nullable|array',
@@ -130,6 +132,9 @@ class ProductController extends Controller
         $productData = $request->only($fillable);
         if (!isset($productData['stock'])) {
             $productData['stock'] = 0;
+        }
+        if (!isset($productData['warranty_period_months'])) {
+            $productData['warranty_period_months'] = 12;
         }
 
         $product = Product::create($productData);
@@ -169,6 +174,7 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'sku' => 'nullable|string|max:100',
+            'warranty_period_months' => 'nullable|integer|min:0',
             'categories' => 'nullable|array',
             'categories.*.category_id' => 'required_with:categories|exists:categories,id',
             'categories.*.sub_category_id' => 'nullable|exists:sub_categories,id',
@@ -335,7 +341,11 @@ class ProductController extends Controller
                 'message' => 'Products imported successfully!',
                 'failure_count' => 0,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Product Excel import failed.', [
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),

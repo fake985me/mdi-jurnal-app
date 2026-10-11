@@ -168,7 +168,7 @@ class StockController extends Controller
                     $validated['quantity'],
                     $validated['reference_type'] ?? 'manual_adjustment',
                     $validated['reference_id'] ?? 0,
-                    $validated['notes']
+                    $validated['notes'] ?? null
                 );
             } else {
                 $stockService->deductStock(
@@ -176,7 +176,7 @@ class StockController extends Controller
                     $validated['quantity'],
                     $validated['reference_type'] ?? 'manual_adjustment',
                     $validated['reference_id'] ?? 0,
-                    $validated['notes']
+                    $validated['notes'] ?? null
                 );
             }
             

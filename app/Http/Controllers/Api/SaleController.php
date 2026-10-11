@@ -48,6 +48,9 @@ class SaleController extends Controller
     {
         try {
             $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery', 'warehouse', 'customer']);
+            if ($request->boolean('include_warranty_status')) {
+                $query->with(['invoice', 'warranties', 'rmas']);
+            }
 
             // Filter by status
             if ($request->has('status') && !empty($request->status)) {
@@ -266,6 +269,18 @@ class SaleController extends Controller
         try {
             $stockService = $this->stockService;
 
+            $sale = Sale::with('items')->lockForUpdate()->findOrFail($id);
+            $oldStatus = $sale->status;
+            if ($oldStatus === 'cancelled' && in_array($newStatus, ['pending', 'completed'], true)) {
+                foreach ($sale->items as $item) {
+                    $stockService->deductStock(
+                        $item->product_id, $item->quantity, 'sale', $sale->id,
+                        "Sale #{$sale->invoice_number} reactivated", $warehouseId
+                    );
+                }
+                $sale->delivery()->update(['status' => 'preparing', 'delivered_date' => null]);
+            }
+
             // Stock already deducted on create. Only restore when cancelling.
             // Handle status change: completed -> cancelled (restore stock)
             if (in_array($oldStatus, ['completed', 'pending']) && $newStatus === 'cancelled') {
@@ -279,6 +294,7 @@ class SaleController extends Controller
                         $warehouseId
                     );
                 }
+                $sale->delivery()->update(['status' => 'cancelled']);
             }
 
             $sale->update([
@@ -333,6 +349,7 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
+            $sale = Sale::with('items')->lockForUpdate()->findOrFail($id);
             // If sale was completed, restore stock before deletion
             if (in_array($sale->status, ['completed', 'pending'])) {
                 $stockService = $this->stockService;

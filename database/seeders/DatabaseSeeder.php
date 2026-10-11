@@ -71,6 +71,7 @@ class DatabaseSeeder extends Seeder
             CarouselSlideSeeder::class,
             SolutionSeeder::class,
             ProjectSeeder::class,
+            ManagedServicesProjectSeeder::class,
             ContactInfoSeeder::class,
         ]);
     }

@@ -25,14 +25,19 @@ class DeliveryController extends Controller
     {
         try {
             // Show all deliveries (not just pending sales)
-            $query = Delivery::with(['sale.items.product', 'sale.user', 'sale.customer', 'user', 'items.product']);
+            $query = Delivery::with(['sale.items.product', 'sale.user', 'sale.customer', 'user', 'items.product'])
+                ->whereHas('sale', fn ($query) => $query->where('status', '!=', 'cancelled'));
 
             // Filter by search
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->whereHas('sale', function($q) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('tracking_number', 'like', "%{$search}%")
+                        ->orWhere('courier', 'like', "%{$search}%")
+                        ->orWhereHas('sale', function($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
                       ->orWhere('customer_name', 'like', "%{$search}%");
+                    });
                 });
             }
 
@@ -94,6 +99,7 @@ class DeliveryController extends Controller
     private function autoCreateWarranties(Delivery $delivery, array $items)
     {
         $warrantiesCreated = 0;
+        $sale = Sale::with('invoice')->find($delivery->sale_id);
 
         foreach ($items as $item) {
             $serialNumber = $item['serial_number'] ?? null;
@@ -126,8 +132,12 @@ class DeliveryController extends Controller
                 continue;
             }
 
-            $startDate = $delivery->shipped_date ? Carbon::parse($delivery->shipped_date) : now();
-            $endDate = $startDate->copy()->addMonths($warrantyMonths);
+            $purchaseDate = $sale?->invoice?->invoice_date
+                ?? $sale?->sale_date
+                ?? $delivery->shipped_date
+                ?? now();
+            $startDate = Carbon::parse($purchaseDate);
+            $endDate = $startDate->copy()->addMonthsNoOverflow($warrantyMonths);
 
             Warranty::create([
                 'warranty_code' => $this->generateWarrantyCode($productId),
@@ -265,6 +275,12 @@ class DeliveryController extends Controller
 
         DB::beginTransaction();
         try {
+            $sale = Sale::lockForUpdate()->find($delivery->sale_id);
+            if (!$sale || $sale->status === 'cancelled') {
+                throw new \RuntimeException('Pengiriman tidak dapat diubah karena penjualan dibatalkan atau dihapus.');
+            }
+            $delivery = Delivery::lockForUpdate()->findOrFail($id);
+            $delivery->setRelation('sale', $sale);
             // Update delivery items with serial numbers if provided
             if (!empty($validated['items'])) {
                 // Update existing items or create new ones

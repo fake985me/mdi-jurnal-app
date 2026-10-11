@@ -14,26 +14,8 @@
       </button>
     </div>
 
-    <!-- Tabs -->
-    <div class="border-b border-gray-200 mb-0">
-      <nav class="-mb-px flex space-x-8">
-        <button @click="activeTab = 'sales'" :class="[
-          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
-          activeTab === 'sales'
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        ]">?? Sales Orders</button>
-        <button @click="activeTab = 'deliveries'" :class="[
-          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
-          activeTab === 'deliveries'
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        ]">?? Delivery</button>
-      </nav>
-    </div>
-
     <!-- SALES TAB -->
-    <div v-if="activeTab === 'sales'" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-4">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-4">
 
 
       <!-- Sales Summary + Pie Chart Footer -->
@@ -378,10 +360,6 @@
       
     </div>
 
-    <!-- DELIVERY TAB -->
-    <div v-if="activeTab === 'deliveries'" class="mt-4">
-      <Deliveries />
-    </div>
   </div>
 </template>
 
@@ -390,13 +368,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as XLSX from 'xlsx'
 import api from '../../services/api'
-import Deliveries from './Deliveries.vue'
 
 const router = useRouter()
 
 const allSales     = ref([])
 const loading      = ref(true)
-const activeTab    = ref('sales')
 const searchQuery  = ref('')
 const statusFilter = ref('all')
 const dateFrom     = ref('')

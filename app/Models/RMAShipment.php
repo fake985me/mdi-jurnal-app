@@ -36,7 +36,7 @@ class RMAShipment extends Model
 
     public function rma()
     {
-        return $this->belongsTo(RMA::class);
+        return $this->belongsTo(RMA::class, 'rma_id');
     }
 
     public function product()

@@ -5,7 +5,7 @@
     <div class="flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-900">Solutions Management</h2>
       <button
-        @click="showModal = true; editingItem = null"
+        @click="openAddModal"
         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
         + Add Solution
@@ -16,6 +16,11 @@
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="loading" class="p-8 text-center">
         <p class="text-gray-600">Loading solutions...</p>
+      </div>
+
+      <div v-else-if="loadError" class="p-8 text-center text-red-600">
+        {{ loadError }}
+        <button @click="loadSolutions" class="ml-2 underline">Retry</button>
       </div>
 
       <table v-else class="min-w-full">
@@ -32,7 +37,9 @@
           <tr v-for="item in solutions" :key="item.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.order }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.title }}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ item.description.substring(0, 100) }}...</td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              {{ item.description.length > 100 ? `${item.description.substring(0, 100)}...` : item.description }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span :class="[
                 'px-2 py-1 text-xs rounded-full',
@@ -45,6 +52,9 @@
               <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
               <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900">Delete</button>
             </td>
+          </tr>
+          <tr v-if="solutions.length === 0">
+            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">No solutions found.</td>
           </tr>
         </tbody>
       </table>
@@ -83,6 +93,24 @@
             />
           </div>
 
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Upload image</label>
+            <input
+              ref="imageInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              @change="selectImage"
+              class="w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+            />
+            <p class="mt-1 text-xs text-gray-500">JPG, PNG, or WebP; maximum 5 MB. An uploaded image replaces the image URL above.</p>
+            <img
+              v-if="imagePreview"
+              :src="imagePreview"
+              alt="Solution image preview"
+              class="mt-3 h-36 w-auto max-w-full rounded-lg border border-gray-200 object-contain"
+            />
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
@@ -107,7 +135,7 @@
           <div class="flex justify-end space-x-3">
             <button
               type="button"
-              @click="showModal = false"
+              @click="closeModal"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
               Cancel
@@ -127,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
 
 const solutions = ref([]);
@@ -136,6 +164,10 @@ const showModal = ref(false);
 const editingItem = ref(null);
 const saving = ref(false);
 const error = ref('');
+const loadError = ref('');
+const selectedImage = ref(null);
+const imagePreview = ref('');
+const imageInput = ref(null);
 
 const form = ref({
   title: '',
@@ -147,18 +179,58 @@ const form = ref({
 
 const loadSolutions = async () => {
   loading.value = true;
+  loadError.value = '';
   try {
     const response = await api.get('/solutions');
     solutions.value = response.data;
   } catch (err) {
     console.error('Failed to load solutions:', err);
+    loadError.value = err.response?.data?.message || 'Failed to load solutions';
   } finally {
     loading.value = false;
   }
 };
 
+const resetForm = () => {
+  clearSelectedImage();
+  form.value = { title: '', description: '', image_url: '', order: 0, is_active: true };
+};
+
+const clearSelectedImage = () => {
+  if (imagePreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(imagePreview.value);
+  }
+  selectedImage.value = null;
+  imagePreview.value = '';
+  if (imageInput.value) imageInput.value.value = '';
+};
+
+const selectImage = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  clearSelectedImage();
+  selectedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
+};
+
+const openAddModal = () => {
+  editingItem.value = null;
+  resetForm();
+  error.value = '';
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+  resetForm();
+  error.value = '';
+};
+
 const editItem = (item) => {
+  clearSelectedImage();
   editingItem.value = item;
+  error.value = '';
   form.value = {
     title: item.title,
     description: item.description,
@@ -166,6 +238,7 @@ const editItem = (item) => {
     order: item.order,
     is_active: item.is_active,
   };
+  imagePreview.value = item.image_url || '';
   showModal.value = true;
 };
 
@@ -174,16 +247,33 @@ const saveItem = async () => {
   error.value = '';
   
   try {
+    const formData = new FormData();
+    Object.entries(form.value).forEach(([key, value]) => {
+      const fieldValue = key === 'is_active' ? (value ? '1' : '0') : value;
+      formData.append(key, fieldValue === null || fieldValue === undefined ? '' : String(fieldValue));
+    });
+    if (selectedImage.value) {
+      formData.append('image', selectedImage.value);
+    }
+
     if (editingItem.value) {
-      await api.put(`/solutions/${editingItem.value.id}`, form.value);
+      formData.append('_method', 'PUT');
+      await api.post(`/solutions/${editingItem.value.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     } else {
-      await api.post('/solutions', form.value);
+      await api.post('/solutions', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     }
     showModal.value = false;
-    loadSolutions();
-    form.value = { title: '', description: '', image_url: '', order: 0, is_active: true };
+    resetForm();
+    await loadSolutions();
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save solution';
+    const validationErrors = err.response?.data?.errors;
+    error.value = validationErrors
+      ? Object.values(validationErrors).flat().join(' ')
+      : err.response?.data?.message || 'Failed to save solution';
   } finally {
     saving.value = false;
   }
@@ -194,13 +284,15 @@ const deleteItem = async (id) => {
   
   try {
     await api.delete(`/solutions/${id}`);
-    loadSolutions();
+    await loadSolutions();
   } catch (err) {
-    alert('Failed to delete solution');
+    alert(err.response?.data?.message || 'Failed to delete solution');
   }
 };
 
 onMounted(() => {
   loadSolutions();
 });
+
+onBeforeUnmount(clearSelectedImage);
 </script>

@@ -5,7 +5,7 @@
         <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           RMA Shipments
         </h2>
-        <p class="text-sm text-gray-600 mt-1">Manage replacement product shipments for RMA</p>
+        <p class="text-sm text-gray-600 mt-1">Permintaan shipment dibuat otomatis untuk RMA penggantian; stok berkurang saat pengiriman dikonfirmasi.</p>
       </div>
       <button @click="showModal = true; resetForm()"
         class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
@@ -37,7 +37,8 @@
         <p class="text-gray-600">Loading...</p>
       </div>
 
-      <table v-else class="min-w-full">
+      <div v-else class="overflow-x-auto">
+      <table class="min-w-[1100px] w-full">
         <thead class="table-header">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shipment Code</th>
@@ -69,10 +70,19 @@
             </td>
             <td class="px-6 py-4">
               <span :class="getStatusBadge(shipment.status)">{{ shipment.status }}</span>
+              <button
+                v-if="shipment.status === 'pending' && (shipment.rma?.status !== 'processed' || shipment.rma?.resolution !== 'replace')"
+                @click="openRMA(shipment)"
+                class="ml-2 inline-flex items-center rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                Proses RMA
+              </button>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button v-if="shipment.status === 'pending'" @click="openShipModal(shipment)"
+              <button
+                v-if="shipment.status === 'pending' && shipment.rma?.status === 'processed' && shipment.rma?.resolution === 'replace'"
+                @click="openShipModal(shipment)"
                 class="text-blue-600 hover:text-blue-900">Ship</button>
+              <span v-else-if="shipment.status === 'pending'" class="text-xs text-amber-600">Menunggu proses RMA</span>
               <button v-if="shipment.status === 'shipped' || shipment.status === 'in_transit'"
                 @click="markDelivered(shipment)" class="text-green-600 hover:text-green-900">Mark Delivered</button>
               <button @click="viewDetails(shipment)" class="text-gray-600 hover:text-gray-900">Details</button>
@@ -80,6 +90,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
 
       <div v-if="shipments.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between">
         <p class="text-sm text-gray-700">Showing {{ shipments.from }} to {{ shipments.to }} of {{ shipments.total }}</p>
@@ -105,7 +116,7 @@
                 {{ rma.rma_code }} - {{ rma.product?.title }} (Qty: {{ rma.quantity }})
               </option>
             </select>
-            <p class="text-xs text-gray-500 mt-1">Only RMAs with resolution "replace" are shown</p>
+            <p class="text-xs text-gray-500 mt-1">Hanya RMA processed tanpa permintaan shipment yang sudah ada.</p>
           </div>
 
           <div v-if="form.rma_id" class="grid grid-cols-2 gap-4">
@@ -161,6 +172,10 @@
       <div class="bg-white rounded-xl p-6 w-full max-w-md">
         <h3 class="text-xl font-bold mb-4">Ship Package</h3>
         <p class="text-sm text-gray-600 mb-4">Shipment: {{ selectedShipment?.shipment_code }}</p>
+        <p class="text-sm text-gray-600 mb-4">
+          RMA: <span class="font-semibold text-blue-600">{{ selectedShipment?.rma?.rma_code }}</span>.
+          Stok replacement akan dikurangi setelah konfirmasi.
+        </p>
 
         <form @submit.prevent="confirmShip" class="space-y-4">
           <div>
@@ -243,8 +258,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../../services/api';
 
+const router = useRouter();
 const shipments = ref({ data: [] });
 const processedRMAs = ref([]);
 const loading = ref(true);
@@ -308,7 +325,9 @@ const loadProcessedRMAs = async () => {
       params: { per_page: 100 }
     });
     processedRMAs.value = (response.data.data || []).filter(
-      rma => rma.replacement_requested === true || rma.replacement_requested === 1
+      rma => rma.status === 'processed'
+        && rma.resolution === 'replace'
+        && !rma.shipment
     );
   } catch (err) {
     console.error('Failed to load RMAs:', err);
@@ -395,6 +414,10 @@ const markDelivered = async (shipment) => {
 const viewDetails = (shipment) => {
   selectedShipment.value = shipment;
   showDetailModal.value = true;
+};
+
+const openRMA = (shipment) => {
+  router.push({ name: 'RMAs', query: { search: shipment.rma?.rma_code || '' } });
 };
 
 onMounted(() => {

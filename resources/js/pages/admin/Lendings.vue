@@ -56,7 +56,7 @@
               <div class="text-sm font-medium text-gray-900">{{ lending.borrower_name }}</div>
               <div class="text-xs text-gray-500">{{ lending.borrower_contact }}</div>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ lending.quantity }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">{{ lending.quantity }}<div class="text-xs text-gray-500">Sisa: {{ lending.remaining_quantity }}</div></td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(lending.expected_return_date) }}</td>
             <td class="px-6 py-4">
               <span :class="lending.status === 'borrowed' ? 'badge-warning' : 'badge-success'">
@@ -149,7 +149,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Quantity Returned *</label>
-            <input v-model.number="returnForm.quantity_returned" type="number" min="1" required class="input" />
+            <input v-model.number="returnForm.quantity_returned" type="number" min="1" :max="selectedLending?.remaining_quantity" required class="input" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Condition *</label>
@@ -281,7 +281,7 @@ const saveLending = async () => {
 
 const processReturn = (lending) => {
   selectedLending.value = lending;
-  returnForm.value.quantity_returned = lending.quantity;
+  returnForm.value.quantity_returned = lending.remaining_quantity ?? lending.quantity;
   returnModal.value = true;
 };
 
