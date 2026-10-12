@@ -49,7 +49,7 @@ class SaleController extends Controller
         try {
             $query = Sale::with(['salesPerson', 'user', 'items.product', 'delivery', 'warehouse', 'customer']);
             if ($request->boolean('include_warranty_status')) {
-                $query->with(['invoice', 'warranties', 'rmas']);
+                $query->with(['invoice', 'warranties', 'rmas', 'delivery.items.product']);
             }
 
             // Filter by status

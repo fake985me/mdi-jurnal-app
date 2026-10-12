@@ -16,6 +16,7 @@ class RMAShipment extends Model
         'rma_id',
         'product_id',
         'quantity',
+        'serial_numbers',
         'tracking_number',
         'courier',
         'status',
@@ -30,6 +31,7 @@ class RMAShipment extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'serial_numbers' => 'array',
         'shipped_date' => 'date',
         'delivered_date' => 'date',
     ];

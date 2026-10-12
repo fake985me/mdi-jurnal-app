@@ -20,6 +20,7 @@ class RMA extends Model
         'msa_project_id',
         'product_id',
         'serial_number',
+        'returned_serial_number',
         'customer_name',
         'customer_contact',
         'quantity',

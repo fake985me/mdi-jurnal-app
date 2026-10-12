@@ -21,7 +21,7 @@
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="font-semibold text-gray-900">Daftar Serial Number</h3>
-            <p class="mt-1 text-sm text-gray-500">Import serial dengan Excel untuk memperbarui data dan membuat warranty otomatis.</p>
+            <p class="mt-1 text-sm text-gray-500">{{ isRma ? 'Import SN pengganti untuk memperbarui SN pada pengiriman asal dan garansi.' : 'Import serial dengan Excel untuk memperbarui data dan membuat warranty otomatis.' }}</p>
           </div>
           <div class="flex gap-2">
             <button @click="downloadTemplate" class="btn-secondary">Download Template</button>
@@ -62,6 +62,15 @@ import api from '../../services/api';
 
 const route = useRoute();
 const router = useRouter();
+const isRma = String(route.params.id).startsWith('rma-');
+const apiPath = isRma ? `/rma-shipments/${String(route.params.id).slice(4)}` : `/deliveries/${route.params.id}`;
+const normalizeDelivery = (data) => isRma ? {
+  ...data,
+  sale: data.rma?.sale,
+  items: (data.serial_numbers?.length ? data.serial_numbers : [null]).map((sn, index) => ({
+    id: index, product: data.product, quantity: sn ? 1 : data.quantity, serial_number: sn,
+  })),
+} : data;
 const delivery = ref(null);
 const loading = ref(true);
 const uploading = ref(false);
@@ -77,8 +86,8 @@ const getDeliveryBadge = (status) => ({
 const loadDelivery = async () => {
   loading.value = true;
   try {
-    const response = await api.get(`/deliveries/${route.params.id}`);
-    delivery.value = response.data;
+    const response = await api.get(apiPath);
+    delivery.value = normalizeDelivery(response.data);
   } catch (err) {
     console.error('Failed to load delivery:', err);
   } finally {
@@ -88,7 +97,7 @@ const loadDelivery = async () => {
 
 const downloadTemplate = async () => {
   try {
-    const response = await api.get(`/deliveries/${route.params.id}/serial-template`, { responseType: 'blob' });
+    const response = await api.get(`${apiPath}/serial-template`, { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -115,10 +124,10 @@ const uploadSerialExcel = async (event) => {
   formData.append('file', file);
 
   try {
-    const response = await api.post(`/deliveries/${route.params.id}/import-serials`, formData, {
+    const response = await api.post(`${apiPath}/import-serials`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    delivery.value = response.data.delivery;
+    delivery.value = normalizeDelivery(isRma ? response.data.shipment : response.data.delivery);
     uploadMessage.value = response.data.message;
     uploadErrors.value = response.data.errors || [];
   } catch (err) {

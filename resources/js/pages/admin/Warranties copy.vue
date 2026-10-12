@@ -206,7 +206,7 @@
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('status')">
                 Status <span v-if="sortKey==='status'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
               </th>
-              <th class="px-4 py-3 text-left">Pajak</th>
+              <!-- <th class="px-4 py-3 text-left">Pajak</th> -->
               <th class="px-4 py-3 text-left">Delivery</th>
               <th class="px-4 py-3 text-right">Aksi</th>
             </tr>
@@ -268,13 +268,13 @@
                     {{ capitalize(sale.status) }}
                   </span>
                 </td>
-                <td class="px-4 py-3">
+                <!-- <td class="px-4 py-3">
                   <span v-if="sale.tax_type"
                     class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
                     {{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%
                   </span>
                   <span v-else class="text-slate-300 text-xs">-</span>
-                </td>
+                </td> -->
                 <td class="px-4 py-3">
                   <span v-if="sale.delivery"
                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 ring-1 ring-teal-200">
@@ -330,33 +330,7 @@
                           </li>
                           <li v-if="!sale.items || !sale.items.length" class="text-slate-400">Tidak ada item</li>
                         </ul>
-                      </div>
-                      <div class="border border-slate-200 rounded-xl bg-white p-3">
-                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Info Transaksi</div>
-                        <div class="space-y-1.5 text-sm">
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Invoice</span>
-                            <span class="font-semibold">{{ sale.invoice_number }}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Tanggal</span>
-                            <span>{{ formatDate(sale.sale_date) }}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Subtotal</span>
-                            <span>Rp {{ formatInt(sale.subtotal || sale.total_amount) }}</span>
-                          </div>
-                          <div v-if="sale.tax_type" class="flex justify-between">
-                            <span class="text-slate-500">Pajak</span>
-                            <span>{{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%</span>
-                          </div>
-                          <div class="flex justify-between border-t pt-1.5 font-bold">
-                            <span class="text-slate-700">Grand Total</span>
-                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount) }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+
                         <div class="text-xs uppercase text-slate-500 font-bold mb-2">Pengiriman &amp; Gudang</div>
                         <div class="space-y-1.5 text-sm">
                           <div class="flex justify-between">
@@ -382,6 +356,80 @@
                           <div v-else class="text-slate-400 text-xs">Belum ada pengiriman</div>
                         </div>
                       </div>
+
+                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Product List</div>
+
+
+                        <div class="space-y-1.5 text-sm">
+                          <table class="w-full text-sm text-left text-slate-700">
+                            <thead class="text-[10px] text-slate-500 uppercase bg-slate-100">
+                              <tr>
+                                <th scope="col" class="px-2 py-1">Produk</th>
+                                <th scope="col" class="px-2 py-1">SN</th>
+                                <th scope="col" class="px-2 py-1">Masa Garansi</th>
+                                <th scope="col" class="px-2 py-1">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="row in productPagination[sale.id].rows" :key="row.key" class="border-b border-slate-200">
+                                  <td class="px-2 py-1">{{ row.product?.title || row.product?.name || 'Produk dihapus' }}</td>
+                                  <td class="px-2 py-1">
+                                    <code v-if="row.serial_number" class="text-[10px] font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{{ row.serial_number }}</code>
+                                    <span v-else class="text-[10px] text-slate-400">Belum ada SN</span>
+                                  </td>
+                                  <td class="px-2 py-1">
+                                    <span v-if="row.info.startDate && row.info.endDate" class="text-[10px] text-slate-500">
+                                      {{ formatDate(row.info.startDate) }} - {{ formatDate(row.info.endDate) }}
+                                    </span>
+                                    <span v-else class="text-[10px] text-slate-400">-</span>
+                                  </td>
+                                  <td class="px-2 py-1">
+                                    <span :class="['rounded-full px-2 py-0.5 text-[10px] font-semibold', row.info.active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600']">{{ row.info.label }}</span>
+                                  </td>
+                                </tr>
+
+                              <tr v-if="!sale.items || !sale.items.length">
+                                <td colspan="4" class="px-2 py-1 text-slate-400">Tidak ada item</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div v-if="productPagination[sale.id].total > productsPerPage" class="flex flex-wrap items-center justify-between gap-2 pt-3 text-xs text-slate-500">
+                            <span>{{ productPagination[sale.id].from }}–{{ productPagination[sale.id].to }} dari {{ productPagination[sale.id].total }} produk</span>
+                            <div class="flex items-center gap-2">
+                              <button type="button" @click="productListPages[sale.id] = productPagination[sale.id].page - 1" :disabled="productPagination[sale.id].page === 1" class="rounded-lg border border-slate-200 px-2 py-1 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Sebelumnya</button>
+                              <span>{{ productPagination[sale.id].page }} / {{ productPagination[sale.id].pages }}</span>
+                              <button type="button" @click="productListPages[sale.id] = productPagination[sale.id].page + 1" :disabled="productPagination[sale.id].page === productPagination[sale.id].pages" class="rounded-lg border border-slate-200 px-2 py-1 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Berikutnya</button>
+                            </div>
+                          </div>
+
+
+                          <!-- <div class="flex justify-between">
+                            <span class="text-slate-500">Invoice</span>
+                            <span class="font-semibold">{{ sale.invoice_number }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Tanggal</span>
+                            <span>{{ formatDate(sale.sale_date) }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-slate-500">Subtotal</span>
+                            <span>Rp {{ formatInt(sale.subtotal || sale.total_amount) }}</span>
+                          </div>
+                          <div v-if="sale.tax_type" class="flex justify-between">
+                            <span class="text-slate-500">Pajak</span>
+                            <span>{{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%</span>
+                          </div>
+                          <div class="flex justify-between border-t pt-1.5 font-bold">
+                            <span class="text-slate-700">Grand Total</span>
+                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount) }}</span>
+                          </div> -->
+
+
+                        </div>
+
+                      </div>
+
                     </div>
                   </div>
                 </td>
@@ -417,11 +465,9 @@ import api from '../../services/api'
 
 const router = useRouter()
 
-const warranties = ref([])
 
 const allSales     = ref([])
 const loading      = ref(true)
-const activeTab    = ref('sales')
 const searchQuery  = ref('')
 const statusFilter = ref('all')
 const dateFrom     = ref('')
@@ -431,6 +477,8 @@ const sortDir      = ref(-1)
 const currentPage  = ref(1)
 const pageSize     = ref(10)
 const expanded     = ref({})
+const productsPerPage = 5
+const productListPages = ref({})
 
 const statusOptions = ['all', 'pending', 'completed', 'cancelled']
 
@@ -471,6 +519,7 @@ const sortedSales = computed(() => {
     return String(va).localeCompare(String(vb)) * sortDir.value
   })
 })
+
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredSales.value.length / pageSize.value)))
 
@@ -584,6 +633,30 @@ const formatDate = (d) => {
   return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 const purchaseDate = (sale) => sale.invoice?.invoice_date || sale.sale_date
+const productList = (sale) => (sale.items || []).flatMap(item => {
+  const records = (sale.warranties || []).filter(record => Number(record.product_id) === Number(item.product_id))
+  const deliveryItems = (sale.delivery?.items || []).filter(record => Number(record.product_id) === Number(item.product_id))
+  const units = records.length ? records : deliveryItems.length ? deliveryItems : [item]
+  return units.map((record, index) => ({
+    key: `${item.id}-${index}`,
+    product: record.product || item.product,
+    serial_number: record.serial_number,
+    info: warrantyInfo(records.length ? { ...sale, warranties: [record] } : sale, item),
+  }))
+})
+const productPagination = computed(() => Object.fromEntries(allSales.value.map(sale => {
+  const products = productList(sale)
+  const total = products.length
+  const pages = Math.max(1, Math.ceil(total / productsPerPage))
+  const page = Math.min(Math.max(1, productListPages.value[sale.id] || 1), pages)
+  const start = (page - 1) * productsPerPage
+  return [sale.id, {
+    rows: products.slice(start, start + productsPerPage),
+    total, pages, page,
+    from: total ? start + 1 : 0,
+    to: Math.min(start + productsPerPage, total),
+  }]
+})))
 const warrantyInfo = (sale, item) => {
   if (!item.product_id) {
     return { active: false, label: 'Data produk tidak tersedia', months: 0, startDate: null, endDate: null }
@@ -628,6 +701,8 @@ const statusClr = (s) => {
   const map = { pending: 'bg-blue-50 text-blue-700 ring-blue-200', completed: 'bg-emerald-50 text-emerald-700 ring-emerald-200', cancelled: 'bg-rose-50 text-rose-700 ring-rose-200', delivered: 'bg-teal-50 text-teal-700 ring-teal-200' }
   return map[s] || 'bg-slate-100 text-slate-700 ring-slate-200'
 }
+
+
 
 watch([searchQuery, statusFilter, dateFrom, dateTo], () => { currentPage.value = 1 })
 onMounted(loadSales)

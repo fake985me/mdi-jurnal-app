@@ -8,6 +8,9 @@ use App\Models\RMAShipment;
 use App\Services\StockSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\RMAReplacementSerialImport;
+use App\Exports\RMAReplacementSerialTemplate;
 
 class RMAShipmentController extends Controller
 {
@@ -105,15 +108,83 @@ class RMAShipmentController extends Controller
 
     public function show($id)
     {
-        $shipment = RMAShipment::with(['rma', 'product', 'user'])->findOrFail($id);
+        $shipment = RMAShipment::with(['rma.sale', 'product', 'user'])->findOrFail($id);
         return response()->json($shipment);
     }
 
-    public function ship(Request $request, $id)
+    public function updateStatus(Request $request, $id)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:preparing,shipped,in_transit,delivered,cancelled',
+            'tracking_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+        ]);
+        try {
+            return DB::transaction(function () use ($request, $id, $data) {
+                $shipment = RMAShipment::whereKey($id)->lockForUpdate()->firstOrFail();
+                $target = $data['status'] === 'preparing' ? 'pending' : $data['status'];
+                if ($target !== $shipment->status) {
+                    if (in_array($shipment->status, ['delivered', 'cancelled'], true) ||
+                        ($target === 'pending' && $shipment->status !== 'pending') ||
+                        ($target === 'shipped' && $shipment->status === 'in_transit') ||
+                        ($target === 'cancelled' && $shipment->status !== 'pending')) {
+                        throw new \RuntimeException('Perubahan status ini tidak dapat dilakukan untuk shipment yang sudah diproses.');
+                    }
+                    if ($shipment->status === 'pending' && in_array($target, ['shipped', 'in_transit', 'delivered'], true)) {
+                        $response = $this->ship($request, $id, false);
+                        if ($response->status() >= 400) {
+                            throw new \RuntimeException($response->getData()->message);
+                        }
+                        $shipment->refresh();
+                    }
+                    if ($target === 'delivered') {
+                        $response = $this->markDelivered($id);
+                        if ($response->status() >= 400) {
+                            throw new \RuntimeException($response->getData()->message);
+                        }
+                        $shipment->refresh();
+                    } else {
+                        $shipment->status = $target;
+                    }
+                }
+                $shipment->fill(collect($data)->except('status')->all())->save();
+                return response()->json($shipment->load(['rma', 'product']));
+            });
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function downloadSerialTemplate($id)
+    {
+        $shipment = RMAShipment::with('product')->findOrFail($id);
+        return Excel::download(new RMAReplacementSerialTemplate($shipment), 'serial_template_'.$shipment->shipment_code.'.xlsx');
+    }
+
+    public function importSerialNumbers(Request $request, $id)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:5120']);
+        try {
+            return DB::transaction(function () use ($request, $id) {
+                $shipment = RMAShipment::whereKey($id)->lockForUpdate()->firstOrFail();
+                $import = new RMAReplacementSerialImport($shipment);
+                Excel::import($import, $request->file('file'));
+                return response()->json([
+                    'message' => count($shipment->serial_numbers ?? []).' SN pengganti berhasil disimpan dan diperbarui pada pengiriman asal serta garansi.',
+                    'shipment' => $shipment->fresh(['rma.sale', 'product']),
+                    'errors' => [],
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function ship(Request $request, $id, bool $requireShippingDetails = true)
     {
         $validated = $request->validate([
-            'tracking_number' => 'required|string|max:100',
-            'courier' => 'required|string|max:100',
+            'tracking_number' => ($requireShippingDetails ? 'required' : 'nullable').'|string|max:100',
+            'courier' => ($requireShippingDetails ? 'required' : 'nullable').'|string|max:100',
         ]);
 
         DB::beginTransaction();
@@ -139,8 +210,8 @@ class RMAShipmentController extends Controller
 
             $shipment->update([
                 'status' => 'shipped',
-                'tracking_number' => $validated['tracking_number'],
-                'courier' => $validated['courier'],
+                'tracking_number' => $validated['tracking_number'] ?? $shipment->tracking_number,
+                'courier' => $validated['courier'] ?? $shipment->courier,
                 'shipped_date' => now(),
             ]);
 

@@ -50,7 +50,7 @@
         v-model="filters.search"
         @input="debouncedLoadDeliveries"
         type="search"
-        placeholder="Cari invoice, pelanggan, atau nomor resi..."
+        placeholder="Cari transaksi, penerima, barang, atau nomor resi..."
         class="input max-w-xl"
       />
     </div>
@@ -60,6 +60,7 @@
         <h3 class="text-lg font-semibold text-gray-900">Daftar Pengiriman</h3>
         <span class="text-sm text-gray-500">{{ deliveries.total || 0 }} pengiriman</span>
       </div>
+      <p v-if="attachmentDownloadError" class="px-6 py-3 text-sm text-red-700">{{ attachmentDownloadError }}</p>
 
       <div v-if="loading" class="p-10 text-center text-sm text-gray-500">Memuat data pengiriman...</div>
       <div v-else-if="!deliveries.data?.length" class="p-10 text-center text-sm text-gray-500">Tidak ada data pengiriman.</div>
@@ -68,19 +69,24 @@
         <table class="min-w-full">
           <thead class="table-header">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Invoice</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Pelanggan</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Transaksi / Dokumen</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Penerima / Tujuan</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Pengiriman</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Attachment</th>
               <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
             <tr v-for="delivery in deliveries.data" :key="delivery.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ delivery.sale?.invoice_number || '-' }}</td>
               <td class="px-6 py-4">
-                <p class="text-sm font-medium text-gray-900">{{ delivery.sale?.customer_name || '-' }}</p>
-                <p class="text-xs text-gray-500">{{ delivery.sale?.customer_phone || '-' }}</p>
+                <p class="text-sm font-semibold text-gray-900">{{ delivery.number || '-' }}</p>
+                <p class="text-xs text-gray-500">{{ delivery.type }}</p>
+                <p v-for="(item, index) in delivery.items" :key="index" class="text-xs text-gray-500">{{ item.product || 'Produk dihapus' }} &times; {{ item.quantity }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-sm font-medium text-gray-900">{{ delivery.party || '-' }}</p>
+                <p class="text-xs text-gray-500">{{ delivery.destination || delivery.contact || '-' }}</p>
               </td>
               <td class="px-6 py-4">
                 <p class="text-sm text-gray-700">{{ delivery.courier || 'Kurir belum diisi' }}</p>
@@ -94,9 +100,17 @@
                 </button>
               </td>
               <td class="px-6 py-4"><span :class="getDeliveryBadge(delivery.status)">{{ formatStatus(delivery.status) }}</span></td>
+              <td class="px-6 py-4 text-sm">
+                <ul v-if="delivery.attachments?.length" class="space-y-1">
+                  <li v-for="file in delivery.attachments" :key="file.id">
+                    <button type="button" @click="downloadAttachment(file, delivery.id)" :title="`Unduh ${file.original_name}`" class="max-w-48 truncate text-left text-indigo-600 hover:underline">{{ file.original_name }}</button>
+                  </li>
+                </ul>
+                <span v-else class="text-gray-400">-</span>
+              </td>
               <td class="px-6 py-4 text-right text-sm">
                 <button @click="openStatusModal(delivery)" class="mr-4 font-medium text-indigo-600 hover:text-indigo-800">Status</button>
-                <button @click="openSerialPage(delivery.id)" class="font-medium text-purple-600 hover:text-purple-800">Serial</button>
+                <button @click="openSerialPage(delivery)" :disabled="!delivery.delivery_id && !delivery.id.startsWith('rma-')" class="font-medium text-purple-600 hover:text-purple-800 disabled:opacity-50 disabled:cursor-not-allowed">Serial</button>
               </td>
             </tr>
           </tbody>
@@ -113,7 +127,7 @@
     </div>
 
     <div v-if="statusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div class="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div class="mb-5">
           <h3 class="text-lg font-bold text-gray-900">Perbarui Status Pengiriman</h3>
           <p class="mt-1 text-sm text-gray-500">{{ selectedDelivery?.number || selectedDelivery?.sale?.invoice_number }}</p>
@@ -123,9 +137,9 @@
             <label class="mb-1 block text-sm font-medium text-gray-700">Status</label>
             <select v-model="statusForm.status" required class="input">
               <option v-if="!requestMode" value="preparing">Preparing</option>
-              <option v-if="!requestMode || selectedDelivery?.status === 'preparing'" value="shipped">Dikirim</option>
+              <option v-if="!requestMode || selectedDelivery?.status === 'preparing'" value="shipped">Shipped</option>
               <option v-if="!requestMode" value="in_transit">In Transit</option>
-              <option v-if="!requestMode || selectedDelivery?.status !== 'preparing'" value="delivered">Diterima</option>
+              <option v-if="!requestMode || selectedDelivery?.status !== 'preparing'" value="delivered">Delivered</option>
               <option v-if="!requestMode" value="cancelled">Cancelled</option>
             </select>
           </div>
@@ -142,6 +156,22 @@
             <textarea v-model="statusForm.notes" rows="3" class="input"></textarea>
           </div>
           <p v-if="error" class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Attachment</label>
+            <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.pdf,.doc,.docx,.xls,.xlsx,.csv" @change="selectAttachments" :disabled="saving" class="block w-full text-sm text-gray-600" />
+            <p class="mt-1 text-xs text-gray-500">Gambar, PDF, Word, atau Excel. Maksimal 5 file, 10 MB per file.</p>
+            <ul v-if="selectedDelivery?.attachments?.length" class="mt-2 space-y-1 text-sm">
+              <li v-for="file in selectedDelivery.attachments" :key="file.id">
+                <button type="button" @click="downloadAttachment(file)" class="text-indigo-600 hover:underline break-all">{{ file.original_name }}</button>
+              </li>
+            </ul>
+            <ul v-if="attachmentFiles.length" class="mt-2 space-y-1 text-sm text-gray-700">
+              <li v-for="(file, index) in attachmentFiles" :key="index" class="flex items-center justify-between gap-2">
+                <span class="break-all">{{ file.name }}</span>
+                <button type="button" @click="attachmentFiles.splice(index, 1)" :disabled="saving" class="text-red-600">Hapus</button>
+              </li>
+            </ul>
+          </div>
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" @click="statusModal = false" class="btn-secondary">Batal</button>
             <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Menyimpan...' : 'Simpan' }}</button>
@@ -167,6 +197,8 @@ const selectedDelivery = ref(null);
 const error = ref('');
 const filters = ref({ search: '' });
 const statusForm = ref({ status: '', tracking_number: '', notes: '' });
+const attachmentFiles = ref([]);
+const attachmentDownloadError = ref('');
 let searchTimer;
 let refreshTimer;
 const requests = ref({ data: [] });
@@ -197,7 +229,7 @@ const getDeliveryBadge = (status) => ({
 const loadDeliveries = async (page = 1) => {
   loading.value = !deliveries.value.data?.length;
   try {
-    const response = await api.get('/deliveries', { params: { page, ...filters.value } });
+    const response = await api.get('/delivery-requests', { params: { page, ...filters.value } });
     deliveries.value = response.data;
   } catch (err) {
     console.error('Failed to load deliveries:', err);
@@ -220,6 +252,7 @@ const copyTrackingNumber = async (trackingNumber) => {
 };
 
 const openStatusModal = (delivery) => {
+  attachmentFiles.value = [];
   requestMode.value = false;
   selectedDelivery.value = delivery;
   statusForm.value = {
@@ -232,6 +265,7 @@ const openStatusModal = (delivery) => {
 };
 
 const openRequestModal = (request) => {
+  attachmentFiles.value = [];
   requestMode.value = true;
   selectedDelivery.value = request;
   statusForm.value = {
@@ -247,7 +281,19 @@ const saveStatus = async () => {
   saving.value = true;
   error.value = '';
   try {
-    await api.put(requestMode.value ? `/delivery-requests/${selectedDelivery.value.id}` : `/deliveries/${selectedDelivery.value.id}`, statusForm.value);
+    const selected = selectedDelivery.value;
+    const endpoint = requestMode.value
+      ? `/delivery-requests/${selected.id}`
+      : `/delivery-requests/${selected.id}/status`;
+    if (attachmentFiles.value.length) {
+      const payload = new FormData();
+      payload.append('_method', 'PUT');
+      Object.entries(statusForm.value).forEach(([key, value]) => payload.append(key, value ?? ''));
+      attachmentFiles.value.forEach(file => payload.append('attachments[]', file));
+      await api.post(endpoint, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+    } else {
+      await api.put(endpoint, statusForm.value);
+    }
     statusModal.value = false;
     await refresh();
   } catch (err) {
@@ -257,7 +303,43 @@ const saveStatus = async () => {
   }
 };
 
-const openSerialPage = (deliveryId) => router.push({ name: 'DeliverySerialNumbers', params: { id: deliveryId } });
+const openSerialPage = (delivery) => router.push({
+  name: 'DeliverySerialNumbers',
+  params: { id: delivery.delivery_id || delivery.id },
+});
+
+const selectAttachments = (event) => {
+  const files = Array.from(event.target.files || []);
+  event.target.value = '';
+  if ((selectedDelivery.value?.attachments?.length || 0) + attachmentFiles.value.length + files.length > 5) {
+    error.value = 'Maksimal 5 attachment untuk satu pengiriman.';
+    return;
+  }
+  if (files.some(file => file.size > 10 * 1024 * 1024)) {
+    error.value = 'Ukuran maksimal setiap attachment adalah 10 MB.';
+    return;
+  }
+  error.value = '';
+  attachmentFiles.value.push(...files);
+};
+
+const downloadAttachment = async (file, requestKey = selectedDelivery.value?.id) => {
+  attachmentDownloadError.value = '';
+  try {
+    const response = await api.get(`/delivery-requests/${requestKey}/attachments/${file.id}`, { responseType: 'blob' });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.original_name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    if (statusModal.value) error.value = 'Gagal mengunduh attachment.';
+    else attachmentDownloadError.value = 'Gagal mengunduh attachment. Silakan coba lagi.';
+  }
+};
 
 onMounted(() => {
   refresh();

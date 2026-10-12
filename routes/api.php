@@ -130,6 +130,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::apiResource('rma-shipments', App\Http\Controllers\Api\RMAShipmentController::class)->except(['update', 'destroy']);
     Route::post('/rma-shipments/{id}/ship', [App\Http\Controllers\Api\RMAShipmentController::class, 'ship']);
     Route::post('/rma-shipments/{id}/mark-delivered', [App\Http\Controllers\Api\RMAShipmentController::class, 'markDelivered']);
+    Route::get('/rma-shipments/{id}/serial-template', [App\Http\Controllers\Api\RMAShipmentController::class, 'downloadSerialTemplate']);
+    Route::post('/rma-shipments/{id}/import-serials', [App\Http\Controllers\Api\RMAShipmentController::class, 'importSerialNumbers']);
 
     // Project Investments
     Route::get('/project-investments/{id}/export', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'export']);
@@ -232,7 +234,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::post('/deliveries/{id}/import-serials', [App\Http\Controllers\Api\DeliveryController::class, 'importSerialNumbers']);
     Route::get('/deliveries/{id}/serial-template', [App\Http\Controllers\Api\DeliveryController::class, 'downloadSerialTemplate']);
     Route::get('/delivery-requests', [App\Http\Controllers\Api\DeliveryRequestController::class, 'index']);
+    Route::get('/delivery-requests/{key}/attachments/{attachment}', [App\Http\Controllers\Api\DeliveryRequestController::class, 'downloadAttachment']);
     Route::put('/delivery-requests/{key}', [App\Http\Controllers\Api\DeliveryRequestController::class, 'update']);
+    Route::put('/delivery-requests/{key}/status', [App\Http\Controllers\Api\DeliveryRequestController::class, 'updateStatus']);
     Route::apiResource('deliveries', App\Http\Controllers\Api\DeliveryController::class);
 
     // History

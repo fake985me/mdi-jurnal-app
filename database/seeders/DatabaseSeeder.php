@@ -57,14 +57,14 @@ class DatabaseSeeder extends Seeder
         );
 
         // Seed categories, brands, sub-categories, and products
-        $this->call([
-            CategorySeeder::class,
-            BrandSeeder::class,
-            SubCategorySeeder::class,
-            ProductsSeeder::class,
-            WarehouseSeeder::class,
-            PublicProductSeeder::class,
-        ]);
+        // $this->call([
+        //     CategorySeeder::class,
+        //     BrandSeeder::class,
+        //     SubCategorySeeder::class,
+        //     ProductsSeeder::class,
+        //     WarehouseSeeder::class,
+        //     PublicProductSeeder::class,
+        // ]);
 
         // Seed CMS content
         $this->call([

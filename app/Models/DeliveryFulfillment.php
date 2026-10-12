@@ -7,4 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class DeliveryFulfillment extends Model
 {
     protected $guarded = ['id'];
+
+    protected $casts = ['attachments' => 'array'];
 }

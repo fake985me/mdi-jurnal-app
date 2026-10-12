@@ -9,6 +9,11 @@ use App\Models\Sale;
 use App\Models\Product;
 use App\Models\Warranty;
 use App\Models\Warehouse;
+use App\Models\RMA;
+use App\Models\MSAProject;
+use App\Models\Lending;
+use App\Models\StockTransfer;
+use App\Models\StockTransaction;
 use App\Exports\DeliverySerialTemplate;
 use App\Imports\DeliverySerialImport;
 use Illuminate\Http\Request;
@@ -25,7 +30,7 @@ class DeliveryController extends Controller
     {
         try {
             // Show all deliveries (not just pending sales)
-            $query = Delivery::with(['sale.items.product', 'sale.user', 'sale.customer', 'user', 'items.product'])
+            $query = Delivery::with(['sale.items.product', 'sale.user', 'sale.customer', 'user', 'items.product', 'rma', 'msaProject', 'lending', 'stockTransfer', 'stockTransaction', 'product'])
                 ->whereHas('sale', fn ($query) => $query->where('status', '!=', 'cancelled'));
 
             // Filter by search
@@ -237,7 +242,7 @@ class DeliveryController extends Controller
 
             DB::commit();
 
-            $response = $delivery->load(['sale.items.product', 'items.product']);
+            $response = $delivery->load(['sale.items.product', 'items.product', 'rma', 'msaProject', 'lending', 'stockTransfer', 'stockTransaction', 'product']);
             $responseData = $response->toArray();
             $responseData['warranties_created'] = $warrantiesCreated ?? 0;
 
@@ -250,7 +255,7 @@ class DeliveryController extends Controller
 
     public function show($id)
     {
-        $delivery = Delivery::with(['sale.items.product', 'user', 'items.product'])->findOrFail($id);
+        $delivery = Delivery::with(['sale.items.product', 'user', 'items.product', 'rma', 'msaProject', 'lending', 'stockTransfer', 'stockTransaction', 'product'])->findOrFail($id);
         return response()->json($delivery);
     }
 
@@ -321,7 +326,7 @@ class DeliveryController extends Controller
 
             DB::commit();
 
-            $response = $delivery->load(['sale', 'items.product']);
+            $response = $delivery->load(['sale', 'items.product', 'rma', 'msaProject', 'lending', 'stockTransfer', 'stockTransaction', 'product']);
             $responseData = $response->toArray();
             $responseData['warranties_created'] = $warrantiesCreated ?? 0;
 
