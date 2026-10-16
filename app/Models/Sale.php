@@ -12,6 +12,7 @@ class Sale extends Model
 
     protected $fillable = [
         'invoice_number',
+        'po_number',
         'customer_id',
         'customer_name',
         'customer_email',
@@ -29,6 +30,8 @@ class Sale extends Model
         'warehouse_id',
         'user_id',
         'sale_date',
+        'due_date',
+        'memo',
         'notes'
     ];
 

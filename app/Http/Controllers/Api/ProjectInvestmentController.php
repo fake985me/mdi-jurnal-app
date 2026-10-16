@@ -413,6 +413,12 @@ class ProjectInvestmentController extends Controller
 
         foreach ($project->items as $item) {
             if ($item->stock_deducted) {
+                if ($item->returned_item_id) {
+                    $returned = \App\Models\ReturnedItem::whereKey($item->returned_item_id)->lockForUpdate()->firstOrFail();
+                    $returned->increment('available_quantity', $item->quantity);
+                    $item->update(['stock_deducted' => false]);
+                    continue;
+                }
                 if ($projectWarehouseId && $defaultWarehouseId) {
                     $transferService->transferNow(
                         $projectWarehouseId,

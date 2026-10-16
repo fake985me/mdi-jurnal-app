@@ -6,9 +6,15 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333;
+            width: 8.5in;
+            height: 11in;
+            margin: 0 auto;
+            padding: 20px;
+            print-color-adjust: exact;
+            print: {
+                size: A4;
+                margin: 0;
+            }
         }
         .header {
             text-align: center;
@@ -83,12 +89,50 @@
             border-top: 1px solid #ddd;
             padding-top: 20px;
         }
+            @page { size: letter; margin: 0; }
+            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>INVOICE</h1>
-        <p>MDI Warehouse Management System</p>
+    <div class="mx-auto bg-white shadow-lg w-204 h-264 p-12 print:w-204 print:h-264 print:p-12 print:shadow-none print:mx-0">
+        
+        <!-- Invoice Header -->
+        <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; border-bottom: 1px solid #1c398e;">
+            <div>
+              <!-- Your Company Logo (Optional) -->
+              <img src="./public/assets/static/kop/header mdi kiri.png" alt="Company Logo" class="flex items-start justify-between relative w-28 " style="margin-left: 0px; margin-right: 24.5%;">
+              <img src="./public/assets/static/kop/header mdi kanan.png" alt="Company Logo" class="flex items-end justify-between relative w-72" style="margin-bottom: 10px; width: 450px;">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 350px; margin-bottom: 24px;">
+            <div>
+                <p style="font-weight: bold; font-size: 16px;">To :</p>
+                <p style="font-size: 14px; margin-left: 40px; text-decoration-line: underline; font-style: italic;">{{ $sale->customer_name }}</p>
+                <p style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ $sale->customer_address }}</p>
+                <p style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ $sale->customer_phone }}</p>
+                <p style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ $sale->customer_email }}</p>
+            </div>
+            <div>
+                <div class="space-y-1 text-[12px] p-3.5" style="margim-bottom: 4px; background-color: #f3f4f6; padding-top: 12px;">
+                    <div class="flex justify-between" style="margin-bottom: 4px;">
+                        <span class="text-gray-500">Invoice No : </span>
+                        <span class="font-medium text-gray-900">{{ $sale->invoice_number }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Date : </span>
+                        <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($sale->sale_date)->format('d F Y') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">PO Referensi : </span>
+                        <span class="font-medium text-gray-900">{{ $sale->po_number ?: '-' }}</span>
+            </div>
+                </div>
+            </div>
+        </div>
+
+
+
     </div>
 
     <div class="invoice-info">

@@ -4,14 +4,14 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2
-                    class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    class="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     Product Management</h2>
                 <p class="text-sm text-gray-600 mt-1">Manage your product catalog, stock levels, and categories</p>
             </div>
             <div class="flex gap-2">
                 <!-- Excel Buttons -->
                 <button v-if="activeTab === 'products'" @click="downloadExcel"
-                    class="px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
+                    class="px-4 py-2.5 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -19,7 +19,7 @@
                     Export
                 </button>
                 <button v-if="activeTab === 'products'" @click="downloadTemplate"
-                    class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
+                    class="px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -27,7 +27,7 @@
                     Template
                 </button>
                 <label v-if="activeTab === 'products'"
-                    class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 cursor-pointer transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
+                    class="px-4 py-2.5 bg-linear-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 cursor-pointer transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -38,7 +38,7 @@
                 <!-- Sync Semua ke Publik -->
                 <button v-if="activeTab === 'products'" @click="syncAllToPublic"
                     :disabled="syncAllLoading"
-                    class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50">
+                    class="px-4 py-2.5 bg-linear-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50">
                     <svg v-if="syncAllLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -49,7 +49,7 @@
                     {{ syncAllLoading ? 'Syncing...' : 'Sync Semua ke Publik' }}
                 </button>
                 <button v-if="activeTab === 'products'" @click="openProductForm()"
-                    class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
+                    class="px-6 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
                     + Add Product
                 </button>
             </div>
@@ -326,10 +326,9 @@
 
         <!-- Product Form Modal -->
         <div v-if="showModal" class="product-form-tab tab-form-page"
-            :class="formPage ? 'max-w-6xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'"
+            :class="formPage ? 'mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'"
             @click.self="cancelProductForm">
-            <div class="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl"
-                :class="formPage ? 'max-h-none' : ''">
+            <div class="bg-white rounded-xl p-6 w-full overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
                     <h3
                         class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">

@@ -7,7 +7,7 @@
         <p class="text-sm text-gray-600 mt-1">Manage purchase orders and inventory</p>
       </div>
       <button
-        @click="showModal = true; resetForm()"
+        @click="$router.push({ name: 'PurchaseCreate' })"
         class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
       >
         + Create Purchase Order

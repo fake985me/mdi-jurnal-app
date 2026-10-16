@@ -56,6 +56,9 @@ class RMAController extends Controller
     private function createReplacementShipment(RMA $rma): RMAShipment
     {
         $rma->loadMissing('sale');
+        if ($rma->resolution === 'replace') {
+            app(\App\Services\ReturnedInventoryService::class)->register('rma', $rma->id, $rma->rma_code, $rma->product_id, $rma->quantity, array_filter(array_map('trim', explode(',', $rma->returned_serial_number ?: $rma->serial_number ?: ''))), $rma->condition);
+        }
 
         return RMAShipment::firstOrCreate(
             ['rma_id' => $rma->id],
@@ -428,7 +431,7 @@ class RMAController extends Controller
             $newStatus = $validated['status'] ?? $oldStatus;
 
             if ($oldStatus !== 'rejected' && $newStatus === 'rejected') {
-                if (!$rma->replacement_requested) {
+                if (!$rma->warranty_claim_flow && !$rma->replacement_requested) {
                     $stockService = new \App\Services\StockSyncService();
                     $stockService->addStock(
                         $rma->product_id,
@@ -461,7 +464,7 @@ class RMAController extends Controller
         try {
             $stockService = new \App\Services\StockSyncService();
 
-            if (!$rma->replacement_requested && !in_array($rma->status, ['rejected', 'completed'])) {
+            if (!$rma->warranty_claim_flow && !$rma->replacement_requested && !in_array($rma->status, ['rejected', 'completed'])) {
                 $stockService->addStock(
                     $rma->product_id,
                     $rma->quantity,

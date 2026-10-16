@@ -200,11 +200,9 @@ class StockController extends Controller
     public function rmaStock()
     {
         try {
-            $rmas = \App\Models\RMA::with('product')
-                ->where('status', 'received')
-                ->select('product_id', 'condition', \DB::raw('SUM(quantity) as total_quantity'))
-                ->groupBy('product_id', 'condition')
-                ->get();
+            $rmas = \App\Models\ReturnedItem::with('product')
+                ->whereIn('condition', ['working', 'limited'])->where('available_quantity', '>', 0)->get()
+                ->map(fn ($item) => array_merge($item->toArray(), ['total_quantity' => $item->available_quantity]));
 
             return response()->json($rmas);
         } catch (\Exception $e) {
@@ -272,40 +270,24 @@ class StockController extends Controller
     public function defectiveStock()
     {
         try {
-            $defective = [];
-
-            // RMA - non-working items
-            $rmaItems = \App\Models\RMA::with('product')
-                ->where('status', 'received')
-                ->where('condition', '!=', 'working')
+            $rmaItems = \App\Models\ReturnedItem::with('product')
+                ->whereIn('condition', ['defective', 'unrepairable'])
                 ->get()
                 ->map(function($item) {
                     return [
-                        'source' => 'RMA',
-                        'code' => $item->rma_code,
+                        'id' => $item->id,
+                        'source' => strtoupper($item->source_type),
+                        'code' => $item->source_code,
                         'product' => $item->product,
                         'quantity' => $item->quantity,
                         'condition' => $item->condition,
-                        'date' => $item->received_date,
+                        'serial_number' => $item->serial_number,
+                        'notes' => $item->notes,
+                        'date' => $item->created_at,
                     ];
                 });
 
-            // MSA - all issue items
-            $msaItems = \App\Models\MSAProject::with('product')
-                ->whereIn('status', ['pending', 'in_repair', 'returned', 'replaced'])
-                ->get()
-                ->map(function($item) {
-                    return [
-                        'source' => 'MSA',
-                        'code' => $item->msa_code,
-                        'product' => $item->product,
-                        'quantity' => $item->quantity,
-                        'condition' => $item->issue_type . ($item->condition ? " ({$item->condition})" : ''),
-                        'date' => $item->reported_date,
-                    ];
-                });
-
-            $defective = $rmaItems->concat($msaItems)->sortByDesc('date')->values();
+            $defective = $rmaItems->sortByDesc('date')->values();
 
             return response()->json($defective);
         } catch (\Exception $e) {

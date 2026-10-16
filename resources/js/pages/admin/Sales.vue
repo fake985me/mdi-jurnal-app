@@ -28,19 +28,12 @@
           <div class="relative shrink-0" style="width:140px;height:140px">
             <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
               <!-- Background ring -->
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3.8"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3.8" />
               <!-- Segments -->
               <template v-for="(seg, i) in donutSegments" :key="i">
-                <circle
-                  cx="18" cy="18" r="15.9"
-                  fill="none"
-                  :stroke="seg.color"
-                  stroke-width="3.8"
-                  :stroke-dasharray="`${seg.dash} ${100 - seg.dash}`"
-                  :stroke-dashoffset="`${-seg.offset}`"
-                  stroke-linecap="butt"
-                  style="transition: stroke-dasharray 0.6s ease"
-                />
+                <circle cx="18" cy="18" r="15.9" fill="none" :stroke="seg.color" stroke-width="3.8"
+                  :stroke-dasharray="`${seg.dash} ${100 - seg.dash}`" :stroke-dashoffset="`${-seg.offset}`"
+                  stroke-linecap="butt" style="transition: stroke-dasharray 0.6s ease" />
               </template>
             </svg>
             <!-- Center label -->
@@ -52,8 +45,7 @@
 
           <!-- Status Cards -->
           <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-            <div v-for="stat in salesStats" :key="stat.label"
-              class="flex items-center gap-3 p-3 rounded-xl border"
+            <div v-for="stat in salesStats" :key="stat.label" class="flex items-center gap-3 p-3 rounded-xl border"
               :style="`border-color: ${stat.borderColor}; background: ${stat.bg}`">
               <div class="w-3 h-3 rounded-full shrink-0" :style="`background:${stat.color}`"></div>
               <div class="flex-1 min-w-0">
@@ -78,10 +70,11 @@
         </div>
 
         <!-- Compact Pagination -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 pb-3 border-t border-slate-100 pt-3">
+        <div
+          class="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 pb-3 border-t border-slate-100 pt-3">
           <div class="flex items-center gap-2 text-xs text-slate-500">
             <label>Baris:</label>
-            <select v-model="pageSize" @change="currentPage=1"
+            <select v-model="pageSize" @change="currentPage = 1"
               class="border border-slate-200 rounded-lg px-2 py-1 text-sm">
               <option :value="5">5</option>
               <option :value="10">10</option>
@@ -94,10 +87,9 @@
               class="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm">
               &larr;
             </button>
-            <button v-for="p in visiblePages" :key="p" @click="currentPage = p"
-              :class="['px-3 py-1 rounded-lg border text-sm', p === currentPage
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50']">
+            <button v-for="p in visiblePages" :key="p" @click="currentPage = p" :class="['px-3 py-1 rounded-lg border text-sm', p === currentPage
+              ? 'bg-indigo-600 text-white border-indigo-600'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50']">
               {{ p }}
             </button>
             <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
@@ -105,7 +97,9 @@
               &rarr;
             </button>
             <span class="ml-2 text-xs text-slate-400">
-              {{ filteredSales.length === 0 ? 0 : ((currentPage-1)*pageSize)+1 }}–{{ Math.min(currentPage*pageSize, filteredSales.length) }}
+              {{ filteredSales.length === 0 ? 0 : ((currentPage - 1) * pageSize) + 1 }}–{{ Math.min(currentPage *
+                pageSize,
+              filteredSales.length) }}
               / {{ filteredSales.length }}
             </span>
           </div>
@@ -117,20 +111,9 @@
         <div class="grid items-center gap-3 md:grid-cols-[auto,1fr,auto]">
           <h3 class="text-lg font-bold text-slate-800">Daftar Penjualan</h3>
           <div class="justify-self-center">
-            <!-- <div class="flex flex-wrap items-center justify-center gap-2">
-              <span class="stat-badge">Total : <strong class="ml-1">{{ allSales.length }}</strong></span>
-              <span class="stat-badge">Filtered : <strong class="ml-1">{{ filteredSales.length }}</strong></span>
-              <span class="stat-badge">Total : <strong class="ml-1">Rp {{ formatInt(allTotal) }}</strong></span>
-              <span class="stat-badge">Filtered : <strong class="ml-1">Rp {{ formatInt(filteredTotal) }}</strong></span>
-            </div> -->
           </div>
           <div class="justify-self-end w-full max-w-sm">
             <div class="flex items-center gap-2">
-              <button @click="exportExcel"
-                class="px-3 py-2 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 shadow-sm whitespace-nowrap flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 1.5L18.5 9H13zM8 13h2.5l1.5 2.5L13.5 13H16l-2.5 3.5L16 20h-2.5L12 17.5 10.5 20H8l2.5-3.5zm0 0"/></svg>
-                Excel
-              </button>
               <input v-model="searchQuery" type="text"
                 class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-indigo-100"
                 placeholder="Cari invoice, customer..." />
@@ -144,8 +127,7 @@
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex flex-wrap items-center gap-2">
             <span class="legend-label">Status</span>
-            <button v-for="s in statusOptions" :key="s"
-              @click="setStatusFilter(s)"
+            <button v-for="s in statusOptions" :key="s" @click="setStatusFilter(s)"
               :class="['legend-btn', statusFilter === s ? 'active' : '']">
               <span>{{ s === 'all' ? 'All' : capitalize(s) }}</span>
               <span class="count-badge">{{ statusCount(s) }}</span>
@@ -153,10 +135,10 @@
           </div>
           <div class="flex flex-wrap items-center gap-2 ml-auto pl-3 border-l border-slate-200">
             <span class="legend-label">Tanggal</span>
-            <input v-model="dateFrom" type="date" @change="currentPage=1"
+            <input v-model="dateFrom" type="date" @change="currentPage = 1"
               class="rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-100" />
             <span class="text-xs text-slate-400">-</span>
-            <input v-model="dateTo" type="date" @change="currentPage=1"
+            <input v-model="dateTo" type="date" @change="currentPage = 1"
               class="rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-100" />
             <button @click="resetFilters"
               class="px-3 py-1 rounded-lg border border-slate-200 bg-white text-xs font-semibold hover:bg-slate-50">
@@ -168,7 +150,8 @@
 
       <!-- Loading -->
       <div v-if="loading" class="p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-indigo-600"></div>
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-indigo-600">
+        </div>
         <p class="mt-3 text-sm text-gray-600">Memuat data penjualan...</p>
       </div>
 
@@ -179,22 +162,33 @@
             <tr>
               <th class="px-3 py-3 w-8"></th>
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('invoice_number')">
-                Invoice <span v-if="sortKey==='invoice_number'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+                Invoice <span v-if="sortKey === 'invoice_number'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ?
+                  '▲'
+                  : '▼'
+                  }}</span>
               </th>
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('customer_name')">
-                Customer <span v-if="sortKey==='customer_name'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+                Customer <span v-if="sortKey === 'customer_name'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ?
+                  '▲'
+                  : '▼'
+                  }}</span>
               </th>
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('sale_date')">
-                Tanggal <span v-if="sortKey==='sale_date'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+                Tanggal <span v-if="sortKey === 'sale_date'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '▲'
+                  : '▼'
+                }}</span>
               </th>
               <th class="px-4 py-3 text-left">Produk</th>
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('status')">
-                Status <span v-if="sortKey==='status'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+                Status <span v-if="sortKey === 'status'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '▲' : '▼'
+                }}</span>
               </th>
               <th class="px-4 py-3 text-left">Pajak</th>
               <th class="px-4 py-3 text-left">Delivery</th>
               <th class="px-4 py-3 text-right cursor-pointer select-none" @click="setSort('grand_total')">
-                Total <span v-if="sortKey==='grand_total'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
+                Total <span v-if="sortKey === 'grand_total'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '▲' :
+                  '▼'
+                }}</span>
               </th>
               <th class="px-4 py-3 text-right">Aksi</th>
             </tr>
@@ -202,7 +196,8 @@
           <tbody class="divide-y divide-slate-200">
             <template v-for="(sale, idx) in pagedSales" :key="sale.id">
               <!-- Main Row -->
-              <tr :class="['transition-colors cursor-pointer', idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white', 'hover:bg-indigo-50/40']"
+              <tr
+                :class="['transition-colors cursor-pointer', idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white', 'hover:bg-indigo-50/40']"
                 @click="toggleExpand(sale.id)">
                 <td class="px-3 py-3 text-center">
                   <span class="inline-block text-slate-400 transition-transform duration-200"
@@ -214,7 +209,8 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
-                    <div :class="['w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0', avatarColor(sale.customer_name)]">
+                    <div
+                      :class="['w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0', avatarColor(sale.customer_name)]">
                       {{ (sale.customer_name || '?').charAt(0).toUpperCase() }}
                     </div>
                     <div class="min-w-0">
@@ -226,15 +222,18 @@
                 <td class="px-4 py-3 whitespace-nowrap text-slate-700">{{ formatDate(sale.sale_date) }}</td>
                 <td class="px-4 py-3">
                   <template v-if="sale.items && sale.items.length">
-                    <div v-for="(item, i) in sale.items.slice(0,2)" :key="i" class="text-xs text-slate-700">
-                      {{ item.product ? item.product.title : 'Produk' }} <span class="text-slate-400">x{{ item.quantity }}</span>
+                    <div v-for="(item, i) in sale.items.slice(0, 2)" :key="i" class="text-xs text-slate-700">
+                      {{ item.product ? item.product.title : 'Produk' }} <span class="text-slate-400">x{{ item.quantity
+                      }}</span>
                     </div>
-                    <div v-if="sale.items.length > 2" class="text-[11px] text-slate-400">+{{ sale.items.length - 2 }} lainnya</div>
+                    <div v-if="sale.items.length > 2" class="text-[11px] text-slate-400">+{{ sale.items.length - 2 }}
+                      lainnya</div>
                   </template>
                   <span v-else class="text-slate-400 text-xs">-</span>
                 </td>
                 <td class="px-4 py-3">
-                  <span :class="['inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
+                  <span
+                    :class="['inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
                     <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
                     {{ capitalize(sale.status) }}
                   </span>
@@ -258,14 +257,14 @@
                 </td>
                 <td class="px-4 py-3 text-right" @click.stop>
                   <div class="flex justify-end gap-1.5 flex-wrap">
-                    <button v-if="!sale.delivery && ['pending','completed'].includes(sale.status)"
+                    <button v-if="!sale.delivery && ['pending', 'completed'].includes(sale.status)"
                       @click="$router.push({ name: 'SalesEdit', params: { id: sale.id } })"
                       class="px-2 py-1 text-xs rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-medium">
                       + Delivery
                     </button>
                     <button @click="editSale(sale)"
                       class="px-2 py-1 text-xs rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">Edit</button>
-                    <button @click="$router.push({ name: 'SalesEdit', params: { id: sale.id } })"
+                    <button @click="$router.push({ name: 'SalesView', params: { id: sale.id } })"
                       class="px-2 py-1 text-xs rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium">View</button>
                     <button @click="deleteSale(sale.id)"
                       class="px-2 py-1 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium">Hapus</button>
@@ -283,7 +282,9 @@
                         <ul class="space-y-1 text-sm">
                           <li v-for="item in (sale.items || [])" :key="item.id"
                             class="flex items-center justify-between text-slate-700">
-                            <span class="truncate mr-2">{{ item.product ? item.product.title : (item.product_name || 'Produk') }}</span>
+                            <span class="truncate mr-2">{{ item.product ? item.product.title : (item.product_name ||
+                              'Produk')
+                            }}</span>
                             <span class="text-slate-400 shrink-0">x {{ item.quantity }}</span>
                           </li>
                           <li v-if="!sale.items || !sale.items.length" class="text-slate-400">Tidak ada item</li>
@@ -310,7 +311,8 @@
                           </div>
                           <div class="flex justify-between border-t pt-1.5 font-bold">
                             <span class="text-slate-700">Grand Total</span>
-                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount) }}</span>
+                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount)
+                            }}</span>
                           </div>
                         </div>
                       </div>
@@ -323,7 +325,8 @@
                           </div>
                           <div class="flex justify-between">
                             <span class="text-slate-500">Status</span>
-                            <span :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
+                            <span
+                              :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
                               {{ capitalize(sale.status) }}
                             </span>
                           </div>
@@ -356,10 +359,7 @@
           </tbody>
         </table>
       </div>
-
-      
     </div>
-
   </div>
 </template>
 
@@ -371,17 +371,17 @@ import api from '../../services/api'
 
 const router = useRouter()
 
-const allSales     = ref([])
-const loading      = ref(true)
-const searchQuery  = ref('')
+const allSales = ref([])
+const loading = ref(true)
+const searchQuery = ref('')
 const statusFilter = ref('all')
-const dateFrom     = ref('')
-const dateTo       = ref('')
-const sortKey      = ref('sale_date')
-const sortDir      = ref(-1)
-const currentPage  = ref(1)
-const pageSize     = ref(10)
-const expanded     = ref({})
+const dateFrom = ref('')
+const dateTo = ref('')
+const sortKey = ref('sale_date')
+const sortDir = ref(-1)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const expanded = ref({})
 
 const statusOptions = ['all', 'pending', 'completed', 'cancelled']
 
@@ -402,7 +402,7 @@ const filteredSales = computed(() => {
   return allSales.value.filter(s => {
     if (statusFilter.value !== 'all' && s.status !== statusFilter.value) return false
     if (dateFrom.value && s.sale_date < dateFrom.value) return false
-    if (dateTo.value   && s.sale_date > dateTo.value)   return false
+    if (dateTo.value && s.sale_date > dateTo.value) return false
     if (q) {
       const hay = ((s.invoice_number || '') + ' ' + (s.customer_name || '') + ' ' + (s.customer_phone || '')).toLowerCase()
       if (!hay.includes(q)) return false
@@ -434,19 +434,19 @@ const visiblePages = computed(() => {
   const tp = totalPages.value, cp = currentPage.value
   const pages = [], w = 7
   let start = Math.max(1, cp - Math.floor(w / 2))
-  let end   = Math.min(tp, start + w - 1)
+  let end = Math.min(tp, start + w - 1)
   start = Math.max(1, end - w + 1)
   for (let p = start; p <= end; p++) pages.push(p)
   return pages
 })
 
-const allTotal      = computed(() => allSales.value.reduce((s, x) => s + (Number(x.grand_total || x.total_amount) || 0), 0))
+const allTotal = computed(() => allSales.value.reduce((s, x) => s + (Number(x.grand_total || x.total_amount) || 0), 0))
 const filteredTotal = computed(() => filteredSales.value.reduce((s, x) => s + (Number(x.grand_total || x.total_amount) || 0), 0))
 
 // ── Pie / Donut chart data ───────────────────────────────────
 const salesStats = computed(() => {
   const statuses = [
-    { key: 'pending',   label: 'Pending',   color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe' },
+    { key: 'pending', label: 'Pending', color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe' },
     { key: 'completed', label: 'Completed', color: '#10b981', bg: '#f0fdf4', borderColor: '#a7f3d0' },
     { key: 'cancelled', label: 'Cancelled', color: '#f43f5e', bg: '#fff1f2', borderColor: '#fecdd3' },
   ]
@@ -489,46 +489,6 @@ const deleteSale = async (id) => {
   }
 }
 
-const exportExcel = () => {
-  const rows = sortedSales.value
-
-  // Build AOA (array of arrays) with header
-  const headers = ['Invoice', 'Customer', 'Telepon', 'Tanggal', 'Gudang', 'Status', 'Pajak', 'Subtotal (Rp)', 'Grand Total (Rp)']
-  const data = [headers]
-  rows.forEach(s => {
-    const items = (s.items || []).map(i => (i.product ? i.product.title : (i.product_name || 'Produk')) + ' x' + i.quantity).join('; ')
-    data.push([
-      s.invoice_number || '',
-      s.customer_name  || '',
-      s.customer_phone || '',
-      s.sale_date      || '',
-      s.warehouse ? s.warehouse.name : '',
-      s.status         || '',
-      s.tax_type ? (taxDisplayName(s.tax_type) + ' ' + s.tax_rate + '%') : '',
-      Number(s.subtotal || s.total_amount || 0),
-      Number(s.grand_total || s.total_amount || 0)
-    ])
-  })
-
-  const ws = XLSX.utils.aoa_to_sheet(data)
-
-  // Auto column width
-  const colWidths = headers.map((h, ci) => {
-    const max = data.reduce((m, row) => Math.max(m, String(row[ci] || '').length), h.length)
-    return { wch: Math.min(max + 2, 40) }
-  })
-  ws['!cols'] = colWidths
-
-  // Style header row (bold)
-  headers.forEach((_, ci) => {
-    const cellRef = XLSX.utils.encode_cell({ r: 0, c: ci })
-    if (ws[cellRef]) ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: 'E8EEFF' } } }
-  })
-
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Sales')
-  XLSX.writeFile(wb, 'sales_' + new Date().toISOString().slice(0, 10) + '.xlsx')
-}
 
 const formatDate = (d) => {
   if (!d) return '-'
@@ -538,7 +498,7 @@ const formatInt = (n) => Number(n || 0).toLocaleString('id-ID')
 const taxDisplayName = (code) => { const names = { ppn: 'PPN', pph23: 'PPh 23' }; return names[code] || (code ? code.toUpperCase() : '') }
 const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
 
-const avatarColors = ['bg-rose-500','bg-violet-600','bg-emerald-500','bg-cyan-600','bg-sky-600','bg-amber-600','bg-indigo-600','bg-pink-600']
+const avatarColors = ['bg-rose-500', 'bg-violet-600', 'bg-emerald-500', 'bg-cyan-600', 'bg-sky-600', 'bg-amber-600', 'bg-indigo-600', 'bg-pink-600']
 const avatarColor = (name) => { if (!name) return 'bg-slate-400'; return avatarColors[name.charCodeAt(0) % avatarColors.length] }
 
 const statusClr = (s) => {
@@ -551,12 +511,77 @@ onMounted(loadSales)
 </script>
 
 <style scoped>
-.legend-btn { display:inline-flex; align-items:center; gap:.5rem; border-radius:9999px; padding:.25rem .75rem; font-size:.75rem; font-weight:600; border:1px solid #e5e7eb; background:#ffffff; color:#334155; transition:background .15s,color .15s,border-color .15s; cursor:pointer; }
-.legend-btn:hover { background:#f8fafc; }
-.legend-btn.active { background:#1e3a8a; color:#fff; border-color:#1e3a8a; }
-.legend-btn.active:hover { background:#1e40af; }
-.legend-label { display:inline-flex; align-items:center; border-radius:9999px; padding:.2rem .5rem; font-size:.65rem; font-weight:700; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
-.count-badge { display:inline-flex; align-items:center; justify-content:center; min-width:1.2rem; height:1.2rem; padding:0 .3rem; border-radius:9999px; font-size:.7rem; font-weight:700; background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff; }
-.stat-badge { display:inline-flex; align-items:center; gap:.25rem; border-radius:9999px; padding:.3rem .6rem; font-size:.72rem; font-weight:600; background:#f8fafc; color:#334155; border:1px solid #e5e7eb; }
-.vsep th + th, .vsep td + td { border-left:1px solid #e5e7eb; }
+.legend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 9999px;
+  padding: .25rem .75rem;
+  font-size: .75rem;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #334155;
+  transition: background .15s, color .15s, border-color .15s;
+  cursor: pointer;
+}
+
+.legend-btn:hover {
+  background: #f8fafc;
+}
+
+.legend-btn.active {
+  background: #1e3a8a;
+  color: #fff;
+  border-color: #1e3a8a;
+}
+
+.legend-btn.active:hover {
+  background: #1e40af;
+}
+
+.legend-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: .2rem .5rem;
+  font-size: .65rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 .3rem;
+  border-radius: 9999px;
+  font-size: .7rem;
+  font-weight: 700;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #e0e7ff;
+}
+
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  border-radius: 9999px;
+  padding: .3rem .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e5e7eb;
+}
+
+.vsep th+th,
+.vsep td+td {
+  border-left: 1px solid #e5e7eb;
+}
 </style>

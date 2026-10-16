@@ -17,10 +17,13 @@ class ProjectInvestmentItem extends Model
         'total_price',
         'stock_deducted',
         'notes',
+        'serial_numbers',
+        'returned_item_id',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
+        'serial_numbers' => 'array',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'stock_deducted' => 'boolean',

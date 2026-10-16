@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class DeliveryRequestController extends Controller
 {
-    private const ADJUSTMENT_TYPES = ['adjustment', 'manual_adjustment', 'stock_adjustment'];
+    private const ADJUSTMENT_TYPES = ['adjustment', 'manual_adjustment', 'stock_adjustment', 'project_defective_return'];
 
     public function index(Request $request)
     {

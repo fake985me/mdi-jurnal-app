@@ -22,6 +22,10 @@ class RMAReplacementSerialService
                 throw new \RuntimeException('Isi satu SN unik per unit, sesuai jumlah barang pengganti.');
             }
             $previous = $locked->serial_numbers ?: $this->split($rma->serial_number);
+            $returned = $this->split($rma->returned_serial_number ?: $rma->serial_number);
+            if (array_intersect(array_map('strtolower', $serials), array_map('strtolower', $returned))) {
+                throw new \RuntimeException('SN pengganti harus berbeda dari SN barang yang diretur.');
+            }
             if (count($previous) !== count($serials)) {
                 throw new \RuntimeException('Jumlah SN barang retur harus sesuai jumlah SN pengganti.');
             }
@@ -34,6 +38,7 @@ class RMAReplacementSerialService
                 }
             }
             $deliveryIds = Delivery::where('sale_id', $rma->sale_id)->pluck('id');
+            $warrantyId = count($returned) === 1 ? Warranty::where('sale_id', $rma->sale_id)->where('product_id', $locked->product_id)->where('serial_number', $returned[0])->value('id') : null;
             foreach (DeliveryItem::whereIn('delivery_id', $deliveryIds)->where('product_id', $locked->product_id)->lockForUpdate()->get() as $item) {
                 $old = $this->split($item->serial_number);
                 $updated = array_map(fn ($sn) => $map[strtolower($sn)] ?? $sn, $old);
@@ -45,7 +50,9 @@ class RMAReplacementSerialService
                 if ($old !== $updated) $warranty->update(['serial_number' => implode(', ', $updated)]);
             }
             $locked->update(['serial_numbers' => $serials]);
+            app(ReturnedInventoryService::class)->register('rma', $rma->id, $rma->rma_code, $rma->product_id, $rma->quantity, $returned, $rma->condition);
             $rma->update([
+                'warranty_id' => $warrantyId ?? $rma->warranty_id,
                 'returned_serial_number' => $rma->returned_serial_number ?? $rma->serial_number,
                 'serial_number' => implode(', ', $serials),
             ]);

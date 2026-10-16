@@ -104,9 +104,19 @@ const routes = [
                 component: () => import("../pages/admin/SalesCreate.vue"),
             },
             {
+                path: "sales/:id/view",
+                name: "SalesView",
+                component: () => import("../pages/admin/SalesCreate.vue"),
+            },
+            {
                 path: "purchases",
                 name: "Purchases",
                 component: () => import("../pages/admin/Purchases.vue"),
+            },
+            {
+                path: "purchases/create",
+                name: "PurchaseCreate",
+                component: () => import("../pages/admin/PurchaseCreate.vue"),
             },
             {
                 path: "sales-people",
@@ -159,9 +169,24 @@ const routes = [
                 component: () => import("../pages/admin/RMAShipments.vue"),
             },
             {
+                path: "warranties/:id/claim",
+                name: "WarrantyClaim",
+                component: () => import("../pages/admin/WarrantyClaim.vue"),
+            },
+            {
+                path: "rmas/:id/inspection",
+                name: "RMAInspection",
+                component: () => import("../pages/admin/RMAInspection.vue"),
+            },
+            {
                 path: "project-investments",
                 name: "ProjectInvestments",
                 component: () => import("../pages/admin/ProjectInvestments.vue"),
+            },
+            {
+                path: "project-investments/:id",
+                name: "ProjectInvestmentDetail",
+                component: () => import("../pages/admin/ProjectInvestmentDetail.vue"),
             },
             {
                 path: "msa-projects",
@@ -202,6 +227,11 @@ const routes = [
                 path: "accounting",
                 name: "Accounting",
                 component: () => import("../pages/admin/Accounting.vue"),
+            },
+            {
+                path: "accounting/transactions",
+                name: "AccountingTransactions",
+                component: () => import("../pages/admin/AccountingTransactions.vue"),
             },
             {
                 path: "bank-accounts",

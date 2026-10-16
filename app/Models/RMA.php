@@ -21,6 +21,8 @@ class RMA extends Model
         'product_id',
         'serial_number',
         'returned_serial_number',
+        'warranty_claim_flow',
+        'inspected_at',
         'customer_name',
         'customer_contact',
         'quantity',
@@ -40,6 +42,8 @@ class RMA extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'warranty_claim_flow' => 'boolean',
+        'inspected_at' => 'datetime',
         'issue_date' => 'date',
         'received_date' => 'date',
         'replacement_requested' => 'boolean',

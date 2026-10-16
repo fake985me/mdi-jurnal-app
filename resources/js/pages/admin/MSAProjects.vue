@@ -422,6 +422,10 @@
             </select>
           </div>
           
+          <div v-if="returnType === 'replace'" class="space-y-3">
+            <div><label class="block mb-1 text-sm">SN barang retur (satu per baris)</label><textarea v-model="oldReturnSerials" rows="3" class="input"></textarea></div>
+            <div><label class="block mb-1 text-sm">SN barang pengganti (satu per baris)</label><textarea v-model="newReturnSerials" rows="3" class="input"></textarea></div>
+          </div>
           <p v-if="returnType === 'replace'" class="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
             ⚠️ This will deduct {{ selectedMSA?.quantity }} unit(s) from stock for replacement.
           </p>
@@ -781,10 +785,14 @@ const startRepair = async (msa) => {
   }
 };
 
+const oldReturnSerials = ref('');
+const newReturnSerials = ref('');
 const openReturnModal = (msa, type) => {
   selectedMSA.value = msa;
   returnType.value = type;
   returnCondition.value = '';
+  oldReturnSerials.value = (msa.serial_numbers || []).join('\n');
+  newReturnSerials.value = '';
   showReturnModal.value = true;
 };
 
@@ -792,7 +800,11 @@ const confirmReturn = async () => {
   try {
     const endpoint = returnType.value === 'return' ? 'mark-returned' : 'replace';
     await api.post(`/msa-projects/${selectedMSA.value.id}/${endpoint}`, {
-      condition: returnCondition.value
+      condition: returnCondition.value,
+      ...(returnType.value === 'replace' ? {
+        serial_numbers: oldReturnSerials.value.split(/[\n,]+/).map(sn => sn.trim()).filter(Boolean),
+        replacement_serial_numbers: newReturnSerials.value.split(/[\n,]+/).map(sn => sn.trim()).filter(Boolean),
+      } : {}),
     });
     showReturnModal.value = false;
     loadMSAs();

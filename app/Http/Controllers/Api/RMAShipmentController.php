@@ -196,11 +196,12 @@ class RMAShipmentController extends Controller
             }
 
             $rma = RMA::whereKey($shipment->rma_id)->lockForUpdate()->firstOrFail();
-            if ($rma->status !== 'processed' || $rma->resolution !== 'replace') {
+            $returnNormal = $rma->inspected_at && $rma->resolution === 'repair';
+            if ($rma->status !== 'processed' || ($rma->resolution !== 'replace' && !$returnNormal)) {
                 throw new \RuntimeException('RMA harus diproses dengan resolution replace sebelum shipment dikonfirmasi');
             }
 
-            $this->stockService->deductStock(
+            if (!$returnNormal) $this->stockService->deductStock(
                 $shipment->product_id,
                 $shipment->quantity,
                 'rma_shipment',

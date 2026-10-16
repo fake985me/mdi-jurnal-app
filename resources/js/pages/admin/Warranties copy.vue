@@ -10,28 +10,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <!-- <div class="border-b border-gray-200 mb-0">
-      <nav class="-mb-px flex space-x-8">
-        <button @click="activeTab = 'sales'" :class="[
-          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
-          activeTab === 'sales'
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        ]">?? Sales Orders</button>
-        <button @click="activeTab = 'deliveries'" :class="[
-          'py-3 px-1 border-b-2 font-semibold text-sm transition-colors duration-200',
-          activeTab === 'deliveries'
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        ]">?? Delivery</button>
-      </nav>
-    </div> -->
-
-    <!-- SALES TAB -->
-    <!-- <div v-if="activeTab === 'sales'" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-4"> -->
-
-
       <!-- Sales Summary + Pie Chart Footer -->
       <div class="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
 
@@ -129,15 +107,7 @@
       <!-- Header: Title + Stats + Search -->
       <div class="px-4 pt-4 pb-3 border-b border-slate-200">
         <div class="grid items-center gap-3 md:grid-cols-[auto,1fr,auto]">
-          <h3 class="text-lg font-bold text-slate-800">Daftar Penjualan</h3>
-          <div class="justify-self-center">
-            <!-- <div class="flex flex-wrap items-center justify-center gap-2">
-              <span class="stat-badge">Total : <strong class="ml-1">{{ allSales.length }}</strong></span>
-              <span class="stat-badge">Filtered : <strong class="ml-1">{{ filteredSales.length }}</strong></span>
-              <span class="stat-badge">Total : <strong class="ml-1">Rp {{ formatInt(allTotal) }}</strong></span>
-              <span class="stat-badge">Filtered : <strong class="ml-1">Rp {{ formatInt(filteredTotal) }}</strong></span>
-            </div> -->
-          </div>
+          <h3 class="text-lg font-bold text-slate-800">Daftar Garansi</h3>
           <div class="justify-self-end w-full max-w-sm">
             <div class="flex items-center gap-2">
               <button @click="exportExcel"
@@ -206,7 +176,6 @@
               <th class="px-4 py-3 text-left cursor-pointer select-none" @click="setSort('status')">
                 Status <span v-if="sortKey==='status'" class="text-[10px] text-indigo-500">{{ sortDir > 0 ? '?' : '?' }}</span>
               </th>
-              <!-- <th class="px-4 py-3 text-left">Pajak</th> -->
               <th class="px-4 py-3 text-left">Delivery</th>
               <th class="px-4 py-3 text-right">Aksi</th>
             </tr>
@@ -268,13 +237,6 @@
                     {{ capitalize(sale.status) }}
                   </span>
                 </td>
-                <!-- <td class="px-4 py-3">
-                  <span v-if="sale.tax_type"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                    {{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%
-                  </span>
-                  <span v-else class="text-slate-300 text-xs">-</span>
-                </td> -->
                 <td class="px-4 py-3">
                   <span v-if="sale.delivery"
                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 ring-1 ring-teal-200">
@@ -289,11 +251,11 @@
                       class="px-2 py-1 text-xs rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-medium">
                       + Delivery
                     </button>
-                    <button @click="editSale(sale)"
+                    <button @click="editWarranty(sale)"
                       class="px-2 py-1 text-xs rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">Edit</button>
-                    <button @click="$router.push({ name: 'SalesEdit', params: { id: sale.id } })"
+                    <button @click="$router.push({ name: 'SalesView', params: { id: sale.id } })"
                       class="px-2 py-1 text-xs rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium">View</button>
-                    <button @click="deleteSale(sale.id)"
+                    <button @click="deleteWarranty(sale.id)"
                       class="px-2 py-1 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium">Hapus</button>
                   </div>
                 </td>
@@ -303,65 +265,17 @@
               <tr v-if="expanded[sale.id]" class="bg-white">
                 <td colspan="10" class="px-0 py-0">
                   <div class="p-4 bg-indigo-50/30">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div class="border border-slate-200 rounded-xl bg-white p-3">
-                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Produk Dipesan</div>
-                        <ul class="space-y-1 text-sm">
-                          <li v-for="item in (sale.items || [])" :key="item.id" class="text-slate-700">
-                            <div class="flex items-center justify-between">
-                              <span class="truncate mr-2">{{ item.product ? item.product.title : (item.product_name || 'Produk') }}</span>
-                              <span class="text-slate-400 shrink-0">x {{ item.quantity }}</span>
-                            </div>
-                            <div class="mt-1 flex flex-wrap gap-1">
-                              <span :class="['rounded-full px-2 py-0.5 text-[10px] font-semibold', warrantyInfo(sale, item).active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600']">
-                                {{ warrantyInfo(sale, item).label }}
-                              </span>
-                              <span v-if="warrantyInfo(sale, item).startDate" class="text-[10px] text-slate-500">
-                                {{ warrantyInfo(sale, item).months }} bulan:
-                                {{ formatDate(warrantyInfo(sale, item).startDate) }} - {{ formatDate(warrantyInfo(sale, item).endDate) }}
-                              </span>
-                              <span v-if="hasClaim(sale, item, 'replace')" class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                                Pernah retur/ganti baru
-                              </span>
-                              <span v-if="hasClaim(sale, item, 'repair')" class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                                Pernah klaim perbaikan
-                              </span>
-                            </div>
-                          </li>
-                          <li v-if="!sale.items || !sale.items.length" class="text-slate-400">Tidak ada item</li>
-                        </ul>
+                    <div class="grid grid-cols-1 gap-4">
 
-                        <div class="text-xs uppercase text-slate-500 font-bold mb-2">Pengiriman &amp; Gudang</div>
-                        <div class="space-y-1.5 text-sm">
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Gudang</span>
-                            <span>{{ sale.warehouse ? sale.warehouse.name : '-' }}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Status</span>
-                            <span :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', statusClr(sale.status)]">
-                              {{ capitalize(sale.status) }}
-                            </span>
-                          </div>
-                          <template v-if="sale.delivery">
-                            <div class="flex justify-between">
-                              <span class="text-slate-500">Tracking</span>
-                              <span class="font-mono text-xs">{{ sale.delivery.tracking_number }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                              <span class="text-slate-500">Kurir</span>
-                              <span>{{ sale.delivery.courier_name || '-' }}</span>
-                            </div>
-                          </template>
-                          <div v-else class="text-slate-400 text-xs">Belum ada pengiriman</div>
-                        </div>
-                      </div>
-
-                      <div class="border border-slate-200 rounded-xl bg-white p-3">
+                      <div class="w-full border border-slate-200 rounded-xl bg-white p-3">
                         <div class="text-xs uppercase text-slate-500 font-bold mb-2">Product List</div>
 
-
                         <div class="space-y-1.5 text-sm">
+                          <input v-model="productSearchQueries[sale.id]"
+                                 @input="productListPages[sale.id] = 1"
+                                 type="search"
+                                 class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-indigo-100"
+                                 placeholder="Cari produk atau serial number..." />
                           <table class="w-full text-sm text-left text-slate-700">
                             <thead class="text-[10px] text-slate-500 uppercase bg-slate-100">
                               <tr>
@@ -369,6 +283,7 @@
                                 <th scope="col" class="px-2 py-1">SN</th>
                                 <th scope="col" class="px-2 py-1">Masa Garansi</th>
                                 <th scope="col" class="px-2 py-1">Status</th>
+                                <th scope="col" class="px-2 py-1 w-0">Aksi</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -377,6 +292,7 @@
                                   <td class="px-2 py-1">
                                     <code v-if="row.serial_number" class="text-[10px] font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{{ row.serial_number }}</code>
                                     <span v-else class="text-[10px] text-slate-400">Belum ada SN</span>
+                                    <p v-if="row.previousSerials.length" class="mt-1 text-[10px] text-slate-500">SN retur: {{ row.previousSerials.join(', ') }}</p>
                                   </td>
                                   <td class="px-2 py-1">
                                     <span v-if="row.info.startDate && row.info.endDate" class="text-[10px] text-slate-500">
@@ -386,11 +302,23 @@
                                   </td>
                                   <td class="px-2 py-1">
                                     <span :class="['rounded-full px-2 py-0.5 text-[10px] font-semibold', row.info.active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600']">{{ row.info.label }}</span>
+                                    <div class="mt-1 flex flex-wrap gap-1">
+                                      <span v-if="row.claims.length" class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Sudah klaim garansi</span>
+                                      <span v-if="row.exchanged" class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Retur / tukar barang</span>
+                                      <span v-if="row.activeClaim" class="rounded-full bg-yellow-50 px-2 py-0.5 text-[10px] font-semibold text-yellow-700">Klaim sedang diproses</span>
+                                    </div>
+                                    <router-link v-for="claim in row.claims" :key="claim.id" :to="{ name: 'RMAs', query: { search: claim.rma_code } }" class="mt-1 block text-[10px] text-indigo-600 hover:underline">{{ claim.rma_code }} · {{ claimStatusLabel(claim.status) }}</router-link>
+                                  </td>
+                                  <td class="px-2 py-1">
+                                    <router-link v-if="row.warranty_id && row.info.active && !row.activeClaim" :to="{ name: 'WarrantyClaim', params: { id: row.warranty_id } }" class="text-blue-500 hover:text-blue-700 whitespace-nowrap">Klaim Garansi</router-link>
+                                    <span v-else-if="row.activeClaim" class="text-xs text-amber-600">Menunggu hasil klaim</span>
+                                    <span v-else class="text-xs text-slate-400">Klaim tidak tersedia</span>
+                                    <button v-if="row.warranty_id" @click="deleteWarranty(row.warranty_id)" class="text-red-500 hover:text-red-700 ml-2">Hapus</button>
                                   </td>
                                 </tr>
 
-                              <tr v-if="!sale.items || !sale.items.length">
-                                <td colspan="4" class="px-2 py-1 text-slate-400">Tidak ada item</td>
+                              <tr v-if="!productPagination[sale.id].total">
+                                <td colspan="5" class="px-2 py-1 text-slate-400">{{ productSearchQueries[sale.id]?.trim() ? 'Produk atau SN tidak ditemukan' : 'Tidak ada item' }}</td>
                               </tr>
                             </tbody>
                           </table>
@@ -402,30 +330,6 @@
                               <button type="button" @click="productListPages[sale.id] = productPagination[sale.id].page + 1" :disabled="productPagination[sale.id].page === productPagination[sale.id].pages" class="rounded-lg border border-slate-200 px-2 py-1 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Berikutnya</button>
                             </div>
                           </div>
-
-
-                          <!-- <div class="flex justify-between">
-                            <span class="text-slate-500">Invoice</span>
-                            <span class="font-semibold">{{ sale.invoice_number }}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Tanggal</span>
-                            <span>{{ formatDate(sale.sale_date) }}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-slate-500">Subtotal</span>
-                            <span>Rp {{ formatInt(sale.subtotal || sale.total_amount) }}</span>
-                          </div>
-                          <div v-if="sale.tax_type" class="flex justify-between">
-                            <span class="text-slate-500">Pajak</span>
-                            <span>{{ taxDisplayName(sale.tax_type) }} {{ sale.tax_rate }}%</span>
-                          </div>
-                          <div class="flex justify-between border-t pt-1.5 font-bold">
-                            <span class="text-slate-700">Grand Total</span>
-                            <span class="text-indigo-700">Rp {{ formatInt(sale.grand_total || sale.total_amount) }}</span>
-                          </div> -->
-
-
                         </div>
 
                       </div>
@@ -458,7 +362,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as XLSX from 'xlsx'
 import api from '../../services/api'
@@ -479,6 +383,7 @@ const pageSize     = ref(10)
 const expanded     = ref({})
 const productsPerPage = 5
 const productListPages = ref({})
+const productSearchQueries = ref({})
 
 const statusOptions = ['all', 'pending', 'completed', 'cancelled']
 
@@ -570,6 +475,29 @@ const donutSegments = computed(() => {
   })
 })
 
+const filters = ref({ search: '', status: '' });
+let debounceTimer;
+
+const activeCount = computed(() => (warranties.value.data || []).filter((warranty) => warranty.status === 'active').length);
+const groupedWarranties = computed(() => {
+  const groups = new Map();
+
+  for (const warranty of warranties.value.data || []) {
+    const key = warranty.sale_id || `warranty-${warranty.id}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        invoice: warranty.sale?.invoice_number || 'Tanpa Invoice',
+        customer: warranty.sale?.customer_name || '',
+        items: [],
+      });
+    }
+    groups.get(key).items.push(warranty);
+  }
+
+  return [...groups.values()];
+});
+
 const setStatusFilter = (s) => { statusFilter.value = s; currentPage.value = 1 }
 const statusCount = (s) => s === 'all' ? allSales.value.length : allSales.value.filter(x => x.status === s).length
 const resetFilters = () => { searchQuery.value = ''; statusFilter.value = 'all'; dateFrom.value = ''; dateTo.value = ''; currentPage.value = 1 }
@@ -633,19 +561,45 @@ const formatDate = (d) => {
   return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 const purchaseDate = (sale) => sale.invoice?.invoice_date || sale.sale_date
+const splitSerials = (serials) => String(serials || '').split(',').map(sn => sn.trim()).filter(Boolean)
+const claimStatusLabel = (status) => ({ pending: 'Menunggu pengecekan', approved: 'Disetujui', received: 'Barang diterima', processed: 'Menunggu pengiriman', completed: 'Selesai', rejected: 'Ditolak' }[status] || status)
 const productList = (sale) => (sale.items || []).flatMap(item => {
   const records = (sale.warranties || []).filter(record => Number(record.product_id) === Number(item.product_id))
   const deliveryItems = (sale.delivery?.items || []).filter(record => Number(record.product_id) === Number(item.product_id))
   const units = records.length ? records : deliveryItems.length ? deliveryItems : [item]
-  return units.map((record, index) => ({
+  return units.map((record, index) => {
+    const serial = String(record.serial_number || '').trim().toLowerCase()
+    const claims = (sale.rmas || []).filter(rma => {
+      if (Number(rma.product_id) !== Number(item.product_id)) return false
+      const matchesWarranty = records.length && Number(rma.warranty_id) === Number(record.id)
+      const matchesSerial = [...splitSerials(rma.serial_number), ...splitSerials(rma.returned_serial_number)]
+        .some(sn => sn.toLowerCase() === serial)
+      return serial ? matchesSerial || (rma.warranty_claim_flow && matchesWarranty) : matchesWarranty
+    })
+    const previousSerials = [...new Set(claims.flatMap(rma => {
+      const current = splitSerials(rma.serial_number)
+      const previous = splitSerials(rma.returned_serial_number)
+      const position = current.findIndex(sn => sn.toLowerCase() === serial)
+      return position >= 0 && previous[position] && previous[position].toLowerCase() !== serial ? [previous[position]] : []
+    }))]
+    return {
     key: `${item.id}-${index}`,
+    warranty_id: records.length ? record.id : null,
     product: record.product || item.product,
     serial_number: record.serial_number,
+    claims,
+    previousSerials,
+    activeClaim: claims.some(rma => !['completed', 'rejected'].includes(rma.status)),
+    exchanged: claims.some(rma => rma.status !== 'rejected' && rma.resolution === 'replace'),
     info: warrantyInfo(records.length ? { ...sale, warranties: [record] } : sale, item),
-  }))
+    }
+  })
 })
 const productPagination = computed(() => Object.fromEntries(allSales.value.map(sale => {
-  const products = productList(sale)
+  const query = (productSearchQueries.value[sale.id] || '').trim().toLowerCase()
+  const products = productList(sale).filter(row => !query ||
+    [row.product?.title, row.product?.name, row.product?.sku, row.serial_number, ...row.previousSerials]
+      .some(value => String(value || '').toLowerCase().includes(query)))
   const total = products.length
   const pages = Math.max(1, Math.ceil(total / productsPerPage))
   const page = Math.min(Math.max(1, productListPages.value[sale.id] || 1), pages)
@@ -705,7 +659,45 @@ const statusClr = (s) => {
 
 
 watch([searchQuery, statusFilter, dateFrom, dateTo], () => { currentPage.value = 1 })
-onMounted(loadSales)
+onMounted(() => {
+  loadSales()
+  window.addEventListener('focus', loadSales)
+})
+onUnmounted(() => window.removeEventListener('focus', loadSales))
+
+const loadWarranties = async (page = 1) => {
+  loading.value = true;
+  try {
+    const response = await api.get('/warranties', {
+      params: { page, per_page: 15, ...filters.value },
+    });
+    warranties.value = response.data;
+  } catch (err) {
+    console.error('Failed to load warranties:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const warranties = ref({ data: [] });
+const debouncedLoad = () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => loadWarranties(), 300);
+};
+
+const editWarranty = (id) => router.push({ name: 'WarrantyEdit', params: { id } });
+
+const deleteWarranty = async (id) => {
+  if (!confirm('Hapus warranty ini?')) return;
+  try {
+    await api.delete(`/warranties/${id}`);
+    await loadSales();
+  } catch (err) {
+    alert(err.response?.data?.message || 'Gagal menghapus warranty.');
+  }
+};
+
+onMounted(loadWarranties);
 </script>
 
 <style scoped>

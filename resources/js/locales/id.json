@@ -32,6 +32,7 @@
         "suppliers": "Supplier",
         "accounting": "AKUNTANSI",
         "accounts": "Akun",
+        "accountingTransactions": "Daftar Transaksi",
         "bankAccounts": "Rekening Bank",
         "taxRates": "Tarif Pajak",
         "history": "Riwayat",

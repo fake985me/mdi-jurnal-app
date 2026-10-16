@@ -24,12 +24,16 @@ class MSAProject extends Model
         'resolution',
         'condition',
         'user_id',
+        'serial_numbers',
+        'replacement_serial_numbers',
     ];
 
     protected $casts = [
         'reported_date' => 'date',
         'resolved_date' => 'date',
         'quantity' => 'integer',
+        'serial_numbers' => 'array',
+        'replacement_serial_numbers' => 'array',
     ];
 
     public function project()

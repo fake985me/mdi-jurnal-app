@@ -378,8 +378,8 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-md" :class="formPage ? 'max-w-4xl max-h-none' : ''">
+    <div v-if="showModal" class="tab-form" :class="formPage ? 'mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full overflow-y-auto shadow-md" :class="formPage" ? >
         <h3 class="text-2xl font-bold mb-6">{{ editingId ? 'Edit Warehouse' : 'New Warehouse' }}</h3>
         
         <form @submit.prevent="saveWarehouse" class="space-y-4">

@@ -91,10 +91,7 @@
               <span :class="getStatusBadge(rma.status)">{{ rma.status }}</span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button v-if="rma.status === 'pending'" @click="approveRMA(rma)"
-                class="text-green-600 hover:text-green-900">Approve</button>
-              <button v-if="rma.status === 'approved'" @click="markReceived(rma)"
-                class="text-blue-600 hover:text-blue-900">Received</button>
+              <router-link v-if="rma.status !== 'rejected'" :to="{ name: 'RMAInspection', params: { id: rma.id } }" target="_blank" rel="noopener" class="text-green-600 hover:text-green-900">Aksi</router-link>
               <button @click="deleteRMA(rma.id)" class="text-red-600 hover:text-red-900">Delete</button>
             </td>
           </tr>
@@ -432,7 +429,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../services/api';
 
@@ -932,8 +929,13 @@ const deleteRMA = async (id) => {
   }
 };
 
+const refreshAfterInspection = () => {
+  if (!showModal.value && !showConditionModal.value && !showEvidenceModal.value) loadRMAs(rmas.value.current_page || 1);
+};
 onMounted(() => {
   loadRMAs();
   loadSalesWithWarranty();
+  window.addEventListener('focus', refreshAfterInspection);
 });
+onUnmounted(() => window.removeEventListener('focus', refreshAfterInspection));
 </script>

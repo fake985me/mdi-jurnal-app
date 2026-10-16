@@ -257,7 +257,7 @@
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
         <h3 class="text-lg font-semibold text-gray-900">↩️ RMA Inventory (Returned Items)</h3>
-        <p class="text-sm text-gray-600 mt-1">Items returned from RMAs grouped by condition</p>
+        <p class="text-sm text-gray-600 mt-1">Barang retur layak guna, bernilai buku Rp 0, terpisah dari stok reguler.</p>
       </div>
 
       <div v-if="loadingRMA" class="p-8 text-center">
@@ -280,10 +280,12 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="rma in rmaStock" :key="`${rma.product_id}-${rma.condition}`" class="hover:bg-gray-50">
+            <tr v-for="rma in rmaStock" :key="rma.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ rma.product?.title }}</div>
                 <div class="text-xs text-gray-500">{{ rma.product?.brand }}</div>
+                <div class="text-xs font-mono text-gray-500">{{ rma.serial_number || 'Tanpa SN' }}</div>
+                <div class="text-xs text-gray-500">Nilai buku: Rp 0 · {{ rma.notes }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="getConditionBadge(rma.condition)" class="px-2 py-1 text-xs rounded-full capitalize">
@@ -435,6 +437,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -445,11 +448,13 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.code }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}<p class="text-xs font-mono text-gray-500">{{ item.serial_number || 'Tanpa SN' }}</p></td>
                 <td class="px-6 py-4 text-sm font-bold text-red-600">{{ item.quantity }}</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ item.condition }}</span>
+                  <p class="mt-1 text-xs text-gray-500">{{ item.notes }}</p>
                 </td>
+                <td class="px-6 py-4 text-right"><button type="button" @click="openReturnInspection(item)" class="text-indigo-600 hover:underline">Hasil Perbaikan</button></td>
               </tr>
             </tbody>
           </table>
@@ -457,6 +462,17 @@
       </div>
     </div>
 
+    <div v-if="returnInspection" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <form @submit.prevent="saveReturnInspection" class="w-full max-w-lg rounded-xl bg-white p-6 space-y-4">
+        <h3 class="text-lg font-bold">Tindak Lanjut Barang Retur</h3>
+        <p>{{ returnInspection.product?.title }} · {{ returnInspection.serial_number || returnInspection.code }}</p>
+        <div><label class="block mb-1 text-sm">Hasil Perbaikan</label><select v-model="returnResult.condition" class="input" required><option value="unrepairable">Tidak dapat diperbaiki — tetap barang rusak</option><option value="limited">Layak guna dengan keterbatasan — stok RMA</option><option value="working">Normal — stok RMA</option></select></div>
+        <div><label class="block mb-1 text-sm">Catatan / Keterbatasan Penggunaan</label><textarea v-model="returnResult.notes" class="input" rows="3" required maxlength="5000"></textarea></div>
+        <p class="text-xs text-gray-500">Stok RMA bernilai buku Rp 0 dan terpisah dari stok reguler.</p>
+        <p v-if="returnError" class="text-red-700 text-sm">{{ returnError }}</p>
+        <div class="flex justify-end gap-2"><button type="button" @click="returnInspection = null" class="btn-secondary">Batal</button><button :disabled="returnSaving" class="btn-primary">{{ returnSaving ? 'Menyimpan...' : 'Simpan' }}</button></div>
+      </form>
+    </div>
     <!-- Transaction Modal -->
     <div v-if="showTransactionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 w-full max-w-md">
@@ -550,6 +566,24 @@ const rmaStock = ref([]);
 const investmentStock = ref([]);
 const msaStock = ref([]);
 const defectiveStock = ref([]);
+const returnInspection = ref(null);
+const returnResult = ref({ condition: 'unrepairable', notes: '' });
+const returnSaving = ref(false);
+const returnError = ref('');
+const openReturnInspection = item => {
+  returnInspection.value = item;
+  returnResult.value = { condition: 'unrepairable', notes: item.notes || '' };
+  returnError.value = '';
+};
+const saveReturnInspection = async () => {
+  returnSaving.value = true;
+  try {
+    await api.post(`/returned-items/${returnInspection.value.id}/inspect`, returnResult.value);
+    returnInspection.value = null;
+    await Promise.all([loadDefectiveStock(), loadRMAStock()]);
+  } catch (err) { returnError.value = err.response?.data?.message || 'Gagal menyimpan hasil perbaikan.'; }
+  finally { returnSaving.value = false; }
+};
 const warehouses = ref([]);
 const activeTab = ref('regular');
 const loading = ref(true);

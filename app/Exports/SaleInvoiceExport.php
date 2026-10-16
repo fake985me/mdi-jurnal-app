@@ -41,8 +41,8 @@ class SaleInvoiceExport implements FromArray, WithStyles, WithColumnWidths
         // Row 5: Horizontal separator (will be styled)
         $data[] = [''];
         
-        // Row 6: Empty
-        $data[] = [''];
+        // Row 6: Customer PO reference (preserve the following row positions).
+        $data[] = ['PO Reference:', $this->sale->po_number ?: '-'];
         
         // Row 7-10: Invoice Details (2 columns layout)
         $data[] = [

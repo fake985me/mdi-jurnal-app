@@ -84,6 +84,7 @@ const menuSections = computed(() => [
     title: t('nav.accounting'),
     items: [
       { name: t('nav.accounts'), icon: 'accounts', to: '/dashboard/accounting', roles: ['admin', 'staff'] },
+      { name: t('nav.accountingTransactions'), icon: 'table', to: '/dashboard/accounting/transactions', roles: ['admin', 'staff'] },
       { name: t('nav.bankAccounts'), icon: 'wallet', to: '/dashboard/bank-accounts', roles: ['admin', 'staff'] },
       { name: t('nav.taxRates'), icon: 'tax', to: '/dashboard/tax-rates', roles: ['admin', 'staff'] },
     ]

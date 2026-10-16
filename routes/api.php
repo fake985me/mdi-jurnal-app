@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     // Sales
     Route::get('/sales/{id}/export', [App\Http\Controllers\Api\SaleController::class, 'exportInvoice']);
     Route::get('/sales/{id}/pdf', [App\Http\Controllers\Api\SaleController::class, 'downloadPdf']);
+    Route::get('/sales/{id}/print', [App\Http\Controllers\Api\SaleController::class, 'printInvoice']);
     Route::apiResource('sales', App\Http\Controllers\Api\SaleController::class);
     Route::get('/sales-statistics', [App\Http\Controllers\Api\SaleController::class, 'statistics']);
 
@@ -122,6 +123,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::post('/rmas/check-eligibility', [App\Http\Controllers\Api\RMAController::class, 'checkEligibility']);
     Route::post('/rmas/batch', [App\Http\Controllers\Api\RMAController::class, 'batchStore']);
     Route::apiResource('rmas', App\Http\Controllers\Api\RMAController::class);
+    Route::post('/warranties/{id}/claim', [App\Http\Controllers\Api\WarrantyClaimController::class, 'store']);
+    Route::post('/rmas/{id}/inspect', [App\Http\Controllers\Api\WarrantyClaimController::class, 'inspect']);
+    Route::post('/rmas/{id}/replacement-serials', [App\Http\Controllers\Api\WarrantyClaimController::class, 'correctReplacement']);
     Route::post('/rmas/{rma}/mark-received', [App\Http\Controllers\Api\RMAController::class, 'markReceived']);
     Route::post('/rmas/{rma}/process', [App\Http\Controllers\Api\RMAController::class, 'process']);
     Route::get('/rmas/{rma}/evidence', [App\Http\Controllers\Api\RMAController::class, 'getEvidence']);
@@ -140,6 +144,11 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::post('/project-investments/{id}/complete', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'complete']);
     Route::post('/project-investments/{id}/cancel', [App\Http\Controllers\Api\ProjectInvestmentController::class, 'cancel']);
     Route::apiResource('project-investments', App\Http\Controllers\Api\ProjectInvestmentController::class);
+    Route::get('/project-investments/{id}/items-detail', [App\Http\Controllers\Api\ProjectItemController::class, 'show']);
+    Route::post('/project-investments/{id}/items', [App\Http\Controllers\Api\ProjectItemController::class, 'store']);
+    Route::post('/project-investments/{id}/items/{itemId}/replace', [App\Http\Controllers\Api\ProjectItemController::class, 'replace']);
+    Route::post('/project-investments/{id}/items/{itemId}/serials', [App\Http\Controllers\Api\ProjectItemController::class, 'serials']);
+    Route::post('/returned-items/{id}/inspect', [App\Http\Controllers\Api\ReturnedItemController::class, 'inspect']);
 
     // Project Contracts
     Route::apiResource('project-contracts', App\Http\Controllers\Api\ProjectContractController::class);
