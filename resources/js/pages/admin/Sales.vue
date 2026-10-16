@@ -3,13 +3,13 @@
     <!-- Top Header -->
     <div class="flex justify-between items-center mb-4">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <h2 class="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
           Sales Management
         </h2>
         <p class="text-sm text-gray-600 mt-1">Kelola dan pantau semua transaksi penjualan</p>
       </div>
       <button @click="$router.push({ name: 'SalesCreate' })"
-        class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm">
+        class="px-5 py-2.5 bg-linear-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm">
         + Buat Penjualan
       </button>
     </div>
@@ -19,7 +19,7 @@
 
 
       <!-- Sales Summary + Pie Chart Footer -->
-      <div class="border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+      <div class="border-t border-slate-200 bg-linear-to-br from-slate-50 to-white">
 
         <!-- Donut Chart + Status Cards -->
         <div class="px-6 py-5 flex flex-col md:flex-row items-center gap-8">
@@ -360,6 +360,39 @@
         </table>
       </div>
     </div>
+    <!-- End Sales Content -->
+
+    <!-- Sales Create Form-->
+    <div v-if="showCreateForm" class="mx-auto py-8 fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 relative">
+        <button @click="showCreateForm = false"
+          class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        <h3 class="text-lg font-bold mb-4">Buat Penjualan Baru</h3>
+        <!-- Form fields for creating a sale -->
+        <form @submit.prevent="createSale">
+          <!-- Example input fields -->
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+            <input v-model="newSale.customer_name" type="text"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring focus:ring-indigo-100" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Invoice Number</label>
+            <input v-model="newSale.invoice_number" type="text"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring focus:ring-indigo-100" />
+          </div>
+          <!-- Add more fields as necessary -->
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showCreateForm = false"
+              class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
   </div>
 </template>
 
@@ -373,6 +406,12 @@ const router = useRouter()
 
 const allSales = ref([])
 const loading = ref(true)
+const showCreateForm = ref(false)
+const newSale = ref({
+  customer_name: '',
+  invoice_number: '',
+  // Add other necessary fields for creating a sale
+})
 const searchQuery = ref('')
 const statusFilter = ref('all')
 const dateFrom = ref('')
@@ -396,6 +435,11 @@ const loadSales = async () => {
     loading.value = false
   }
 }
+
+const SalesCreate = () => {
+  showCreateForm.value = true
+}
+
 
 const filteredSales = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
@@ -478,6 +522,18 @@ const resetFilters = () => { searchQuery.value = ''; statusFilter.value = 'all';
 const setSort = (col) => { if (sortKey.value === col) sortDir.value *= -1; else { sortKey.value = col; sortDir.value = -1 }; currentPage.value = 1 }
 const toggleExpand = (id) => { expanded.value = { ...expanded.value, [id]: !expanded.value[id] } }
 const editSale = (sale) => { router.push({ name: 'SalesEdit', params: { id: sale.id } }) }
+
+
+const createSale = async () => {
+  try {
+    await api.post('/sales', newSale.value)
+    showCreateForm.value = false
+    newSale.value = { customer_name: '', invoice_number: '' }
+    await loadSales()
+  } catch (err) {
+    alert((err.response && err.response.data && err.response.data.message) || 'Gagal membuat penjualan')
+  }
+}
 
 const deleteSale = async (id) => {
   if (!confirm('Yakin ingin menghapus penjualan ini?')) return
