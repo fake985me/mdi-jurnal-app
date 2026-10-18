@@ -1,29 +1,29 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold text-gray-900">Contact Information</h2>
+      <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.CmsContact') }}</h2>
       <button
         @click="showModal = true; editingItem = null"
         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
       >
-        + Add Contact Info
+        {{ $t('ui.addContactInfo') }}
       </button>
     </div>
 
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading contact info...</p>
+        <p class="text-gray-600">{{ $t('ui.loadingContactInfo') }}</p>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.order') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.type') }}</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Label</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.value') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -31,22 +31,22 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.order }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                {{ item.type }}
+                {{ $label(item.type) }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ item.label }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $ui(item.label) }}</td>
             <td class="px-6 py-4 text-sm">{{ item.value }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span :class="[
                 'px-2 py-1 text-xs rounded-full',
                 item.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
               ]">
-                {{ item.is_active ? 'Active' : 'Inactive' }}
+                {{ item.is_active ? $t('labels.active') : $t('labels.inactive') }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
-              <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
-              <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900">Delete</button>
+              <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900">{{ $t('common.edit') }}</button>
+              <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -56,29 +56,29 @@
     <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">{{ editingItem ? 'Edit Contact Info' : 'Add New Contact Info' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ editingItem ? $t('ui.editContactInformation') : $t('ui.addNewContactInformation') }}</h3>
         
         <form @submit.prevent="saveItem" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.type2') }}</label>
             <select v-model="form.type" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
-              <option value="description">Description (Company Info)</option>
-              <option value="address">Address</option>
-              <option value="phone">Phone</option>
-              <option value="email">Email</option>
-              <option value="sales">Sales & Marketing</option>
-              <option value="social">Social Media</option>
+              <option value="description">{{ $t('ui.descriptionCompanyInfo') }}</option>
+              <option value="address">{{ $t('labels.address') }}</option>
+              <option value="phone">{{ $t('labels.phone') }}</option>
+              <option value="email">{{ $t('labels.email') }}</option>
+              <option value="sales">{{ $t('ui.salesMarketing') }}</option>
+              <option value="social">{{ $t('labels.social') }}</option>
             </select>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
-            <input v-model="form.label" placeholder="e.g., Office, Mail, Our Address" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
-            <small class="text-gray-500">Optional - leave empty for items that don't need a label</small>
+            <input v-model="form.label" :placeholder="$t('ui.eGOfficeMailOurAddress')" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
+            <small class="text-gray-500">{{ $t('ui.optionalLeaveEmptyForItemsThatDonTNeedALabel') }}</small>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.value3') }}</label>
             <textarea
               v-model="form.value"
               required
@@ -90,28 +90,28 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-            <input v-model="form.icon" placeholder="e.g., envelope, phone, map-marker" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.icon') }}</label>
+            <input v-model="form.icon" :placeholder="$t('ui.eGEnvelopePhoneMapMarker')" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.order') }}</label>
             <input v-model.number="form.order" type="number" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
           </div>
 
           <div class="flex items-center">
             <label class="flex items-center cursor-pointer">
               <input v-model="form.is_active" type="checkbox" class="mr-2" />
-              <span class="text-sm font-medium text-gray-700">Active</span>
+              <span class="text-sm font-medium text-gray-700">{{ $t('labels.active') }}</span>
             </label>
           </div>
 
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ $ui(error) }}</div>
 
           <div class="flex justify-end space-x-3">
-            <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
+            <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving" class="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">
-              {{ saving ? 'Saving...' : 'Save' }}
+              {{ saving ? $t('sales.saving') : $t('common.save') }}
             </button>
           </div>
         </form>
@@ -121,6 +121,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -142,24 +144,24 @@ const form = ref({
 
 const getPlaceholder = (type) => {
   const placeholders = {
-    description: 'Enter company description...',
+    description: uiText("Masukkan deskripsi perusahaan..."),
     address: 'Gedung Tifa Arum Realty\n3th Floor Suite 301',
     phone: '021 2930-6714',
     email: 'info@mdi-solutions.com',
     sales: 'Hadi : +62 887-0978-7005',
     social: '@company_social'
   }
-  return placeholders[type] || 'Enter value...'
+  return placeholders[type] || uiText("Masukkan nilai...")
 }
 
 const getHint = (type) => {
   const hints = {
-    description: 'Company description shown at the top of contact page',
-    address: 'Use line breaks for multi-line addresses',
-    phone: 'Phone number with or without label',
-    email: 'Email address for contact',
-    sales: 'Format: Name : Phone Number',
-    social: 'Social media handle or URL'
+    description: uiText("Deskripsi perusahaan di bagian atas halaman kontak"),
+    address: uiText("Gunakan baris baru untuk alamat beberapa baris"),
+    phone: uiText("Nomor telepon dengan atau tanpa label"),
+    email: uiText("Alamat email untuk kontak"),
+    sales: uiText("Format: Nama : Nomor Telepon"),
+    social: uiText("Nama akun atau URL media sosial")
   }
   return hints[type] || ''
 }
@@ -170,7 +172,7 @@ const loadContacts = async () => {
     const response = await api.get('/contact-info');
     contacts.value = response.data;
   } catch (err) {
-    console.error('Failed to load contact info:', err);
+    console.error('Gagal memuat informasi kontak:', err);
   } finally {
     loading.value = false;
   }
@@ -196,19 +198,19 @@ const saveItem = async () => {
     loadContacts();
     form.value = { type: 'description', label: '', value: '', icon: '', order: 0, is_active: true };
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save contact info';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan informasi kontak");
   } finally {
     saving.value = false;
   }
 };
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure?')) return;
+  if (!confirm(uiText("Apakah Anda yakin?"))) return;
   try {
     await api.delete(`/contact-info/${id}`);
     loadContacts();
   } catch (err) {
-    alert('Failed to delete contact info');
+    alert(uiText("Gagal menghapus informasi kontak"));
   }
 };
 

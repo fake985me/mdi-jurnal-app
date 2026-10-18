@@ -4,7 +4,7 @@
             <!-- Header -->
             <div class="sticky top-0 bg-gray-100 border-b px-6 py-4 flex justify-between items-center">
                 <h3 class="text-2xl font-bold text-gray-900">
-                    Specification
+                    {{ $t('ui.specification') }}
                 </h3>
                 <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
                     &times;
@@ -16,19 +16,19 @@
                 <!-- Module Selector -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Product Module
+                        {{ $t('ui.productModule') }}
                     </label>
                     <select v-model="selectedModule" @change="loadModuleSpecs"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Select Module</option>
-                        <option value="A">Module A (OLT)</option>
-                        <option value="B">Module B (ONT)</option>
-                        <option value="C">Module C (Switch)</option>
-                        <option value="D">Module D (Router)</option>
-                        <option value="E">Module E (Media Converter)</option>
-                        <option value="F">Module F (SFP Module)</option>
-                        <option value="G">Module G (Accessories)</option>
-                        <option value="H">Module H (Other)</option>
+                        <option value="">{{ $t('ui.selectModule') }}</option>
+                        <option value="A">{{ $t('ui.moduleAOlt') }}</option>
+                        <option value="B">{{ $t('ui.moduleBOnt') }}</option>
+                        <option value="C">{{ $t('ui.moduleCSwitch') }}</option>
+                        <option value="D">{{ $t('ui.moduleDRouter') }}</option>
+                        <option value="E">{{ $t('ui.moduleEMediaConverter') }}</option>
+                        <option value="F">{{ $t('ui.moduleFSfpModule') }}</option>
+                        <option value="G">{{ $t('ui.moduleGAccessories') }}</option>
+                        <option value="H">{{ $t('ui.moduleHOther') }}</option>
                     </select>
                 </div>
 
@@ -38,33 +38,33 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
-                                    Specification
+                                    {{ $t('ui.specification') }}
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Value
+                                    {{ $t('ui.value') }}
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr v-for="(spec, index) in currentSpecs" :key="index" class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                                    {{ spec.label }}
+                                    {{ $ui(spec.label) }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <input v-if="spec.type === 'text'" 
                                         v-model="localSpecs[spec.key]" 
                                         type="text"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        :placeholder="spec.placeholder" />
+                                        :placeholder="$ui(spec.placeholder)" />
                                     <textarea v-else-if="spec.type === 'textarea'"
                                         v-model="localSpecs[spec.key]"
                                         rows="3"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        :placeholder="spec.placeholder"></textarea>
+                                        :placeholder="$ui(spec.placeholder)"></textarea>
                                     <select v-else-if="spec.type === 'select'"
                                         v-model="localSpecs[spec.key]"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                        <option value="">Select...</option>
+                                        <option value="">{{ $t('ui.select') }}</option>
                                         <option v-for="opt in spec.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>
                                 </td>
@@ -78,10 +78,10 @@
             <div class="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
                 <button @click="$emit('close')"
                     class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
-                    Cancel
+                    {{ $t('common.cancel') }}
                 </button>
                 <button @click="save" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                    Save Specifications
+                    {{ $t('ui.saveSpecifications') }}
                 </button>
             </div>
         </div>
@@ -89,6 +89,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../utils/uiText';
+
 import { ref, watch } from 'vue';
 
 const props = defineProps({
@@ -104,95 +106,95 @@ const localSpecs = ref({});
 // Module-specific specification templates
 const moduleSpecsTemplate = {
     A: [ // OLT Module
-        { key: 'flash_memory', label: 'Flash Memory', type: 'text', placeholder: 'e.g., 8MB(Boot) + 512MB(NOS)' },
-        { key: 'sdram_memory', label: 'SDRAM Memory', type: 'text', placeholder: 'e.g., 4GB (DDR4)' },
-        { key: 'interface', label: 'Interface', type: 'textarea', placeholder: 'e.g., IU_GPON8 for GPON(SFP)' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'power_consumption', label: 'Power Consumption', type: 'text', placeholder: 'e.g., 875W' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 443.8 x 265.9 x 280 mm' }
+        { key: 'flash_memory', label: uiText("Memori Flash"), type: 'text', placeholder: uiText("contoh: 8MB(Boot) + 512MB(NOS)") },
+        { key: 'sdram_memory', label: uiText("Memori SDRAM"), type: 'text', placeholder: uiText("contoh: 4GB (DDR4)") },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'textarea', placeholder: uiText("contoh: IU_GPON8 for GPON(SFP)") },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'power_consumption', label: uiText("Konsumsi Daya"), type: 'text', placeholder: uiText("contoh: 875W") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 443.8 x 265.9 x 280 mm" }
     ],
     B: [ // ONT Module
-        { key: 'interface', label: 'Interface', type: 'text', placeholder: 'e.g., Realtek RTL9601CI' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'power_consumption', label: 'Power Consumption', type: 'text', placeholder: 'e.g., 875W' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 443.8 x 265.9 x 280 mm' }
+        { key: 'interface', label: uiText("Antarmuka"), type: 'text', placeholder: uiText("contoh: Realtek RTL9601CI") },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'power_consumption', label: uiText("Konsumsi Daya"), type: 'text', placeholder: uiText("contoh: 875W") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 443.8 x 265.9 x 280 mm" }
     ],
     C: [ // Switch Module
-        { key: 'flash_memory', label: 'Flash Memory', type: 'text', placeholder: 'e.g., 8MB(Boot) + 512MB(NOS)' },
-        { key: 'sdram_memory', label: 'SDRAM Memory', type: 'text', placeholder: 'e.g., 4GB (DDR4)' },
-        { key: 'interface', label: 'Interface', type: 'textarea', placeholder: 'e.g., IU_GPON8 for GPON(SFP)' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., AC 100-240V' }
+        { key: 'flash_memory', label: uiText("Memori Flash"), type: 'text', placeholder: uiText("contoh: 8MB(Boot) + 512MB(NOS)") },
+        { key: 'sdram_memory', label: uiText("Memori SDRAM"), type: 'text', placeholder: uiText("contoh: 4GB (DDR4)") },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'textarea', placeholder: uiText("contoh: IU_GPON8 for GPON(SFP)") },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: AC 100-240V") }
     ],
     D: [ // Router Module
-        { key: 'flash_memory', label: 'Flash Memory', type: 'text', placeholder: 'e.g., 8MB(Boot) + 512MB(NOS)' },
-        { key: 'sdram_memory', label: 'SDRAM Memory', type: 'text', placeholder: 'e.g., 4GB (DDR4)' },
-        { key: 'interface', label: 'Interface', type: 'textarea', placeholder: 'e.g., IU_GPON8 for GPON(SFP)' },
-        { key: 'antena', label: 'Antena', type: 'text', placeholder: 'e.g., IPSec, PPTP, L2TP' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 200 x 150 x 40 mm' }
+        { key: 'flash_memory', label: uiText("Memori Flash"), type: 'text', placeholder: uiText("contoh: 8MB(Boot) + 512MB(NOS)") },
+        { key: 'sdram_memory', label: uiText("Memori SDRAM"), type: 'text', placeholder: uiText("contoh: 4GB (DDR4)") },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'textarea', placeholder: uiText("contoh: IU_GPON8 for GPON(SFP)") },
+        { key: 'antena', label: uiText("Antena"), type: 'text', placeholder: uiText("contoh: IPSec, PPTP, L2TP") },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 200 x 150 x 40 mm" }
     ],
     E: [ // Media Converter Module  
-        { key: 'switching_capacity', label: 'Switching Capacity', type: 'text', placeholder: 'e.g., 1x SC, Single-mode' },
-        { key: 'throughput', label: 'Throughput', type: 'text', placeholder: 'e.g., 1x RJ45 10/100/1000M' },
-        { key: 'interface', label: 'Interface', type: 'text', placeholder: 'e.g., Tx:1310nm, Rx:1550nm' },
-        { key: 'countrol_unit', label: 'Control Unit', type: 'text', placeholder: 'e.g., Up to 20km' },
-        { key: 'additional_interface', label: 'Additional Interface', type: 'text', placeholder: 'e.g., DC 5V/1A' },
-        { key: 'mac_address', label: 'MAC Address', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' },
-        { key: 'routing_table', label: 'Routing Table', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' },
-        { key: 'dust_and_waterproff', label: 'Dust and Waterproof', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' },
-        { key: 'noise', label: 'Noise', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' }
+        { key: 'switching_capacity', label: uiText("Kapasitas Switching"), type: 'text', placeholder: uiText("contoh: 1x SC, Single-mode") },
+        { key: 'throughput', label: 'Throughput', type: 'text', placeholder: "contoh: 1x RJ45 10/100/1000M" },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'text', placeholder: uiText("contoh: Tx:1310nm, Rx:1550nm") },
+        { key: 'countrol_unit', label: uiText("Unit Kontrol"), type: 'text', placeholder: uiText("contoh: Up to 20km") },
+        { key: 'additional_interface', label: uiText("Antarmuka Tambahan"), type: 'text', placeholder: "contoh: DC 5V/1A" },
+        { key: 'mac_address', label: uiText("Alamat MAC"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" },
+        { key: 'routing_table', label: uiText("Tabel Perutean"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" },
+        { key: 'dust_and_waterproff', label: uiText("Ketahanan Debu dan Air"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" },
+        { key: 'noise', label: uiText("Kebisingan"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" }
     ],
     F: [ // SFP Module
-        { key: 'switching_capacity', label: 'Switching Capacity', type: 'text', placeholder: 'e.g., 1x SC, Single-mode' },
-        { key: 'throughput', label: 'Throughput', type: 'text', placeholder: 'e.g., 1x RJ45 10/100/1000M' },
-        { key: 'interface', label: 'Interface', type: 'text', placeholder: 'e.g., Tx:1310nm, Rx:1550nm' },
-        { key: 'additional_interface', label: 'Additional Interface', type: 'text', placeholder: 'e.g., DC 5V/1A' },
-        { key: 'operating_temp', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'power_consumption', label: 'Power Consumption', type: 'text', placeholder: 'e.g., 875W' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' }
+        { key: 'switching_capacity', label: uiText("Kapasitas Switching"), type: 'text', placeholder: uiText("contoh: 1x SC, Single-mode") },
+        { key: 'throughput', label: 'Throughput', type: 'text', placeholder: "contoh: 1x RJ45 10/100/1000M" },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'text', placeholder: uiText("contoh: Tx:1310nm, Rx:1550nm") },
+        { key: 'additional_interface', label: uiText("Antarmuka Tambahan"), type: 'text', placeholder: "contoh: DC 5V/1A" },
+        { key: 'operating_temp', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'power_consumption', label: uiText("Konsumsi Daya"), type: 'text', placeholder: uiText("contoh: 875W") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" }
     ],
     G: [ // Accessories
-        { key: 'wireless_standard', label: 'Wireless Standard', type: 'text', placeholder: 'e.g., Patch Cord, Adapter, Splitter' },
-        { key: 'wireless_stream', label: 'Wireless Stream', type: 'text', placeholder: 'e.g., 2.4GHz, 5GHz' },
-        { key: 'client_capacity', label: 'Client Capacity', type: 'text', placeholder: 'e.g., 2.4GHz, 5GHz' },
-        { key: 'anntena', label: 'Antenna', type: 'text', placeholder: 'e.g., 1m, 3m, 5m' },
-        { key: 'interface', label: 'Interface', type: 'text', placeholder: 'e.g., SC/UPC, LC/APC' },
-        { key: 'ip_rating', label: 'IP Rating', type: 'text', placeholder: 'e.g., IP67' },
-        { key: 'operating_temp ', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'power_consumption', label: 'Power Consumption', type: 'text', placeholder: 'e.g., 875W' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' }
+        { key: 'wireless_standard', label: uiText("Standar Nirkabel"), type: 'text', placeholder: uiText("contoh: Patch Cord, Adapter, Splitter") },
+        { key: 'wireless_stream', label: uiText("Aliran Nirkabel"), type: 'text', placeholder: uiText("contoh: 2.4GHz, 5GHz") },
+        { key: 'client_capacity', label: uiText("Kapasitas Klien"), type: 'text', placeholder: uiText("contoh: 2.4GHz, 5GHz") },
+        { key: 'anntena', label: uiText("Antena"), type: 'text', placeholder: "contoh: 1m, 3m, 5m" },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'text', placeholder: "contoh: SC/UPC, LC/APC" },
+        { key: 'ip_rating', label: uiText("Tingkat Perlindungan IP"), type: 'text', placeholder: uiText("contoh: IP67") },
+        { key: 'operating_temp ', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'power_consumption', label: uiText("Konsumsi Daya"), type: 'text', placeholder: uiText("contoh: 875W") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" }
     ],
     H: [ // Generic/Other
-        { key: 'number_of_manageble_aps', label: 'Number of Manageable APs', type: 'text', placeholder: 'Enter specification...' },
-        { key: 'maximum_configurable_ap_number', label: 'Maximum Configurable AP Number', type: 'text', placeholder: 'Enter specification...' },
-        { key: 'maximum_number_of_clients', label: 'Maximum Number of Clients', type: 'text', placeholder: 'Enter specification...' },
-        { key: 'interface', label: 'Interface', type: 'text', placeholder: 'Enter specification...' },
-        { key: 'operating_temp ', label: 'Operating Temp', type: 'text', placeholder: 'e.g., 0 ~ 50°C' },
-        { key: 'storage_temp', label: 'Storage Temp', type: 'text', placeholder: 'e.g., -20 ~ 70°C' },
-        { key: 'humidity', label: 'Humidity', type: 'text', placeholder: 'e.g., 20 ~ 80% (non-condensing)' },
-        { key: 'power', label: 'Power', type: 'text', placeholder: 'e.g., -48VDC' },
-        { key: 'power_consumption', label: 'Power Consumption', type: 'text', placeholder: 'e.g., 875W' },
-        { key: 'dimensions', label: 'Dimensions', type: 'text', placeholder: 'e.g., 100 x 80 x 25 mm' }
+        { key: 'number_of_manageble_aps', label: uiText("Jumlah AP yang Dapat Dikelola"), type: 'text', placeholder: uiText("Masukkan spesifikasi...") },
+        { key: 'maximum_configurable_ap_number', label: uiText("Jumlah Maksimal AP yang Dapat Dikonfigurasi"), type: 'text', placeholder: uiText("Masukkan spesifikasi...") },
+        { key: 'maximum_number_of_clients', label: uiText("Jumlah Maksimal Klien"), type: 'text', placeholder: uiText("Masukkan spesifikasi...") },
+        { key: 'interface', label: uiText("Antarmuka"), type: 'text', placeholder: uiText("Masukkan spesifikasi...") },
+        { key: 'operating_temp ', label: uiText("Suhu Operasional"), type: 'text', placeholder: uiText("contoh: 0 ~ 50°C") },
+        { key: 'storage_temp', label: uiText("Suhu Penyimpanan"), type: 'text', placeholder: uiText("contoh: -20 ~ 70°C") },
+        { key: 'humidity', label: uiText("Kelembapan"), type: 'text', placeholder: "contoh: 20 ~ 80% (non-condensing)" },
+        { key: 'power', label: uiText("Daya"), type: 'text', placeholder: uiText("contoh: -48VDC") },
+        { key: 'power_consumption', label: uiText("Konsumsi Daya"), type: 'text', placeholder: uiText("contoh: 875W") },
+        { key: 'dimensions', label: uiText("Dimensi"), type: 'text', placeholder: "contoh: 100 x 80 x 25 mm" }
     ]
 };
 

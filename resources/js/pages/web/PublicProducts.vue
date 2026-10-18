@@ -1,20 +1,20 @@
 <template>
   <div class="public-products-page">
     <div class="page-header">
-      <h1>Public Products</h1>
+      <h1>{{ $t('nav.publicProducts') }}</h1>
       <div class="header-actions">
         <button @click="syncFromProducts" :disabled="syncingFromProducts" class="btn btn-primary" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; color: white;">
           <i :class="['fas', syncingFromProducts ? 'fa-spinner fa-spin' : 'fa-sync-alt']"></i>
-          {{ syncingFromProducts ? 'Syncing...' : 'Sync dari Products' }}
+          {{ syncingFromProducts ? $t('ui.syncing') : $t('ui.syncFromProducts') }}
         </button>
         <button @click="exportAll" class="btn btn-secondary">
-          <i class="fas fa-download"></i> Export All
+          <i class="fas fa-download"></i> {{ $t('ui.exportAll') }}
         </button>
         <button @click="exportTemplate" class="btn btn-secondary">
           <i class="fas fa-file-download"></i> Template
         </button>
         <button @click="triggerImport" class="btn btn-secondary">
-          <i class="fas fa-upload"></i> Import
+          <i class="fas fa-upload"></i> {{ $t('ui.import') }}
         </button>
         <input 
           ref="fileInput" 
@@ -24,7 +24,7 @@
           style="display: none" 
         />
         <button @click="openCreateForm" class="btn btn-primary">
-          <i class="fas fa-plus"></i> Add Product
+          <i class="fas fa-plus"></i> {{ $t('ui.addProduct') }}
         </button>
       </div>
     </div>
@@ -35,24 +35,24 @@
         v-model="filters.search"
         @input="fetchProducts"
         type="text"
-        placeholder="Search products..."
+        :placeholder="$t('sales.searchProducts')"
         class="search-input"
       />
       
       <select v-model="filters.category_id" @change="fetchProducts" class="filter-select">
-        <option value="">All Categories</option>
+        <option value="">{{ $t('ui.allCategories') }}</option>
         <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
       </select>
 
       <select v-model="filters.brand" @change="fetchProducts" class="filter-select">
-        <option value="">All Brands</option>
+        <option value="">{{ $t('ui.allBrands') }}</option>
         <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
       </select>
 
       <select v-model="filters.is_active" @change="fetchProducts" class="filter-select">
-        <option value="">All Status</option>
-        <option value="1">Active</option>
-        <option value="0">Inactive</option>
+        <option value="">{{ $t('sales.allStatus') }}</option>
+        <option value="1">{{ $t('labels.active') }}</option>
+        <option value="0">{{ $t('labels.inactive') }}</option>
       </select>
     </div>
 
@@ -61,80 +61,80 @@
       <table class="products-table">
         <thead>
           <tr>
-            <th class="sticky-col first-col">Actions</th>
+            <th class="sticky-col first-col">{{ $t('sales.actions') }}</th>
             <th class="sticky-col second-col">ID</th>
-            <th>Module</th>
-            <th>Image</th>
-            <th>SKU</th>
-            <th>Title</th>
-            <th>Subtitle</th>
-            <th>Category</th>
-            <th>Subcategory</th>
-            <th>Brand</th>
-            <th>Stock</th>
-            <th>Descriptions</th>
+            <th>{{ $t('ui.module') }}</th>
+            <th>{{ $t('labels.image') }}</th>
+            <th>{{ $t('dashboard.sku') }}</th>
+            <th>{{ $t('ui.heading') }}</th>
+            <th>{{ $t('ui.subheading') }}</th>
+            <th>{{ $t('dashboard.category') }}</th>
+            <th>{{ $t('dashboard.subcategory') }}</th>
+            <th>{{ $t('ui.brand') }}</th>
+            <th>{{ $t('sales.stock') }}</th>
+            <th>{{ $t('projectInvestment.description') }}</th>
             <!-- Specs 1-20 -->
-            <th v-for="i in 20" :key="'h-spec' + i">Spec {{ i }}</th>
+            <th v-for="i in 20" :key="'h-spec' + i">{{ $t('ui.specification') }} {{ i }}</th>
             <!-- Features 1-20 -->
-            <th v-for="i in 20" :key="'h-fitur' + i">Fitur {{ i }}</th>
+            <th v-for="i in 20" :key="'h-fitur' + i">{{ $t('labels.features') }} {{ i }}</th>
             <!-- Wireless -->
-            <th>Wireless Standard</th>
-            <th>Wireless Stream</th>
-            <th v-for="i in 5" :key="'h-ws' + i">Wireless Stream {{ i }}</th>
+            <th>{{ $t('ui.wirelessStandard') }}</th>
+            <th>{{ $t('ui.wirelessStream') }}</th>
+            <th v-for="i in 5" :key="'h-ws' + i">{{ $t('ui.wirelessStream') }} {{ i }}</th>
             <!-- Controller / AP -->
-            <th>Manageable APs</th>
-            <th>AP Number</th>
-            <th>Number of Clients</th>
-            <th>Capacity</th>
-            <th>IP Rating</th>
+            <th>{{ $t('ui.manageableAps') }}</th>
+            <th>{{ $t('ui.apNumber') }}</th>
+            <th>{{ $t('ui.numberOfClients') }}</th>
+            <th>{{ $t('ui.capacity') }}</th>
+            <th>{{ $t('ui.ipRating') }}</th>
             <!-- Switch -->
-            <th>Switching Capacity</th>
+            <th>{{ $t('ui.switchingCapacity') }}</th>
             <th>Throughput</th>
             <!-- Memory -->
-            <th>Flash Memory</th>
-            <th>SDRAM Memory</th>
+            <th>{{ $t('ui.flashMemory') }}</th>
+            <th>{{ $t('ui.sdramMemory') }}</th>
             <!-- Interfaces -->
-            <th>Interface Main</th>
-            <th v-for="i in 5" :key="'h-if' + i">Interface {{ i }}</th>
-            <th>Antenna</th>
+            <th>{{ $t('ui.interfaceMain') }}</th>
+            <th v-for="i in 5" :key="'h-if' + i">{{ $t('ui.interface') }} {{ i }}</th>
+            <th>{{ $t('ui.antenna') }}</th>
             <th>CU</th>
             <th v-for="i in 5" :key="'h-cu' + i">CU {{ i }}</th>
-            <th v-for="i in 5" :key="'h-addif' + i">Additional Interface {{ i }}</th>
+            <th v-for="i in 5" :key="'h-addif' + i">{{ $t('ui.additionalInterface') }} {{ i }}</th>
             <!-- Network -->
-            <th>MAC Address</th>
-            <th>Routing Table</th>
+            <th>{{ $t('ui.macAddress') }}</th>
+            <th>{{ $t('ui.routingTable') }}</th>
             <!-- Environment -->
-            <th>Dustproof & Waterproof</th>
-            <th>Noise</th>
+            <th>{{ $t('ui.dustAndWaterproof') }}</th>
+            <th>{{ $t('ui.noise') }}</th>
             <th>MTBF</th>
-            <th>Operating Temp</th>
-            <th>Storage Temp</th>
-            <th>Operating Humidity</th>
+            <th>{{ $t('ui.operatingTemp') }}</th>
+            <th>{{ $t('ui.storageTemp') }}</th>
+            <th>{{ $t('ui.operatingHumidity') }}</th>
             <!-- Power -->
-            <th v-for="i in 5" :key="'h-pwr' + i">Power {{ i }}</th>
-            <th>Power Consumptions</th>
-            <th>Power Consumption (with PoE)</th>
-            <th>Power Consumption (Excl PoE)</th>
-            <th>PoE Budget</th>
+            <th v-for="i in 5" :key="'h-pwr' + i">{{ $t('ui.power') }} {{ i }}</th>
+            <th>{{ $t('ui.powerConsumption') }}</th>
+            <th>{{ $t('ui.powerConsumptionWithPoe') }}</th>
+            <th>{{ $t('ui.powerConsumptionExclPoe') }}</th>
+            <th>{{ $t('ui.poeBudget') }}</th>
             <!-- Dimensions & Diagrams -->
-            <th>Dimensions</th>
+            <th>{{ $t('ui.dimensions') }}</th>
             <th>Diagram</th>
-            <th>Network Diagram</th>
-            <th>Status</th>
-            <th>Sort Order</th>
+            <th>{{ $t('ui.networkDiagram') }}</th>
+            <th>{{ $t('projectInvestment.materials.status') }}</th>
+            <th>{{ $t('ui.displayOrder') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="product in products.data" :key="product.id">
             <!-- Actions -->
             <td class="sticky-col first-col actions">
-              <button @click="toggleActive(product)" class="btn-icon" :title="product.is_active ? 'Deactivate' : 'Activate'">
+              <button @click="toggleActive(product)" class="btn-icon" :title="product.is_active ? $t('ui.deactivate') : $t('ui.activate')">
                 <i :class="['fas', product.is_active ? 'fa-eye-slash' : 'fa-eye']"></i>
               </button>
-              <button @click="editProduct(product)" class="btn-icon" title="Edit">
+              <button @click="editProduct(product)" class="btn-icon" :title="$t('common.edit')">
                 <i class="fas fa-edit"></i>
               </button>
-              <button @click="deleteProduct(product)" class="btn-icon btn-danger" title="Delete">
+              <button @click="deleteProduct(product)" class="btn-icon btn-danger" :title="$t('common.delete')">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -144,7 +144,7 @@
             <!-- Image -->
             <td>
               <img v-if="product.image" :src="product.image" :alt="product.title" class="product-image" @error="(e) => e.target.style.display = 'none'" />
-              <span v-else class="no-image">No Image</span>
+              <span v-else class="no-image">{{ $t('ui.noImage') }}</span>
             </td>
             <!-- SKU -->
             <td class="font-mono">{{ product.sku || '-' }}</td>
@@ -218,8 +218,8 @@
             <!-- Power -->
             <td v-for="i in 5" :key="'c-pwr' + i">{{ product['power' + i] || '-' }}</td>
             <td>{{ product.power_consumptions || product.powercomsumptions || '-' }}</td>
-            <td>{{ product.power_consumption_with_poe || product['PowerConsumption(withPoE)'] || '-' }}</td>
-            <td>{{ product.power_consumption_excluding_poe || product['PowerConsumption(ExcludingPoE)'] || '-' }}</td>
+            <td>{{ product.power_consumption_with_poe || product[$t('ui.powerConsumptionWithPoe')] || '-' }}</td>
+            <td>{{ product.power_consumption_excluding_poe || product[$t('ui.powerConsumptionExclPoe')] || '-' }}</td>
             <td>{{ product.poe_budget || product.PoEBudget || '-' }}</td>
             <!-- Dimensions & Diagrams -->
             <td>{{ product.dimensions || '-' }}</td>
@@ -228,17 +228,17 @@
             <!-- Status -->
             <td>
               <span :class="['status-badge', product.is_active ? 'active' : 'inactive']">
-                {{ product.is_active ? 'Active' : 'Inactive' }}
+                {{ product.is_active ? $t('labels.active') : $t('labels.inactive') }}
               </span>
             </td>
             <!-- Sort Order -->
             <td>{{ product.sort_order ?? 0 }}</td>
           </tr>
           <tr v-if="loading">
-            <td colspan="100" class="text-center">Loading...</td>
+            <td colspan="100" class="text-center">{{ $t('common.loading') }}</td>
           </tr>
           <tr v-if="!loading && products.data?.length === 0">
-            <td colspan="100" class="text-center">No products found</td>
+            <td colspan="100" class="text-center">{{ $t('ui.noProductsFound') }}</td>
           </tr>
         </tbody>
       </table>
@@ -247,11 +247,11 @@
     <!-- Pagination -->
     <div v-if="products.last_page > 1" class="pagination">
       <button @click="changePage(products.current_page - 1)" :disabled="products.current_page === 1" class="btn">
-        Previous
+        {{ $t('sales.previous') }}
       </button>
-      <span class="page-info">Page {{ products.current_page }} of {{ products.last_page }}</span>
+      <span class="page-info">{{ $t('nav.pages') }} {{ products.current_page }} {{ $t('sales.of') }} {{ products.last_page }}</span>
       <button @click="changePage(products.current_page + 1)" :disabled="products.current_page === products.last_page" class="btn">
-        Next
+        {{ $t('sales.next') }}
       </button>
     </div>
 
@@ -259,7 +259,7 @@
     <div v-if="showForm" class="modal" @click.self="closeForm">
       <div class="modal-content large">
         <div class="modal-header">
-          <h2>{{ isEditing ? 'Edit Product' : 'Create Product' }}</h2>
+          <h2>{{ isEditing ? $t('ui.editProduct') : $t('ui.createProduct') }}</h2>
           <button @click="closeForm" class="btn-close">&times;</button>
         </div>
         <div class="modal-body">
@@ -267,68 +267,68 @@
             <div class="form-grid">
               <!-- Basic Info -->
               <div class="form-group col-span-2">
-                <label>Title *</label>
+                <label>{{ $t('ui.title') }}</label>
                 <input v-model="form.title" type="text" required class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>Subtitle</label>
+                <label>{{ $t('ui.subheading') }}</label>
                 <input v-model="form.subtitle" type="text" class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>SKU</label>
+                <label>{{ $t('dashboard.sku') }}</label>
                 <input v-model="form.sku" type="text" class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>Category</label>
+                <label>{{ $t('dashboard.category') }}</label>
                 <input v-model="form.category" type="text" class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>Sub Category</label>
+                <label>{{ $t('dashboard.subcategory') }}</label>
                 <input v-model="form.sub_category" type="text" class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>Brand</label>
+                <label>{{ $t('ui.brand') }}</label>
                 <input v-model="form.brand" type="text" class="form-input" />
               </div>
 
               <div class="form-group">
-                <label>Module</label>
+                <label>{{ $t('ui.module') }}</label>
                 <input v-model="form.module" type="text" class="form-input" />
               </div>
 
               <!-- Categories Section -->
               <div class="form-section col-span-2">
                 <div class="section-header">
-                  <h3>Categories & Subcategories</h3>
+                  <h3>{{ $t('ui.categoriesSubcategories') }}</h3>
                   <button type="button" @click="addCategoryPair" class="btn btn-sm btn-primary">
-                    + Add Category
+                    {{ $t('ui.addCategory') }}
                   </button>
                 </div>
                 
                 <div v-if="form.categories.length === 0" class="no-categories">
-                  No categories added. Click "Add Category" to add one.
+                  {{ $t('ui.noCategoriesAddedClickAddCategoryToAddOne2') }}
                 </div>
 
                 <div class="category-pairs">
                   <div v-for="(catPair, index) in form.categories" :key="index" class="category-pair-row">
                     <div class="form-group">
-                      <label>Category</label>
+                      <label>{{ $t('dashboard.category') }}</label>
                       <select v-model="catPair.category_id" @change="onCategoryChange(index)" class="form-input">
-                        <option value="">Select Category</option>
+                        <option value="">{{ $t('ui.selectCategory') }}</option>
                         <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">
                           {{ cat.name }}
                         </option>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label>Subcategory</label>
+                      <label>{{ $t('dashboard.subcategory') }}</label>
                       <select v-model="catPair.sub_category_id" class="form-input" :disabled="!catPair.category_id">
-                        <option value="">Select Subcategory</option>
+                        <option value="">{{ $t('ui.selectSubcategory') }}</option>
                         <option v-for="sub in getSubcategoriesForCategory(catPair.category_id)" 
                             :key="sub.id" :value="sub.id">
                           {{ sub.name }}
@@ -343,21 +343,21 @@
               </div>
 
               <div class="form-group col-span-2">
-                <label>Image URL</label>
+                <label>{{ $t('ui.imageUrl') }}</label>
                 <input v-model="form.image" type="url" class="form-input" />
               </div>
 
               <div class="form-group col-span-2">
-                <label>Description</label>
+                <label>{{ $t('projectInvestment.description') }}</label>
                 <textarea v-model="form.descriptions" rows="4" class="form-input"></textarea>
               </div>
 
               <!-- Specifications -->
               <div class="form-section col-span-2">
-                <h3>Specifications</h3>
+                <h3>{{ $t('ui.specification') }}</h3>
                 <div class="form-grid">
                   <div v-for="i in 7" :key="'spec' + i" class="form-group">
-                    <label>Spec {{ i }}</label>
+                    <label>{{ $t('ui.specification') }} {{ i }}</label>
                     <input v-model="form['spec' + i]" type="text" class="form-input" />
                   </div>
                 </div>
@@ -365,10 +365,10 @@
 
               <!-- Features -->
               <div class="form-section col-span-2">
-                <h3>Features</h3>
+                <h3>{{ $t('labels.features') }}</h3>
                 <div class="form-grid">
                   <div v-for="i in 15" :key="'fitur' + i" class="form-group">
-                    <label>Feature {{ i }}</label>
+                    <label>{{ $t('labels.features') }} {{ i }}</label>
                     <input v-model="form['fitur' + i]" type="text" class="form-input" />
                   </div>
                 </div>
@@ -376,64 +376,64 @@
 
               <!-- Product Specifications -->
               <div class="form-section col-span-2">
-                <h3>Product Specifications</h3>
+                <h3>{{ $t('ui.productSpecifications') }}</h3>
                 <div class="form-grid">
                   <!-- Wireless Specs -->
                   <div class="form-group">
-                    <label>Wireless Standard</label>
-                    <input v-model="form.wirelessStandard" type="text" class="form-input" placeholder="e.g., 802.11ax" />
+                    <label>{{ $t('ui.wirelessStandard') }}</label>
+                    <input v-model="form.wirelessStandard" type="text" class="form-input" :placeholder="$t('ui.eG80211ax')" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream</label>
+                    <label>{{ $t('ui.wirelessStream') }}</label>
                     <input v-model="form.wirelessStream" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream 1</label>
+                    <label>{{ $t('ui.wirelessStream1') }}</label>
                     <input v-model="form.wirelessStream1" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream 2</label>
+                    <label>{{ $t('ui.wirelessStream2') }}</label>
                     <input v-model="form.wirelessStream2" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream 3</label>
+                    <label>{{ $t('ui.wirelessStream3') }}</label>
                     <input v-model="form.wirelessStream3" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream 4</label>
+                    <label>{{ $t('ui.wirelessStream4') }}</label>
                     <input v-model="form.wirelessStream4" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Wireless Stream 5</label>
+                    <label>{{ $t('ui.wirelessStream5') }}</label>
                     <input v-model="form.wirelessStream5" type="text" class="form-input" />
                   </div>
 
                   <!-- Controller Specs -->
                   <div class="form-group">
-                    <label>Manageable APs</label>
+                    <label>{{ $t('ui.manageableAps') }}</label>
                     <input v-model="form.manageableAps" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>AP Number</label>
+                    <label>{{ $t('ui.apNumber') }}</label>
                     <input v-model="form.APnumber" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Number of Clients</label>
+                    <label>{{ $t('ui.numberOfClients') }}</label>
                     <input v-model="form.numberOfClients" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Capacity</label>
+                    <label>{{ $t('ui.capacity') }}</label>
                     <input v-model="form.capacity" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>IP Rating</label>
-                    <input v-model="form.iprating" type="text" class="form-input" placeholder="e.g., IP67" />
+                    <label>{{ $t('ui.ipRating') }}</label>
+                    <input v-model="form.iprating" type="text" class="form-input" :placeholder="$t('ui.eGIp67')" />
                   </div>
 
                   <!-- Switch Specs -->
                   <div class="form-group">
-                    <label>Switching Capacity</label>
-                    <input v-model="form.switching" type="text" class="form-input" placeholder="e.g., 10 Gbps" />
+                    <label>{{ $t('ui.switchingCapacity') }}</label>
+                    <input v-model="form.switching" type="text" class="form-input" :placeholder="$t('ui.eG10Gbps')" />
                   </div>
                   <div class="form-group">
                     <label>Throughput</label>
@@ -442,156 +442,156 @@
 
                   <!-- Memory Specs -->
                   <div class="form-group">
-                    <label>Flash Memory</label>
-                    <input v-model="form.flashmemory" type="text" class="form-input" placeholder="e.g., 128MB" />
+                    <label>{{ $t('ui.flashMemory') }}</label>
+                    <input v-model="form.flashmemory" type="text" class="form-input" :placeholder="$t('ui.eG128mb')" />
                   </div>
                   <div class="form-group">
-                    <label>SDRAM Memory</label>
-                    <input v-model="form.sdrammemory" type="text" class="form-input" placeholder="e.g., 256MB" />
+                    <label>{{ $t('ui.sdramMemory') }}</label>
+                    <input v-model="form.sdrammemory" type="text" class="form-input" :placeholder="$t('ui.eG256mb')" />
                   </div>
 
                   <!-- Interface Specs -->
                   <div class="form-group">
-                    <label>Interface</label>
+                    <label>{{ $t('ui.interface') }}</label>
                     <input v-model="form.Interface" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Interface 1</label>
+                    <label>{{ $t('ui.interface1') }}</label>
                     <input v-model="form.Interface1" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Interface 2</label>
+                    <label>{{ $t('ui.interface2') }}</label>
                     <input v-model="form.Interface2" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Interface 3</label>
+                    <label>{{ $t('ui.interface3') }}</label>
                     <input v-model="form.Interface3" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Interface 4</label>
+                    <label>{{ $t('ui.interface4') }}</label>
                     <input v-model="form.Interface4" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Interface 5</label>
+                    <label>{{ $t('ui.interface5') }}</label>
                     <input v-model="form.Interface5" type="text" class="form-input" />
                   </div>
 
                   <!-- Antenna -->
                   <div class="form-group">
-                    <label>Antena</label>
+                    <label>{{ $t('ui.antenna') }}</label>
                     <input v-model="form.antena" type="text" class="form-input" />
                   </div>
 
                   <!-- Control Unit -->
                   <div class="form-group">
-                    <label>Control Unit</label>
+                    <label>{{ $t('ui.controlUnit') }}</label>
                     <input v-model="form.cu" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Control Unit 1</label>
+                    <label>{{ $t('ui.controlUnit1') }}</label>
                     <input v-model="form.cu1" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Control Unit 2</label>
+                    <label>{{ $t('ui.controlUnit2') }}</label>
                     <input v-model="form.cu2" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Control Unit 3</label>
+                    <label>{{ $t('ui.controlUnit3') }}</label>
                     <input v-model="form.cu3" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Control Unit 4</label>
+                    <label>{{ $t('ui.controlUnit4') }}</label>
                     <input v-model="form.cu4" type="text" class="form-input" />
                   </div>
 
                   <!-- Additional Interface -->
                   <div class="form-group">
-                    <label>Additional Interface 1</label>
+                    <label>{{ $t('ui.additionalInterface1') }}</label>
                     <input v-model="form.aditionalinterface1" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Additional Interface 2</label>
+                    <label>{{ $t('ui.additionalInterface2') }}</label>
                     <input v-model="form.aditionalinterface2" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Additional Interface 3</label>
+                    <label>{{ $t('ui.additionalInterface3') }}</label>
                     <input v-model="form.aditionalinterface3" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Additional Interface 4</label>
+                    <label>{{ $t('ui.additionalInterface4') }}</label>
                     <input v-model="form.aditionalinterface4" type="text" class="form-input" />
                   </div>
 
                   <!-- Network Specs -->
                   <div class="form-group">
-                    <label>MAC Address</label>
+                    <label>{{ $t('ui.macAddress') }}</label>
                     <input v-model="form.macaddress" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Routing Table</label>
+                    <label>{{ $t('ui.routingTable') }}</label>
                     <input v-model="form.routingtable" type="text" class="form-input" />
                   </div>
 
                   <!-- Environmental Specs -->
                   <div class="form-group">
-                    <label>Dustproof & Waterproof</label>
+                    <label>{{ $t('ui.dustAndWaterproof') }}</label>
                     <input v-model="form.dustproofwaterproof" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Noise</label>
-                    <input v-model="form.noise" type="text" class="form-input" placeholder="e.g., <30dB" />
+                    <label>{{ $t('ui.noise') }}</label>
+                    <input v-model="form.noise" type="text" class="form-input" :placeholder="$t('ui.eG30db')" />
                   </div>
                   <div class="form-group">
                     <label>MTBF</label>
-                    <input v-model="form.mtbf" type="text" class="form-input" placeholder="Mean Time Between Failures" />
+                    <input v-model="form.mtbf" type="text" class="form-input" :placeholder="$t('ui.meanTimeBetweenFailures')" />
                   </div>
 
                   <!-- Temperature & Humidity -->
                   <div class="form-group">
-                    <label>Operating Temperature</label>
-                    <input v-model="form.operatingtemperature" type="text" class="form-input" placeholder="e.g., 0°C to 40°C" />
+                    <label>{{ $t('ui.operatingTemp') }}</label>
+                    <input v-model="form.operatingtemperature" type="text" class="form-input" :placeholder="$t('ui.eG0CTo40C')" />
                   </div>
                   <div class="form-group">
-                    <label>Storage Temperature</label>
-                    <input v-model="form.storagetemperature" type="text" class="form-input" placeholder="e.g., -20°C to 70°C" />
+                    <label>{{ $t('ui.storageTemp') }}</label>
+                    <input v-model="form.storagetemperature" type="text" class="form-input" :placeholder="$t('ui.eG20CTo70C')" />
                   </div>
                   <div class="form-group">
-                    <label>Operating Humidity</label>
-                    <input v-model="form.operatinghumidity" type="text" class="form-input" placeholder="e.g., 10% to 90%" />
+                    <label>{{ $t('ui.operatingHumidity') }}</label>
+                    <input v-model="form.operatinghumidity" type="text" class="form-input" :placeholder="$t('ui.eG10To90')" />
                   </div>
 
                   <!-- Power Specs -->
                   <div class="form-group">
-                    <label>Power 1</label>
-                    <input v-model="form.power1" type="text" class="form-input" placeholder="e.g., DC 12V" />
+                    <label>{{ $t('ui.power1') }}</label>
+                    <input v-model="form.power1" type="text" class="form-input" :placeholder="$t('ui.eGDc12v')" />
                   </div>
                   <div class="form-group">
-                    <label>Power 2</label>
-                    <input v-model="form.power2" type="text" class="form-input" placeholder="e.g., PoE 802.3af" />
+                    <label>{{ $t('ui.power2') }}</label>
+                    <input v-model="form.power2" type="text" class="form-input" :placeholder="$t('ui.eGPoe8023af')" />
                   </div>
                   <div class="form-group">
-                    <label>Power 3</label>
+                    <label>{{ $t('ui.power3') }}</label>
                     <input v-model="form.power3" type="text" class="form-input" />
                   </div>
                   <div class="form-group">
-                    <label>Power Consumptions</label>
-                    <input v-model="form.powercomsumptions" type="text" class="form-input" placeholder="e.g., Max 25W" />
+                    <label>{{ $t('ui.powerConsumption') }}</label>
+                    <input v-model="form.powercomsumptions" type="text" class="form-input" :placeholder="$t('ui.eGMax25w')" />
                   </div>
 
                   <!-- Physical Specs -->
                   <div class="form-group col-span-2">
-                    <label>Dimensions</label>
-                    <input v-model="form.dimensions" type="text" class="form-input" placeholder="e.g., 440 x 220 x 44mm" />
+                    <label>{{ $t('ui.dimensions') }}</label>
+                    <input v-model="form.dimensions" type="text" class="form-input" :placeholder="$t('ui.eG440X220X44mm')" />
                   </div>
 
                   <!-- Diagram -->
                   <div class="form-group">
                     <label>Diagram</label>
-                    <input v-model="form.diagram" type="text" class="form-input" placeholder="Diagram filename (without extension)" />
+                    <input v-model="form.diagram" type="text" class="form-input" :placeholder="$t('ui.diagramFilenameWithoutExtension')" />
                   </div>
                   <div class="form-group">
-                    <label>Network Diagram</label>
-                    <input v-model="form.networkDIagram" type="text" class="form-input" placeholder="e.g., gpon, xgspon, switch" />
+                    <label>{{ $t('ui.networkDiagram') }}</label>
+                    <input v-model="form.networkDIagram" type="text" class="form-input" :placeholder="$t('ui.eGGponXgsponSwitch')" />
                   </div>
                 </div>
               </div>
@@ -600,20 +600,20 @@
               <div class="form-group">
                 <label>
                   <input v-model="form.is_active" type="checkbox" />
-                  Active
+                  {{ $t('labels.active') }}
                 </label>
               </div>
 
               <div class="form-group">
-                <label>Sort Order</label>
+                <label>{{ $t('ui.displayOrder') }}</label>
                 <input v-model.number="form.sort_order" type="number" class="form-input" />
               </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" @click="closeForm" class="btn">Cancel</button>
+              <button type="button" @click="closeForm" class="btn">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">
-                {{ saving ? 'Saving...' : 'Save' }}
+                {{ saving ? $t('sales.saving') : $t('common.save') }}
               </button>
             </div>
           </form>
@@ -624,6 +624,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, reactive, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -750,15 +752,15 @@ for (let i = 1; i <= 20; i++) form[`fitur${i}`] = '';
 const syncingFromProducts = ref(false);
 
 async function syncFromProducts() {
-  if (!confirm('Sync semua data dari Products (/dashboard/products) ke Public Products?')) return;
+  if (!confirm('Sinkronkan semua data dari Produk (/dashboard/products) ke Produk Publik?')) return;
   syncingFromProducts.value = true;
   try {
     const res = await api.post('/public-products/sync-from-products');
-    alert(res.data.message || 'Data berhasil disinkronkan dari Products.');
+    alert(res.data.message || uiText("Data berhasil disinkronkan dari Produk."));
     await fetchProducts(products.value.current_page || 1);
   } catch (err) {
     console.error('Failed to sync from products:', err);
-    alert(err.response?.data?.message || 'Gagal melakukan sinkronisasi dari Products');
+    alert(err.response?.data?.message || uiText("Gagal melakukan sinkronisasi dari Produk"));
   } finally {
     syncingFromProducts.value = false;
   }
@@ -785,7 +787,7 @@ async function fetchProducts(page = 1) {
   } catch (error) {
     console.error('Error fetching products:', error);
     console.error('Error response:', error.response);
-    alert('Failed to fetch products');
+    alert(uiText("Gagal memuat produk"));
   } finally {
     loading.value = false;
   }
@@ -936,10 +938,10 @@ async function saveProduct() {
     
     if (isEditing.value) {
       await api.put(`/public-products/${form.id}`, payload);
-      alert('Product updated successfully');
+      alert(uiText("Produk berhasil diperbarui"));
     } else {
       await api.post('/public-products', payload);
-      alert('Product created successfully');
+      alert(uiText("Produk berhasil dibuat"));
     }
     closeForm();
     fetchProducts(products.value.current_page);
@@ -947,7 +949,7 @@ async function saveProduct() {
     fetchBrands();
   } catch (error) {
     console.error('Error saving product:', error);
-    alert(error.response?.data?.message || 'Failed to save product');
+    alert(error.response?.data?.message || uiText("Gagal menyimpan produk"));
   } finally {
     saving.value = false;
   }
@@ -959,20 +961,20 @@ async function toggleActive(product) {
     product.is_active = !product.is_active;
   } catch (error) {
     console.error('Error toggling status:', error);
-    alert('Failed to update product status');
+    alert(uiText("Gagal memperbarui status produk"));
   }
 }
 
 async function deleteProduct(product) {
-  if (!confirm(`Are you sure you want to delete "${product.title}"?`)) return;
+  if (!confirm(uiText('ui.confirmDeleteNamed', { p0: product.title }))) return;
 
   try {
     await api.delete(`/public-products/${product.id}`);
-    alert('Product deleted successfully');
+    alert(uiText("Produk berhasil dihapus"));
     fetchProducts(products.value.current_page);
   } catch (error) {
     console.error('Error deleting product:', error);
-    alert('Failed to delete product');
+    alert(uiText("Gagal menghapus produk"));
   }
 }
 
@@ -1006,10 +1008,10 @@ async function handleFileImport(event) {
     });
 
     const result = response.data;
-    let message = `Import completed!\n\nImported: ${result.imported}\nUpdated: ${result.updated}`;
+    let message = uiText('ui.importSummary', { p0: result.imported, p1: result.updated });
     
     if (result.errors && result.errors.length > 0) {
-      message += `\n\nErrors (${result.errors.length}):`;
+      message += `\n\nKesalahan (${result.errors.length}):`;
       result.errors.slice(0, 5).forEach((err, idx) => {
         message += `\n${idx + 1}. ${err.row}: ${err.error}`;
       });
@@ -1024,7 +1026,7 @@ async function handleFileImport(event) {
     fetchBrands();
   } catch (error) {
     console.error('Error importing products:', error);
-    alert(error.response?.data?.message || 'Failed to import products');
+    alert(error.response?.data?.message || uiText("Gagal mengimpor produk"));
   } finally {
     // Reset file input
     event.target.value = '';

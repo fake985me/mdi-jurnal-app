@@ -16,7 +16,7 @@
         <div :class="settings.layout === 'image-right' ? 'md:order-2' : ''">
           <img 
             :src="content.image" 
-            :alt="content.title || 'Content image'"
+            :alt="content.title || $t('ui.contentImage')"
             class="w-full rounded-lg shadow-md"
           />
         </div>
@@ -30,7 +30,7 @@
         <img 
           v-if="content.image && settings.layout === 'image-top'"
           :src="content.image" 
-          :alt="content.title || 'Content image'"
+          :alt="content.title || $t('ui.contentImage')"
           class="w-full rounded-lg shadow-md mb-8"
         />
         <div v-html="content.body" class="prose prose-lg max-w-none"></div>

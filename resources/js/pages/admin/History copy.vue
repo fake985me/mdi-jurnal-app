@@ -2,8 +2,8 @@
   <div class="min-h-screen bg-gray-50 p-6">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Histori Transaksi</h1>
-      <p class="text-gray-600">Lihat semua transaksi penjualan dan pembelian</p>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $t('pageTitles.History') }}</h1>
+      <p class="text-gray-600">{{ $t('ui.viewAllSalesAndPurchaseTransactions') }}</p>
     </div>
 
     <!-- Stats Cards -->
@@ -11,9 +11,9 @@
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Total Penjualan</p>
+            <p class="text-sm text-gray-600 mb-1">{{ $t('ui.totalSales') }}</p>
             <p class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.sales.total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ stats.sales.count }} transaksi</p>
+            <p class="text-xs text-gray-500 mt-1">{{ stats.sales.count }} {{ $t('ui.transactions') }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <i class="fas fa-shopping-cart text-blue-600"></i>
@@ -24,9 +24,9 @@
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Total Pembelian</p>
+            <p class="text-sm text-gray-600 mb-1">{{ $t('ui.totalPurchases') }}</p>
             <p class="text-2xl font-bold text-green-600">{{ formatCurrency(stats.purchases.total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ stats.purchases.count}} transaksi</p>
+            <p class="text-xs text-gray-500 mt-1">{{ stats.purchases.count}} {{ $t('ui.transactions') }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
             <i class="fas fa-box text-green-600"></i>
@@ -37,11 +37,11 @@
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Selisih (Net)</p>
+            <p class="text-sm text-gray-600 mb-1">{{ $t('ui.netDifference') }}</p>
             <p class="text-2xl font-bold" :class="stats.net >= 0 ? 'text-emerald-600' : 'text-red-600'">
               {{ formatCurrency(stats.net) }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">Bulan ini</p>
+            <p class="text-xs text-gray-500 mt-1">{{ $t('ui.thisMonth2') }}</p>
           </div>
           <div class="w-12 h-12 rounded-lg flex items-center justify-center" 
                :class="stats.net >= 0 ? 'bg-emerald-100' : 'bg-red-100'">
@@ -55,7 +55,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
       <!-- Tab Headers -->
       <div class="border-b border-gray-200">
-        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+        <nav class="flex space-x-8 px-6" :aria-label="$t('ui.tabs')">
           <button
             v-for="tab in tabs"
             :key="tab.key"
@@ -68,7 +68,7 @@
             ]"
           >
             <i :class="tab.icon" class="mr-2"></i>
-            {{ tab.label }}
+            {{ $ui(tab.label) }}
             <span v-if="tab.count !== undefined" 
                   class="ml-2 py-0.5 px-2 rounded-full text-xs"
                   :class="activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'">
@@ -82,27 +82,27 @@
       <div class="p-6 border-b border-gray-200 bg-gray-50">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('projectInvestment.materials.status') }}</label>
             <select v-model="filters.status" @change="fetchData" 
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-              <option value="">Semua Status</option>
-              <option v-if="activeTab === 'sales'" value="pending">Pending</option>
-              <option v-if="activeTab === 'sales'" value="completed">Completed</option>
-              <option v-if="activeTab === 'sales'" value="cancelled">Cancelled</option>
-              <option v-if="activeTab === 'purchases'" value="unpaid">Unpaid</option>
-              <option v-if="activeTab === 'purchases'" value="paid">Paid</option>
-              <option v-if="activeTab === 'purchases'" value="cancelled">Cancelled</option>
+              <option value="">{{ $t('sales.allStatus') }}</option>
+              <option v-if="activeTab === 'sales'" value="pending">{{ $t('labels.pending') }}</option>
+              <option v-if="activeTab === 'sales'" value="completed">{{ $t('labels.completed') }}</option>
+              <option v-if="activeTab === 'sales'" value="cancelled">{{ $t('labels.cancelled') }}</option>
+              <option v-if="activeTab === 'purchases'" value="unpaid">{{ $t('labels.unpaid') }}</option>
+              <option v-if="activeTab === 'purchases'" value="paid">{{ $t('labels.paid') }}</option>
+              <option v-if="activeTab === 'purchases'" value="cancelled">{{ $t('labels.cancelled') }}</option>
             </select>
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.fromDate') }}</label>
             <input type="date" v-model="filters.date_from" @change="fetchData"
                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.toDate') }}</label>
             <input type="date" v-model="filters.date_to" @change="fetchData"
                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
           </div>
@@ -110,7 +110,7 @@
           <div class="flex items-end">
             <button @click="resetFilters"
                     class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-              <i class="fas fa-redo mr-2"></i>Reset Filter
+              <i class="fas fa-redo mr-2"></i>{{ $t('ui.resetFilter') }}
             </button>
           </div>
         </div>
@@ -119,14 +119,14 @@
       <!-- Loading State -->
       <div v-if="loading" class="p-12 text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-indigo-600"></div>
-        <p class="mt-4 text-gray-600">Memuat data...</p>
+        <p class="mt-4 text-gray-600">{{ $t('ui.loadingData') }}</p>
       </div>
 
       <!-- Sales Tab Content -->
       <div v-else-if="activeTab === 'sales'" class="p-6">
         <div v-if="salesData.length === 0" class="text-center py-12">
           <i class="fas fa-shopping-cart text-gray-300 text-6xl mb-4"></i>
-          <p class="text-gray-600">Belum ada data penjualan</p>
+          <p class="text-gray-600">{{ $t('ui.noSalesDataYet') }}</p>
         </div>
 
         <div v-else class="space-y-4">
@@ -147,29 +147,29 @@
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                   <div>
-                    <p class="text-gray-500">Tanggal</p>
+                    <p class="text-gray-500">{{ $t('sales.date') }}</p>
                     <p class="font-medium">{{ formatDate(sale.sale_date) }}</p>
                   </div>
                   <div>
-                    <p class="text-gray-500">Total</p>
+                    <p class="text-gray-500">{{ $t('sales.total') }}</p>
                     <p class="font-medium text-blue-600">{{ formatCurrency(sale.total_amount) }}</p>
                   </div>
                   <div>
-                    <p class="text-gray-500">Items</p>
+                    <p class="text-gray-500">{{ $t('ui.items') }}</p>
                     <div class="text-sm">
                       <template v-if="sale.items && sale.items.length > 0">
                         <p v-for="(item, idx) in sale.items.slice(0, 3)" :key="idx" class="font-medium">
-                          {{ item.product?.title || item.product_name || 'Produk' }} x {{ item.quantity }}
+                          {{ item.product?.title || item.product_name || $t('sales.product') }} x {{ item.quantity }}
                         </p>
-                        <p v-if="sale.items.length > 3" class="text-gray-400">+{{ sale.items.length - 3 }} lainnya</p>
+                        <p v-if="sale.items.length > 3" class="text-gray-400">+{{ sale.items.length - 3 }} {{ $t('ui.more') }}</p>
                       </template>
-                      <p v-else class="font-medium">{{ sale.items_count || 0 }} produk</p>
+                      <p v-else class="font-medium">{{ sale.items_count || 0 }} {{ $t('ui.products') }}</p>
                     </div>
                   </div>
                   <div>
-                    <p class="text-gray-500">Status</p>
+                    <p class="text-gray-500">{{ $t('projectInvestment.materials.status') }}</p>
                     <span :class="getStatusClass(sale.status)">
-                      {{ sale.status }}
+                      {{ $label(sale.status) }}
                     </span>
                   </div>
                 </div>
@@ -185,7 +185,7 @@
       <div v-else-if="activeTab === 'purchases'" class="p-6">
         <div v-if="purchasesData.length === 0" class="text-center py-12">
           <i class="fas fa-box text-gray-300 text-6xl mb-4"></i>
-          <p class="text-gray-600">Belum ada data pembelian</p>
+          <p class="text-gray-600">{{ $t('ui.noPurchaseDataYet') }}</p>
         </div>
 
         <div v-else class="space-y-4">
@@ -206,29 +206,29 @@
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                   <div>
-                    <p class="text-gray-500">Tanggal</p>
+                    <p class="text-gray-500">{{ $t('sales.date') }}</p>
                     <p class="font-medium">{{ formatDate(purchase.order_date) }}</p>
                   </div>
                   <div>
-                    <p class="text-gray-500">Total</p>
+                    <p class="text-gray-500">{{ $t('sales.total') }}</p>
                     <p class="font-medium text-green-600">{{ formatCurrency(purchase.total_amount) }}</p>
                   </div>
                   <div>
-                    <p class="text-gray-500">Items</p>
+                    <p class="text-gray-500">{{ $t('ui.items') }}</p>
                     <div class="text-sm">
                       <template v-if="purchase.items && purchase.items.length > 0">
                         <p v-for="(item, idx) in purchase.items.slice(0, 3)" :key="idx" class="font-medium">
-                          {{ item.product?.title || item.product_name || 'Produk' }} x {{ item.quantity }}
+                          {{ item.product?.title || item.product_name || $t('sales.product') }} x {{ item.quantity }}
                         </p>
-                        <p v-if="purchase.items.length > 3" class="text-gray-400">+{{ purchase.items.length - 3 }} lainnya</p>
+                        <p v-if="purchase.items.length > 3" class="text-gray-400">+{{ purchase.items.length - 3 }} {{ $t('ui.more') }}</p>
                       </template>
-                      <p v-else class="font-medium">{{ purchase.items_count || 0 }} produk</p>
+                      <p v-else class="font-medium">{{ purchase.items_count || 0 }} {{ $t('ui.products') }}</p>
                     </div>
                   </div>
                   <div>
-                    <p class="text-gray-500">Status</p>
+                    <p class="text-gray-500">{{ $t('projectInvestment.materials.status') }}</p>
                     <span :class="getStatusClass(purchase.status)">
-                      {{ purchase.status }}
+                      {{ $label(purchase.status) }}
                     </span>
                   </div>
                 </div>
@@ -243,7 +243,7 @@
       <!-- Pagination -->
       <div v-if="!loading && meta.total > 0" class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
         <div class="text-sm text-gray-600">
-          Menampilkan {{ salesData.length || purchasesData.length }} dari {{ meta.total }} data
+          {{ $t('sales.showing') }} {{ salesData.length || purchasesData.length }} {{ $t('sales.of') }} {{ meta.total }} data
         </div>
         
         <div class="flex space-x-2">
@@ -254,7 +254,7 @@
           </button>
           
           <span class="px-4 py-2  text-sm">
-            Halaman {{ meta.current_page }} dari {{ meta.last_page }}
+            {{ $t('nav.pages') }} {{ meta.current_page }} {{ $t('sales.of') }} {{ meta.last_page }}
           </span>
           
           <button @click="changePage(meta.current_page + 1)" 
@@ -269,6 +269,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
@@ -300,13 +302,13 @@ const filters = ref({
 const tabs = computed(() => [
   { 
     key: 'sales', 
-    label: 'Penjualan', 
+    label: uiText("Penjualan"),
     icon: 'fas fa-shopping-cart',
     count: salesData.value.length 
   },
   { 
     key: 'purchases', 
-    label: 'Pembelian', 
+    label: uiText("Pembelian"),
     icon: 'fas fa-box',
     count: purchasesData.value.length 
   }
@@ -400,7 +402,7 @@ const viewPurchaseDetail = (purchase) => {
 
 // Formatters
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
+  return new Intl.NumberFormat(uiLocale(), {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0
@@ -408,7 +410,7 @@ const formatCurrency = (value) => {
 }
 
 const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('id-ID', {
+  return new Date(date).toLocaleDateString(uiLocale(), {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

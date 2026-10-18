@@ -8,30 +8,30 @@
         </button>
         <div>
           <p class="text-xs text-indigo-600 font-medium cursor-pointer hover:underline" @click="$router.push({ name: 'Sales' })">
-            Sales
+            {{ $t('labels.sale') }}
           </p>
           <h2 class="text-2xl font-bold text-gray-900">
-            {{ isViewing ? "View Sales Order" : isEditing ? "Edit Sales Order" : "Create Sales Order" }}
+            {{ isViewing ? $t('ui.viewSalesOrder') : isEditing ? $t('ui.editSalesOrder') : $t('ui.createSalesOrder') }}
           </h2>
         </div>
       </div>
       <div class="flex items-center gap-4">
         <select v-if="!isViewing" v-model="form.status" class="input w-40 text-sm">
-          <option value="pending">Sales Order</option>
-          <option value="completed">Completed</option>
+          <option value="pending">{{ $t('sales.salesOrders') }}</option>
+          <option value="completed">{{ $t('labels.completed') }}</option>
         </select>
         <!-- Export & Delivery buttons shown only when editing -->
         <template v-if="isEditing && viewingSale">
-          <button type="button" @click="exportExcel(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 text-sm font-medium transition-colors">Excel
+          <button type="button" @click="exportExcel(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 text-sm font-medium transition-colors">{{ $t('sales.excel') }}
           </button>
-          <button type="button" @click="downloadPdf(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-sm transition-all">PDF
+          <button type="button" @click="downloadPdf(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 bg-linear-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-sm transition-all">{{ $t('sales.pdf') }}
           </button>
           <button type="button" @click=" printPdf(viewingSale.id, viewingSale.invoice_number)" :disabled="printing"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50">
-            {{ printing ? "Memuat PDF..." : "Print PDF" }}
+            class="px-4 py-2 bg-linear-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 text-sm font-medium disabled:opacity-50">
+            {{ printing ? $t('ui.loadingPdf') : $t('ui.printPdf') }}
           </button>
           <button v-if=" !isViewing && !viewingSale.delivery && ['pending', 'completed'].includes( viewingSale.status, )" type="button" @click="openDeliveryModal"
-            class="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium shadow-sm transition-all">Delivery
+            class="px-4 py-2 bg-linear-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium shadow-sm transition-all">{{ $t('sales.delivery') }}
           </button>
         </template>
         <p class="text-2xl font-bold text-red-600">
@@ -49,20 +49,20 @@
         <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; margin-top: -12%;">
           <div>
             <!-- Your Company Logo (Optional) -->
-            <img src="/public/assets/static/kop/header mdi kiri.png" alt="Company Logo" class="flex items-start justify-between relative w-28 top-6" style="margin-left: 0px; margin-right: 12%" />
-            <img src="/public/assets/static/kop/header mdi kanan.png" alt="Company Logo" class="flex items-end justify-between relative w-72" style="margin-left: 340px; margin-right: 0px; top: -24px;"/>
+            <img src="/public/assets/static/kop/header mdi kiri.png" :alt="$t('ui.companyLogo')" class="flex items-start justify-between relative w-28 top-6" style="margin-left: 0px; margin-right: 12%" />
+            <img src="/public/assets/static/kop/header mdi kanan.png" :alt="$t('ui.companyLogo')" class="flex items-end justify-between relative w-72" style="margin-left: 340px; margin-right: 0px; top: -24px;"/>
           </div>
         </div>
 
         <p v-if="isViewing && error" class="rounded-lg bg-red-50 p-1 text-sm text-red-700">
-          {{ error }}
+          {{ $ui(error) }}
         </p>
         <!-- Invoice Detail Preview -->
         <div v-if="viewingSale">
           <!-- Customer & Sale Info -->
           <div style="display: grid; grid-template-columns: 2fr 2fr; gap: 185px; margin-bottom: 24px;">
             <div>
-              <p style="font-weight: bold; font-size: 16px">To :</p>
+              <p style="font-weight: bold; font-size: 16px">{{ $t('ui.to2') }}</p>
               <p v-if="viewingSale.customer_name" style="font-size: 14px; margin-left: 40px; text-decoration-line: underline; font-style: italic;">{{ viewingSale.customer_name }}</p>
               <p v-if="viewingSale.customer_address" style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ viewingSale.customer_address }}</p>
               <p v-if="viewingSale.customer_phone" style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ viewingSale.customer_phone }}</p>
@@ -71,17 +71,17 @@
             <div>
               <div class="space-y-1 text-[12px] p-3.5" style="background-color: #f3f4f6; padding-top: 12px;">
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Invoice No :
+                  <span class="text-gray-500">{{ $t('ui.invoiceNo') }}
                     {{ viewingSale.invoice_number }}
                   </span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">Date :
+                  <span class="text-gray-500">{{ $t('ui.date') }}
                     {{formatDateLong(viewingSale.sale_date,)}}
                   </span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500">PO Referensi :
+                  <span class="text-gray-500">{{ $t('ui.referencePo2') }}
                     {{ viewingSale.po_number || "-" }}
                   </span>
                 </div>
@@ -95,19 +95,19 @@
               <thead>
                 <tr class="bg-blue-300 border-b border-gray-200">
                   <th class="px-5 py-3 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    Product
+                    {{ $t('sales.product') }}
                   </th>
                   <th class="px-5 py-3 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    Description
+                    {{ $t('projectInvestment.description') }}
                   </th>
                   <th class="px-5 py-3 text-center text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    Qty
+                    {{ $t('sales.quantity') }}
                   </th>
                   <th class="px-5 py-3 text-right text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    Unit Price
+                    {{ $t('ui.unitPrice') }}
                   </th>
                   <th class="px-5 py-3 text-right text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    Amount
+                    {{ $t('ui.amount') }}
                   </th>
                 </tr>
               </thead>
@@ -115,7 +115,7 @@
                 <tr v-for="item in viewingSale.items" :key="item.id" class="hover:bg-gray-50 transition-colors">
                   <td class="px-5 py-4">
                     <span class="text-[11px] font-medium text-indigo-700">
-                      {{item.product?.title || "Unknown Product"}}
+                      {{item.product?.title || $t('ui.unknownProduct')}}
                     </span>
                   </td>
                   <td class="px-5 py-4">
@@ -144,11 +144,11 @@
           <div class="flex justify-end">
             <div class="w-72 space-y-2">
               <div class="flex justify-between items-center py-1">
-                <span class="text-[12px] font-semibold text-gray-700">Subtotal</span>
+                <span class="text-[12px] font-semibold text-gray-700">{{ $t('sales.subtotal') }}</span>
                 <span class="text-[12px] font-bold text-gray-900">Rp.{{ formatPrice(calcViewSubtotal()) }}</span>
               </div>
               <div v-if="viewingSale.discount_amount > 0" class="flex justify-between items-center py-1 text-[12px]">
-                <span class="text-gray-500">Discount</span>
+                <span class="text-gray-500">{{ $t('sales.discount') }}</span>
                 <span class="text-red-600">- Rp.{{formatPrice(viewingSale.discount_amount)}}</span>
               </div>
               <div v-if="viewingSale.tax_type"
@@ -157,7 +157,7 @@
                 <span class="text-amber-800 font-semibold">+ Rp.{{formatPrice(viewingSale.tax_amount)}}</span>
               </div>
               <div class="flex justify-between items-center py-2 border-t border-gray-200">
-                <span class="text-[14px] font-bold text-gray-900">Grand Total</span>
+                <span class="text-[14px] font-bold text-gray-900">{{ $t('sales.grandTotal') }}</span>
                 <span class="text-[14px] font-bold text-gray-900">Rp.{{formatPrice(viewingSale.grand_total || viewingSale.total_amount,)}}</span>
               </div>
             </div>
@@ -166,17 +166,17 @@
           <!-- Notes / Payment Terms -->
           <div class="mb-8">
             <p class="text-md font-semibold text-gray-700 mb-2">
-              Notes:
+              {{ $t('ui.note') }}
             </p>
             <textarea id="invoiceNotes"
               class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-400 h-24 text-sm resize-y">
-          Please make payment within 30 days. Thank you for your business!</textarea>
+          {{ $t('ui.pleaseMakePaymentWithin30DaysThankYouForYourBusiness') }}</textarea>
           </div>
 
           <!-- Last Updated -->
           <div class="text-xs text-indigo-600 underline mt-3">
-            Last updated by
-            {{ viewingSale.user?.name || "System" }} on
+            {{ $t('ui.lastUpdatedBy') }}
+            {{ viewingSale.user?.name || $t('ui.system') }} {{ $t('ui.on') }}
             {{ formatDateTimeLong(viewingSale.updated_at) }}
           </div>
         </div>
@@ -184,7 +184,7 @@
     </div>
 
     <p v-if="isViewing && error" class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-      {{ error }}
+      {{ $ui(error) }}
     </p>
     <!-- Invoice Detail Preview -->
     <div v-if="isViewing && viewingSale" class="card p-6 border-l-4 border-indigo-500">
@@ -194,7 +194,7 @@
             {{ viewingSale.invoice_number }}
           </h3>
           <div class="flex items-center gap-3 mt-1">
-            <span :class="getStatusBadgeClass(viewingSale.status)">{{ viewingSale.status }}</span>
+            <span :class="getStatusBadgeClass(viewingSale.status)">{{ $label(viewingSale.status) }}</span>
             <span class="text-sm text-gray-500">{{
               formatDateLong(viewingSale.sale_date)
             }}</span>
@@ -215,7 +215,7 @@
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
           <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Customer
+            {{ $t('sales.customer') }}
           </h4>
           <p class="text-base font-semibold text-gray-900">
             {{
@@ -238,35 +238,35 @@
         </div>
         <div>
           <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Sale Details
+            {{ $t('ui.saleDetails') }}
           </h4>
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-500">Invoice</span>
+              <span class="text-gray-500">{{ $t('sales.invoice') }}</span>
               <span class="font-medium text-gray-900">{{
                 viewingSale.invoice_number
               }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">PO Referensi</span>
+              <span class="text-gray-500">{{ $t('ui.referencePo') }}</span>
               <span class="font-medium text-gray-900">{{
                 viewingSale.po_number || "-"
               }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">Date</span>
+              <span class="text-gray-500">{{ $t('sales.date') }}</span>
               <span class="font-medium text-gray-900">{{
                 formatDateLong(viewingSale.sale_date)
               }}</span>
             </div>
             <div v-if="viewingSale.warehouse" class="flex justify-between">
-              <span class="text-gray-500">Warehouse</span>
+              <span class="text-gray-500">{{ $t('nav.warehouses') }}</span>
               <span class="font-medium text-gray-900">{{
                 viewingSale.warehouse.name
               }}</span>
             </div>
             <div v-if="viewingSale.sales_person" class="flex justify-between">
-              <span class="text-gray-500">Sales Person</span>
+              <span class="text-gray-500">{{ $t('labels.salesperson') }}</span>
               <span class="font-medium text-gray-900">{{
                 viewingSale.sales_person?.name || "—"
               }}</span>
@@ -281,22 +281,22 @@
           <thead>
             <tr class="bg-gray-50 border-b border-gray-200">
               <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Product
+                {{ $t('sales.product') }}
               </th>
               <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Description
+                {{ $t('projectInvestment.description') }}
               </th>
               <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Qty
+                {{ $t('sales.quantity') }}
               </th>
               <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Unit Price
+                {{ $t('ui.unitPrice') }}
               </th>
               <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Tax
+                {{ $t('sales.tax') }}
               </th>
               <th class="px-5 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Amount
+                {{ $t('ui.amount') }}
               </th>
             </tr>
           </thead>
@@ -304,7 +304,7 @@
             <tr v-for="item in viewingSale.items" :key="item.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-5 py-4">
                 <span class="text-sm font-medium text-indigo-700">{{
-                  item.product?.title || "Unknown Product"
+                  item.product?.title || $t('ui.unknownProduct')
                 }}</span>
               </td>
               <td class="px-5 py-4">
@@ -343,11 +343,11 @@
       <div class="flex justify-end">
         <div class="w-72 space-y-2">
           <div class="flex justify-between items-center py-1">
-            <span class="text-sm font-semibold text-gray-700">Subtotal</span>
+            <span class="text-sm font-semibold text-gray-700">{{ $t('sales.subtotal') }}</span>
             <span class="text-sm font-bold text-gray-900">Rp. {{ formatPrice(calcViewSubtotal()) }}</span>
           </div>
           <div v-if="viewingSale.discount_amount > 0" class="flex justify-between items-center py-1 text-sm">
-            <span class="text-gray-500">Discount</span>
+            <span class="text-gray-500">{{ $t('sales.discount') }}</span>
             <span class="text-red-600">- Rp.
               {{ formatPrice(viewingSale.discount_amount) }}</span>
           </div>
@@ -360,7 +360,7 @@
               {{ formatPrice(viewingSale.tax_amount) }}</span>
           </div>
           <div class="flex justify-between items-center py-2 border-t border-gray-200">
-            <span class="text-base font-bold text-gray-900">Grand Total</span>
+            <span class="text-base font-bold text-gray-900">{{ $t('sales.grandTotal') }}</span>
             <span class="text-base font-bold text-gray-900">Rp.
               {{
                 formatPrice(
@@ -370,7 +370,7 @@
               }}</span>
           </div>
           <div class="flex justify-between items-center py-3 border-t-2 border-gray-300">
-            <span class="text-base font-bold text-gray-900">Balance due</span>
+            <span class="text-base font-bold text-gray-900">{{ $t('ui.balanceDue') }}</span>
             <span class="text-lg font-bold" :class="viewingSaleBalance > 0
                 ? 'text-red-600'
                 : 'text-green-600'
@@ -383,7 +383,7 @@
 
       <!-- Last Updated -->
       <div class="text-xs text-indigo-600 underline mt-3">
-        Last updated by {{ viewingSale.user?.name || "System" }} on
+        {{ $t('ui.lastUpdatedBy') }} {{ viewingSale.user?.name || $t('ui.system') }} {{ $t('ui.on') }}
         {{ formatDateTimeLong(viewingSale.updated_at) }}
       </div>
     </div>
@@ -394,10 +394,10 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Customer -->
           <div>
-            <label class="block text-sm font-semibold text-indigo-700 mb-1">Customer *</label>
+            <label class="block text-sm font-semibold text-indigo-700 mb-1">{{ $t('ui.customer') }}</label>
             <div class="flex gap-2">
               <select v-model="form.customer_id" @change="onCustomerSelect" class="input flex-1">
-                <option value="">Choose customer</option>
+                <option value="">{{ $t('ui.chooseCustomer') }}</option>
                 <option v-for="c in customerList" :key="c.id" :value="c.id">
                   {{
                     c.company
@@ -414,13 +414,13 @@
           </div>
           <!-- Email -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-            <input v-model="form.customer_email" type="email" placeholder="Enter email" class="input" />
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('labels.email') }}</label>
+            <input v-model="form.customer_email" type="email" :placeholder="$t('ui.enterEmail')" class="input" />
           </div>
           <!-- Customer Name -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Customer Name *</label>
-            <input v-model="form.customer_name" required class="input" placeholder="Customer name" />
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.customerName') }}</label>
+            <input v-model="form.customer_name" required class="input" :placeholder="$t('ui.customerName2')" />
           </div>
         </div>
       </div>
@@ -430,31 +430,31 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
           <!-- Billing Address -->
           <div class="md:row-span-3">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Billing address</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.billingAddress') }}</label>
             <textarea v-model="form.customer_address" rows="5" class="input"
-              placeholder="e.g. Jalan Indonesia Blk C No. 22"></textarea>
+              :placeholder="$t('ui.eGJalanIndonesiaBlkCNo22')"></textarea>
           </div>
           <!-- Transaction Date -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Transaction date</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.transactionDate') }}</label>
             <input v-model="form.sale_date" type="date" required class="input" />
           </div>
           <!-- Transaction No -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Transaction no.</label>
-            <input v-model="form.invoice_number" class="input" placeholder="[Auto]" />
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.transactionNo') }}</label>
+            <input v-model="form.invoice_number" class="input" :placeholder="$t('ui.auto')" />
           </div>
           <!-- Tag / Sales Person -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Nomor PO Referensi</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.referencePoNumber') }}</label>
             <input v-model="form.po_number" maxlength="255" class="input"
-              placeholder="Nomor PO pelanggan untuk tagihan invoice" />
+              :placeholder="$t('ui.customerPoNumberForTheInvoice')" />
           </div>
           <!-- Sales Person -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Sales Person</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('labels.salesperson') }}</label>
             <select v-model="form.sales_person_id" class="input">
-              <option value="">None</option>
+              <option value="">{{ $t('sales.none') }}</option>
               <option v-for="sp in salesPeople" :key="sp.id" :value="sp.id">
                 {{ sp.name }}
               </option>
@@ -462,19 +462,19 @@
           </div>
           <!-- Due Date -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Due date</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.dueDate2') }}</label>
             <input v-model="form.due_date" type="date" class="input" />
           </div>
           <!-- Customer Phone -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Customer phone</label>
-            <input v-model="form.customer_phone" class="input" placeholder="Phone number" />
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('ui.customerPhone') }}</label>
+            <input v-model="form.customer_phone" class="input" :placeholder="$t('ui.phoneNumber')" />
           </div>
           <!-- Warehouse -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Warehouse</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">{{ $t('nav.warehouses') }}</label>
             <select v-model="form.warehouse_id" class="input">
-              <option value="">Select warehouse</option>
+              <option value="">{{ $t('ui.selectWarehouse') }}</option>
               <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">
                 {{ wh.name }}
               </option>
@@ -486,7 +486,7 @@
         <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-4">
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Currency</label>
+              <label class="block text-xs font-medium text-gray-500 mb-1">{{ $t('ui.currency') }}</label>
               <select class="input w-24 text-sm">
                 <option>IDR</option>
               </select>
@@ -495,7 +495,7 @@
           <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
             <input type="checkbox" v-model="priceIncludesTax"
               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-            Price includes tax
+            {{ $t('ui.priceIncludesTax') }}
           </label>
         </div>
       </div>
@@ -507,28 +507,28 @@
             <thead>
               <tr class="bg-gray-50 border-b border-gray-200">
                 <th class="px-4 py-3 text-left text-xs font-semibold text-indigo-700 uppercase w-1/4">
-                  Product
+                  {{ $t('sales.product') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Description
+                  {{ $t('projectInvestment.description') }}
                 </th>
                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-20">
-                  Qty
+                  {{ $t('sales.quantity') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">
-                  Units
+                  {{ $t('projectInvestment.materials.unit') }}
                 </th>
                 <th class="px-4 py-3 text-right text-xs font-semibold text-indigo-700 uppercase w-32">
-                  Unit price
+                  {{ $t('ui.unitPrice2') }}
                 </th>
                 <th class="px-4 py-3 text-right text-xs font-semibold text-indigo-700 uppercase w-28">
-                  Discount
+                  {{ $t('sales.discount') }}
                 </th>
                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-24">
-                  Tax
+                  {{ $t('sales.tax') }}
                 </th>
                 <th class="px-4 py-3 text-right text-xs font-semibold text-indigo-700 uppercase w-32">
-                  Amount
+                  {{ $t('ui.amount') }}
                 </th>
                 <th class="px-4 py-3 w-10"></th>
               </tr>
@@ -537,7 +537,7 @@
               <tr v-for="(item, index) in form.items" :key="index" class="hover:bg-blue-50/30 transition-colors">
                 <td class="px-2 py-3">
                   <select v-model="item.product_id" @change="updatePrice(index)" required class="input text-xs">
-                    <option value="">Select product</option>
+                    <option value="">{{ $t('ui.selectProduct2') }}</option>
                     <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
                       {{
                         product.title || product.name
@@ -547,7 +547,7 @@
                   </select>
                 </td>
                 <td class="px-2 py-3">
-                  <input v-model="item.description" type="text" class="input text-xs" placeholder="Description" />
+                  <input v-model="item.description" type="text" class="input text-xs" :placeholder="$t('projectInvestment.description')" />
                 </td>
                 <td class="px-2 py-3">
                   <input v-model.number="item.quantity" type="number" min="1" required
@@ -555,10 +555,10 @@
                 </td>
                 <td class="px-2 py-3">
                   <select v-model="item.unit" class="input text-xs">
-                    <option value="pcs">Pcs</option>
-                    <option value="unit">Unit</option>
-                    <option value="set">Set</option>
-                    <option value="box">Box</option>
+                    <option value="pcs">{{ $t('ui.pcs') }}</option>
+                    <option value="unit">{{ $t('projectInvestment.materials.unit') }}</option>
+                    <option value="set">{{ $t('ui.set') }}</option>
+                    <option value="box">{{ $t('ui.box') }}</option>
                   </select>
                 </td>
                 <td class="px-2 py-3">
@@ -597,7 +597,7 @@
         <div class="px-4 py-3 border-t border-gray-100">
           <button type="button" @click="addLineItem"
             class="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-            <span class="text-lg">+</span> Add new line
+            <span class="text-lg">+</span> {{ $t('ui.addNewLine') }}
           </button>
         </div>
       </div>
@@ -607,12 +607,12 @@
         <!-- Left: Message, Memo, Attachments -->
         <div class="space-y-4">
           <div class="card p-5">
-            <label class="block text-sm font-semibold text-indigo-700 mb-2">Delivery information</label>
+            <label class="block text-sm font-semibold text-indigo-700 mb-2">{{ $t('ui.deliveryInformation') }}</label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Courier</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('deliveries.courier') }}</label>
                 <select v-model="deliveryForm.courier" class="input">
-                  <option value="">Select Courier</option>
+                  <option value="">{{ $t('ui.selectCourier') }}</option>
                   <option value="JNE">JNE</option>
                   <option value="J&T">J&T</option>
                   <option value="SiCepat">SiCepat</option>
@@ -620,19 +620,19 @@
                     Ninja Express
                   </option>
                   <option value="AnterAja">AnterAja</option>
-                  <option value="Pickup">Pickup</option>
-                  <option value="Other">Other</option>
+                  <option value="Pickup">{{ $t('ui.pickup') }}</option>
+                  <option value="Other">{{ $t('labels.other') }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tracking Number</label>
-                <input v-model="deliveryForm.tracking_number" class="input" placeholder="Tracking Number" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('deliveries.trackingNumber') }}</label>
+                <input v-model="deliveryForm.tracking_number" class="input" :placeholder="$t('deliveries.trackingNumber')" />
               </div>
             </div>
           </div>
           <div class="card p-5">
-            <label class="block text-sm font-semibold text-indigo-700 mb-2">Message</label>
-            <textarea v-model="form.notes" rows="3" class="input" placeholder="Message"></textarea>
+            <label class="block text-sm font-semibold text-indigo-700 mb-2">{{ $t('ui.message') }}</label>
+            <textarea v-model="form.notes" rows="3" class="input" :placeholder="$t('ui.message')"></textarea>
           </div>
           <div class="card p-5">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Memo</label>
@@ -643,17 +643,17 @@
         <!-- Right: Financial Summary -->
         <div class="card p-5 space-y-3">
           <div class="flex justify-between items-center">
-            <span class="text-sm font-semibold text-indigo-700">Subtotal</span>
+            <span class="text-sm font-semibold text-indigo-700">{{ $t('sales.subtotal') }}</span>
             <span class="text-sm font-bold text-gray-900">Rp{{ formatPrice(calculateTotal()) }}</span>
           </div>
           <!-- Discount per lines -->
           <div class="flex justify-between items-center text-sm">
-            <span class="text-indigo-600">Discount per lines</span>
+            <span class="text-indigo-600">{{ $t('ui.discountPerLines') }}</span>
             <span class="text-indigo-600">Rp{{ formatPrice(calculateLineDiscounts()) }}</span>
           </div>
           <!-- Global Discount -->
           <div class="flex justify-between items-center gap-4">
-            <span class="text-sm text-gray-600">Discount</span>
+            <span class="text-sm text-gray-600">{{ $t('sales.discount') }}</span>
             <div class="flex items-center gap-2">
               <select v-model="discountType" class="input w-16 text-sm py-1">
                 <option value="%">%</option>
@@ -669,9 +669,9 @@
             <span class="text-amber-800 font-semibold">+ Rp{{ formatPrice(calculateTax()) }}</span>
           </div>
           <div class="flex justify-between items-center gap-2">
-            <label class="text-sm text-gray-600">Tax:</label>
+            <label class="text-sm text-gray-600">{{ $t('ui.tax') }}</label>
             <select v-model="form.tax_type" class="input w-48 text-sm py-1">
-              <option value="">No Tax</option>
+              <option value="">{{ $t('sales.noTax') }}</option>
               <option v-for="tax in taxRates" :key="tax.id" :value="tax.code">
                 {{ tax.name }} ({{ tax.rate }}%)
               </option>
@@ -679,21 +679,21 @@
           </div>
           <div class="border-t border-gray-200 pt-3">
             <div class="flex justify-between items-center">
-              <span class="text-base font-bold text-gray-900">Total</span>
+              <span class="text-base font-bold text-gray-900">{{ $t('sales.total') }}</span>
               <span class="text-base font-bold text-gray-900">Rp{{formatPrice(calculateGrandTotal())}}</span>
             </div>
           </div>
           <!-- Deposit checkbox -->
           <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
             <input type="checkbox" v-model="hasDeposit" class="rounded border-gray-300 text-indigo-600" />
-            Deposit
+            {{ $t('labels.deposit') }}
           </label>
           <div v-if="hasDeposit">
-            <input v-model.number="depositAmount" type="number" step="0.01" class="input text-sm" placeholder="Deposit amount" />
+            <input v-model.number="depositAmount" type="number" step="0.01" class="input text-sm" :placeholder="$t('ui.depositAmount')" />
           </div>
           <div class="border-t-2 border-gray-300 pt-3">
             <div class="flex justify-between items-center">
-              <span class="text-base font-bold text-indigo-700">Balance due</span>
+              <span class="text-base font-bold text-indigo-700">{{ $t('ui.balanceDue') }}</span>
               <span class="text-lg font-bold text-indigo-700">Rp{{formatPrice(calculateBalanceDue())}}</span>
             </div>
           </div>
@@ -702,20 +702,20 @@
 
       <!-- Error -->
       <div v-if="error" class="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-200">
-        {{ error }}
+        {{ $ui(error) }}
       </div>
 
       <!-- Action Buttons -->
       <div class="flex justify-between items-center pb-6">
         <button v-if="isEditing && viewingSale" type="button" @click="deleteSale" class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">
-          Delete Sale
+          {{ $t('ui.deleteSale') }}
         </button>
         <div class="flex items-center gap-3 ml-auto">
           <button type="button" @click="$router.push({ name: 'Sales' })" class="btn-secondary px-6">
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button type="submit" :disabled="saving" class="px-8 py-3 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50">
-            {{saving ? "Saving..." : isEditing ? "Update" : "Create"}}
+            {{saving ? $t('sales.saving') : isEditing ? $t('ui.update') : $t('ui.create')}}
           </button>
         </div>
       </div>
@@ -726,29 +726,29 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
         <h3 class="text-xl font-bold mb-4 bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Quick Add Customer
+          {{ $t('ui.quickAddCustomer') }}
         </h3>
         <form @submit.prevent="saveNewCustomer" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-            <input v-model="customerForm.name" required class="input" placeholder="Contact person name" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.customerName') }}</label>
+            <input v-model="customerForm.name" required class="input" :placeholder="$t('ui.contactPersonName')" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
-            <input v-model="customerForm.company" class="input" placeholder="Company name" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.company') }}</label>
+            <input v-model="customerForm.company" class="input" :placeholder="$t('ui.companyName')" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
               <input v-model="customerForm.phone" class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.email') }}</label>
               <input v-model="customerForm.email" type="email" class="input" />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
             <textarea v-model="customerForm.address" rows="2" class="input"></textarea>
           </div>
           <div v-if="customerError" class="bg-red-50 text-red-600 p-2 rounded text-sm">
@@ -756,10 +756,10 @@
           </div>
           <div class="flex justify-end space-x-2 pt-3">
             <button type="button" @click="showCustomerModal = false" class="btn-secondary">
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button type="submit" :disabled="savingCustomer" class="btn-primary">
-              {{ savingCustomer ? "Saving..." : "Add Customer" }}
+              {{ savingCustomer ? $t('sales.saving') : $t('ui.addCustomer') }}
             </button>
           </div>
         </form>
@@ -771,46 +771,46 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
         <h3 class="text-xl font-bold mb-4 text-teal-600">
-          Create Delivery
+          {{ $t('deliveries.createDelivery') }}
         </h3>
 
         <form @submit.prevent="createDelivery" class="space-y-4">
           <div class="p-3 bg-gray-50 rounded-lg">
             <p class="text-sm font-medium text-gray-700">
-              Sale Information:
+              {{ $t('ui.saleInformation') }}
             </p>
-            <p class="text-sm text-gray-600">Invoice:
+            <p class="text-sm text-gray-600">{{ $t('ui.invoice') }}
               <span class="font-semibold">{{viewingSale?.invoice_number}}</span>
             </p>
-            <p class="text-sm text-gray-600">Customer:
+            <p class="text-sm text-gray-600">{{ $t('ui.customer2') }}
               <span class="font-semibold">{{viewingSale?.customer_name}}</span>
             </p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Courier *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.courier') }}</label>
             <select v-model="deliveryModalForm.courier" required class="input">
-              <option value="">Select Courier</option>
+              <option value="">{{ $t('ui.selectCourier') }}</option>
               <option value="JNE">JNE</option>
               <option value="J&T">J&T</option>
               <option value="SiCepat">SiCepat</option>
               <option value="Ninja Express">Ninja Express</option>
               <option value="AnterAja">AnterAja</option>
-              <option value="Pickup">Pickup</option>
-              <option value="Other">Other</option>
+              <option value="Pickup">{{ $t('ui.pickup') }}</option>
+              <option value="Other">{{ $t('labels.other') }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tracking Number</label>
-            <input v-model="deliveryModalForm.tracking_number" class="input" placeholder="Leave empty to auto-generate" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('deliveries.trackingNumber') }}</label>
+            <input v-model="deliveryModalForm.tracking_number" class="input" :placeholder="$t('ui.leaveEmptyToAutoGenerate')" />
             <p class="text-xs text-gray-500 mt-1">
-              Will be auto-generated if left empty
+              {{ $t('ui.willBeAutoGeneratedIfLeftEmpty') }}
             </p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
             <textarea v-model="deliveryModalForm.notes" rows="3" class="input"></textarea>
           </div>
 
@@ -820,10 +820,10 @@
 
           <div class="flex justify-end space-x-2 pt-3">
             <button type="button" @click="showDeliveryModal = false" class="btn-secondary">
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button type="submit" :disabled="savingDelivery" class="btn-primary">
-              {{savingDelivery ? "Creating..." : "Create Delivery"}}
+              {{savingDelivery ? $t('ui.creating') : $t('deliveries.createDelivery')}}
             </button>
           </div>
         </form>
@@ -833,6 +833,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import api from "../../services/api";
@@ -921,7 +923,7 @@ const filteredProducts = computed(() => products.value);
 
 // Helpers
 const formatPrice = (price) =>
-  new Intl.NumberFormat("id-ID").format(price || 0);
+  new Intl.NumberFormat(uiLocale()).format(price || 0);
 
 const taxDisplayName = (code) => {
   const names = { ppn: "PPN", pph23: "PPh 23" };
@@ -930,7 +932,7 @@ const taxDisplayName = (code) => {
 
 const formatDateLong = (date) => {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("id-ID", {
+  return new Date(date).toLocaleDateString(uiLocale(), {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -939,7 +941,7 @@ const formatDateLong = (date) => {
 
 const formatDateTimeLong = (date) => {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("id-ID", {
+  return new Date(date).toLocaleDateString(uiLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -1093,24 +1095,24 @@ const saveSale = async () => {
     } else {
       await api.post("/sales", payload);
     }
-    router.push({ name: "Sales" });
+    router.push({ name: 'Sales' });
   } catch (err) {
     error.value =
       Object.values(err.response?.data?.errors || {}).flat()[0] ||
       err.response?.data?.message ||
-      "Failed to save sale";
+      uiText("Gagal menyimpan penjualan");
   } finally {
     saving.value = false;
   }
 };
 
 const deleteSale = async () => {
-  if (!confirm("Are you sure you want to delete this sale?")) return;
+  if (!confirm(uiText("Yakin ingin menghapus penjualan ini?"))) return;
   try {
     await api.delete(`/sales/${route.params.id}`);
-    router.push({ name: "Sales" });
+    router.push({ name: 'Sales' });
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to delete sale");
+    alert(err.response?.data?.message || uiText("Gagal menghapus penjualan"));
   }
 };
 
@@ -1133,7 +1135,7 @@ const saveNewCustomer = async () => {
     };
   } catch (err) {
     customerError.value =
-      err.response?.data?.message || "Failed to add customer";
+      err.response?.data?.message || uiText("Gagal menambahkan pelanggan");
   } finally {
     savingCustomer.value = false;
   }
@@ -1162,11 +1164,11 @@ const createDelivery = async () => {
     // Reload the sale to show updated delivery info
     await loadSale();
     alert(
-      `Delivery created successfully! Tracking: ${response.data.tracking_number}`,
+      uiText('ui.shipmentCreatedTracking', { p0: response.data.tracking_number }),
     );
   } catch (err) {
     deliveryError.value =
-      err.response?.data?.message || "Failed to create delivery";
+      err.response?.data?.message || uiText("Gagal membuat pengiriman");
   } finally {
     savingDelivery.value = false;
   }
@@ -1186,7 +1188,7 @@ const exportExcel = async (saleId, invoiceNumber) => {
     link.remove();
     window.URL.revokeObjectURL(url);
   } catch (err) {
-    alert("Failed to export Excel file");
+    alert(uiText("Gagal mengekspor berkas Excel"));
   }
 };
 
@@ -1206,19 +1208,19 @@ const downloadPdf = async (saleId, invoiceNumber) => {
     link.remove();
     window.URL.revokeObjectURL(url);
   } catch (err) {
-    alert("Failed to download PDF file");
+    alert(uiText("Gagal mengunduh berkas PDF"));
   }
 };
 
 const printPdf = async (saleId, invoiceNumber) => {
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    alert("Izinkan popup browser untuk mencetak PDF invoice.");
+    alert(uiText("Izinkan jendela pop-up peramban untuk mencetak faktur PDF."));
     return;
   }
   printing.value = true;
-  printWindow.document.title = `Invoice ${invoiceNumber}`;
-  printWindow.document.body.textContent = "Memuat tampilan cetak invoice...";
+  printWindow.document.title = uiText('ui.invoiceNumber', { p0: invoiceNumber });
+  printWindow.document.body.textContent = uiText("Memuat tampilan cetak faktur...");
   try {
     const response = await api.get(`/sales/${saleId}/print`, {
       responseType: "text",
@@ -1229,7 +1231,7 @@ const printPdf = async (saleId, invoiceNumber) => {
     doc.open();
     doc.write(response.data);
     doc.close();
-    doc.title = `Invoice ${invoiceNumber}`;
+    doc.title = uiText('ui.invoiceNumber', { p0: invoiceNumber });
     const style = doc.createElement("style");
     style.textContent =
       "@page { size: A4; margin: 12mm; } img { max-width: 100%; height: auto; } @media print { .invoice-print-toolbar { display: none !important; } body { margin: 0; background: white !important; } }";
@@ -1250,7 +1252,7 @@ const printPdf = async (saleId, invoiceNumber) => {
       "padding:12px;margin-bottom:16px;background:#f3f4f6;text-align:right";
     const button = doc.createElement("button");
     button.type = "button";
-    button.textContent = "Cetak Invoice";
+    button.textContent = uiText("Cetak Faktur");
     button.onclick = () => {
       printWindow.focus();
       printWindow.print();
@@ -1280,7 +1282,7 @@ const printPdf = async (saleId, invoiceNumber) => {
     printWindow.close();
     alert(
       err.response?.data?.message ||
-      "Gagal membuka tampilan cetak invoice.",
+      uiText("Gagal membuka tampilan cetak faktur."),
     );
   } finally {
     printing.value = false;
@@ -1384,7 +1386,7 @@ const loadSale = async () => {
     }
   } catch (err) {
     console.error(err);
-    error.value = "Failed to load sale data";
+    error.value = uiText("Gagal memuat data penjualan");
   }
 };
 

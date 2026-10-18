@@ -5,8 +5,8 @@
             <div>
                 <h2
                     class="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    Product Management</h2>
-                <p class="text-sm text-gray-600 mt-1">Manage your product catalog, stock levels, and categories</p>
+                    {{ $t('pageTitles.Products') }}</h2>
+                <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageYourProductCatalogStockLevelsAndCategories') }}</p>
             </div>
             <div class="flex gap-2">
                 <!-- Excel Buttons -->
@@ -16,7 +16,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Export
+                    {{ $t('projectInvestment.actions.export') }}
                 </button>
                 <button v-if="activeTab === 'products'" @click="downloadTemplate"
                     class="px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-medium">
@@ -32,7 +32,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    Import
+                    {{ $t('ui.import') }}
                     <input type="file" @change="uploadExcel" accept=".xlsx,.xls,.csv" class="hidden" ref="fileInput" />
                 </label>
                 <!-- Sync Semua ke Publik -->
@@ -46,11 +46,11 @@
                     <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    {{ syncAllLoading ? 'Syncing...' : 'Sync Semua ke Publik' }}
+                    {{ syncAllLoading ? $t('ui.syncing') : $t('ui.syncAllToPublic') }}
                 </button>
                 <button v-if="activeTab === 'products'" @click="openProductForm()"
                     class="px-6 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
-                    + Add Product
+                    {{ $t('ui.addProduct') }}
                 </button>
             </div>
         </div>
@@ -64,7 +64,7 @@
                         ? 'border-indigo-500 text-indigo-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 ]">
-                    Products
+                    {{ $t('sales.product') }}
                 </button>
                 <button @click="activeTab = 'categories'; loadCategories()" :class="[
                     'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
@@ -72,7 +72,7 @@
                         ? 'border-indigo-500 text-indigo-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 ]">
-                    Categories
+                    {{ $t('dashboard.category') }}
                 </button>
                 <button @click="activeTab = 'adjustments'; loadAdjustments()" :class="[
                     'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
@@ -80,7 +80,7 @@
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 ]">
-                    Stock Adjustments
+                    {{ $t('ui.stockAdjustments') }}
                 </button>
             </nav>
         </div>
@@ -91,25 +91,25 @@
             <div class="card p-4 mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <input v-model="filters.search" @input="loadProducts" type="text"
-                        placeholder="Search by title, SKU, brand..." class="input" />
+                        :placeholder="$t('ui.searchByTitleSkuBrand')" class="input" />
                     <select v-model="filters.category_id" @change="onFilterCategoryChange" class="input">
-                        <option value="">All Categories</option>
+                        <option value="">{{ $t('ui.allCategories') }}</option>
                         <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
                     </select>
                     <select v-model="filters.sub_category_id" @change="loadProducts" :disabled="!filters.category_id"
                         class="input disabled:bg-gray-100 disabled:cursor-not-allowed">
-                        <option value="">All Subcategories</option>
+                        <option value="">{{ $t('ui.allSubcategories') }}</option>
                         <option v-for="sub in getSubcategoryOptions(filters.category_id)" :key="sub.id" :value="sub.id">
                             {{ sub.label }}
                         </option>
                     </select>
                     <select v-model="filters.brand" @change="loadProducts" class="input">
-                        <option value="">All Brands</option>
+                        <option value="">{{ $t('ui.allBrands') }}</option>
                         <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
                     </select>
                     <button @click="resetFilters"
                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium text-sm">
-                        Reset Filters
+                        {{ $t('ui.resetFilter') }}
                     </button>
                 </div>
             </div>
@@ -118,14 +118,14 @@
             <div class="table-wrapper">
                 <div class="card-header flex justify-between items-center">
                     <div class="flex items-center gap-3">
-                        <h3 class="text-lg font-semibold text-gray-900">Product List</h3>
-                        <span v-if="products.total" class="text-sm text-gray-500">{{ products.total }} products</span>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.productList') }}</h3>
+                        <span v-if="products.total" class="text-sm text-gray-500">{{ products.total }} {{ $t('ui.products') }}</span>
                     </div>
                     <!-- Bulk Sync Bar -->
                     <div class="flex items-center gap-3">
                         <Transition name="fade">
                             <div v-if="selectedProducts.length > 0" class="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-1.5">
-                                <span class="text-sm text-indigo-700 font-medium">{{ selectedProducts.length }} dipilih</span>
+                                <span class="text-sm text-indigo-700 font-medium">{{ selectedProducts.length }} {{ $t('ui.selected2') }}</span>
                                 <button @click="bulkSyncToPublic"
                                     :disabled="bulkSyncing"
                                     class="px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5">
@@ -136,10 +136,10 @@
                                     <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    {{ bulkSyncing ? 'Syncing...' : 'Sync ke Publik' }}
+                                    {{ bulkSyncing ? $t('ui.syncing') : $t('ui.syncToPublic') }}
                                 </button>
                                 <button @click="selectedProducts = []" class="text-indigo-400 hover:text-indigo-600 text-xs">
-                                    Batal
+                                    {{ $t('common.cancel') }}
                                 </button>
                             </div>
                         </Transition>
@@ -154,7 +154,7 @@
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        Loading products...
+                        {{ $t('ui.loadingProducts') }}
                     </div>
                 </div>
 
@@ -170,14 +170,14 @@
                                     class="w-4 h-4 text-indigo-600 rounded border-gray-300 cursor-pointer"
                                 />
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Stock</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.no') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('labels.image') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.sku') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.category') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.brand') }}</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ $t('sales.stock') }}</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -247,7 +247,7 @@
                             <!-- Stock -->
                             <td class="px-4 py-4 text-center">
                                 <span :class="[
-                                    'inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 text-xs font-semibold rounded-full',
+                                    'inline-flex items-center justify-center min-w-10 px-2.5 py-1 text-xs font-semibold rounded-full',
                                     (product.stock || 0) <= 0 ? 'bg-red-100 text-red-700' :
                                         (product.stock || 0) <= (product.minimum_stock || 0) ? 'bg-amber-100 text-amber-700' :
                                             'bg-green-100 text-green-700'
@@ -260,18 +260,18 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <button @click="openAdjustModal(product)"
                                         class="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded hover:bg-amber-100 transition-colors duration-150"
-                                        title="Stock Adjustment">
-                                        Adjust
+                                        :title="$t('ui.stockAdjustments')">
+                                        {{ $t('ui.adjust') }}
                                     </button>
                                     <button @click="openStockModal(product)"
                                         class="px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors duration-150"
-                                        title="View Warehouse Stock">
-                                        Stock
+                                        :title="$t('ui.viewWarehouseStock')">
+                                        {{ $t('sales.stock') }}
                                     </button>
                                     <button @click="editProduct(product)"
                                         class="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 rounded hover:bg-indigo-100 transition-colors duration-150"
-                                        title="Edit Product">
-                                        Edit
+                                        :title="$t('ui.editProduct')">
+                                        {{ $t('common.edit') }}
                                     </button>
                                     <!-- Sync to Public -->
                                     <button @click="syncProductToPublic(product)"
@@ -280,17 +280,17 @@
                                             'px-2 py-1 text-xs font-medium rounded transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1',
                                             product.public_product_id ? 'text-blue-700 bg-blue-50 hover:bg-blue-100' : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
                                         ]"
-                                        :title="product.public_product_id ? 'Update data di website' : 'Publikasikan ke website'">
+                                        :title="product.public_product_id ? $t('ui.updateWebsiteData') : $t('ui.publishToWebsite')">
                                         <svg v-if="syncingId === product.id" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                                         </svg>
-                                        {{ syncingId === product.id ? '...' : (product.public_product_id ? 'Update' : 'Publis') }}
+                                        {{ syncingId === product.id ? '...' : (product.public_product_id ? $t('ui.update') : $t('ui.publish')) }}
                                     </button>
                                     <button @click="deleteProduct(product.id)"
                                         class="px-2 py-1 text-xs font-medium text-red-700 bg-red-50 rounded hover:bg-red-100 transition-colors duration-150"
-                                        title="Delete Product">
-                                        Delete
+                                        :title="$t('ui.deleteProduct')">
+                                        {{ $t('common.delete') }}
                                     </button>
                                 </div>
                             </td>
@@ -302,23 +302,22 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
-                                No products found
+                                {{ $t('ui.noProductsFound') }}
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
                 <!-- Pagination -->
-                <div v-if="products.data?.length"
-                    class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
+                <div v-if="products.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
                     <p class="text-sm text-gray-700">
-                        Showing {{ products.from }} to {{ products.to }} of {{ products.total }} products
+                        {{ $t('sales.showing') }} {{ products.from }} {{ $t('ui.to') }} {{ products.to }} {{ $t('sales.of') }} {{ products.total }} {{ $t('ui.products') }}
                     </p>
                     <div class="flex space-x-2">
                         <button @click="loadProducts(products.current_page - 1)" :disabled="!products.prev_page_url"
-                            class="btn-secondary disabled:opacity-50">Previous</button>
+                            class="btn-secondary disabled:opacity-50">{{ $t('sales.previous') }}</button>
                         <button @click="loadProducts(products.current_page + 1)" :disabled="!products.next_page_url"
-                            class="btn-secondary disabled:opacity-50">Next</button>
+                            class="btn-secondary disabled:opacity-50">{{ $t('sales.next') }}</button>
                     </div>
                 </div>
             </div>
@@ -331,8 +330,8 @@
             <div class="bg-white rounded-xl p-6 w-full overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
                     <h3
-                        class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        {{ editingProduct ? 'Edit Product' : 'Add New Product' }}
+                        class="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        {{ editingProduct ? $t('ui.editProduct') : $t('ui.addNewProduct2') }}
                     </h3>
                     <button @click="cancelProductForm"
                         class="text-gray-400 hover:text-gray-600 text-3xl leading-none transition-colors">&times;</button>
@@ -341,19 +340,19 @@
                 <div class="flex border-b border-gray-200 mb-6 gap-2">
                     <button type="button" @click="formModalTab = 'basic'"
                         :class="['px-4 py-2 text-sm font-semibold border-b-2 transition-all', formModalTab === 'basic' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
-                        Basic & Stock
+                        {{ $t('ui.basicStock') }}
                     </button>
                     <button type="button" @click="formModalTab = 'specs'"
                         :class="['px-4 py-2 text-sm font-semibold border-b-2 transition-all', formModalTab === 'specs' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
-                        Spesifikasi (1-20)
+                        {{ $t('ui.specifications120') }}
                     </button>
                     <button type="button" @click="formModalTab = 'features'"
                         :class="['px-4 py-2 text-sm font-semibold border-b-2 transition-all', formModalTab === 'features' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
-                        Fitur (1-20)
+                        {{ $t('ui.features120') }}
                     </button>
                     <button type="button" @click="formModalTab = 'tech'"
                         :class="['px-4 py-2 text-sm font-semibold border-b-2 transition-all', formModalTab === 'tech' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
-                        Technical Specs & Diagram
+                        {{ $t('ui.technicalSpecsDiagram') }}
                     </button>
                 </div>
 
@@ -361,54 +360,54 @@
                     <!-- Tab 1: Basic Information & Stock & Categories -->
                     <div v-show="formModalTab === 'basic'" class="space-y-6">
                         <div class="bg-blue-50 p-5 rounded-lg">
-                            <h4 class="text-base font-semibold mb-4 text-gray-800">Basic Information</h4>
+                            <h4 class="text-base font-semibold mb-4 text-gray-800">{{ $t('ui.basicInformation') }}</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.title') }}</label>
                                     <input v-model="form.title" type="text" required class="input"
-                                        placeholder="Product name" />
+                                        :placeholder="$t('ui.productName2')" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-                                    <input v-model="form.subtitle" type="text" class="input" placeholder="e.g. Subtitle or series" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.subheading') }}</label>
+                                    <input v-model="form.subtitle" type="text" class="input" :placeholder="$t('ui.eGSubtitleOrSeries')" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                                    <input v-model="form.sku" type="text" class="input" placeholder="e.g. XG-OLT.001" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('dashboard.sku') }}</label>
+                                    <input v-model="form.sku" type="text" class="input" :placeholder="$t('ui.eGXgOlt001')" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                    <input v-model="form.brand" type="text" class="input" placeholder="e.g. DASAN" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.brand') }}</label>
+                                    <input v-model="form.brand" type="text" class="input" :placeholder="$t('ui.eGDasan')" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Module</label>
-                                    <input v-model="form.module" type="text" class="input" placeholder="e.g. A" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.module') }}</label>
+                                    <input v-model="form.module" type="text" class="input" :placeholder="$t('ui.eGA')" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.priceRp') }}</label>
                                     <input v-model.number="form.price" type="number" min="0" step="0.01" class="input"
                                         placeholder="0" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Warranty (Months)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.warrantyMonths') }}</label>
                                     <input v-model.number="form.warranty_period_months" type="number" min="0" step="1"
                                         class="input" placeholder="12" />
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.imageUrl') }}</label>
                                     <input v-model="form.image" type="url" class="input" placeholder="https://..." />
                                 </div>
                                 <div class="md:col-span-3">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
                                     <textarea v-model="form.descriptions" rows="2" class="input"
-                                        placeholder="Optional product description..."></textarea>
+                                        :placeholder="$t('ui.optionalProductDescription2')"></textarea>
                                 </div>
                                 <div class="flex items-end">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <input v-model="form.is_asset" type="checkbox"
                                             class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                                        <span class="text-sm font-medium text-gray-700">Is Asset</span>
-                                        <span class="text-xs text-gray-400">(not for sale)</span>
+                                        <span class="text-sm font-medium text-gray-700">{{ $t('ui.assets') }}</span>
+                                        <span class="text-xs text-gray-400">{{ $t('ui.notForSale') }}</span>
                                     </label>
                                 </div>
                             </div>
@@ -418,38 +417,38 @@
                         <div class="bg-purple-50 p-5 rounded-lg">
                             <div class="flex justify-between items-center mb-4">
                                 <div>
-                                    <h4 class="text-base font-semibold text-gray-800">Categories & Subcategories</h4>
-                                    <p class="text-xs text-gray-500">Mendukung multi-kategori dan multi-subkategori</p>
+                                    <h4 class="text-base font-semibold text-gray-800">{{ $t('ui.categoriesSubcategories') }}</h4>
+                                    <p class="text-xs text-gray-500">{{ $t('ui.supportsMultipleCategoriesAndSubcategories') }}</p>
                                 </div>
                                 <button type="button" @click="addCategoryPair"
                                     class="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
-                                    + Add Category
+                                    {{ $t('ui.addCategory') }}
                                 </button>
                             </div>
 
                             <div v-if="form.categories.length === 0"
                                 class="text-gray-500 text-sm py-3 text-center border-2 border-dashed border-gray-200 rounded-lg">
-                                No categories added. Click "+ Add Category" to add one.
+                                {{ $t('ui.noCategoriesAddedClickAddCategoryToAddOne') }}
                             </div>
 
                             <div class="space-y-3">
                                 <div v-for="(catPair, index) in form.categories" :key="index"
                                     class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
                                     <div class="flex-1">
-                                        <label class="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">{{ $t('dashboard.category') }}</label>
                                         <select v-model="catPair.category_id" @change="onCategoryChange(index)"
                                             class="input text-sm">
-                                            <option value="">Select Category</option>
+                                            <option value="">{{ $t('ui.selectCategory') }}</option>
                                             <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">
                                                 {{ cat.label }}
                                             </option>
                                         </select>
                                     </div>
                                     <div class="flex-1">
-                                        <label class="block text-xs font-medium text-gray-500 mb-1">Subcategory</label>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">{{ $t('dashboard.subcategory') }}</label>
                                         <select v-model="catPair.sub_category_id" class="input text-sm"
                                             :disabled="!catPair.category_id">
-                                            <option value="">Select Subcategory</option>
+                                            <option value="">{{ $t('ui.selectSubcategory') }}</option>
                                             <option v-for="sub in getSubcategoryOptions(catPair.category_id)" :key="sub.id"
                                                 :value="sub.id">
                                                 {{ sub.label }}
@@ -469,14 +468,14 @@
 
                         <!-- Stock Management -->
                         <div class="bg-green-50 p-5 rounded-lg">
-                            <h4 class="text-base font-semibold mb-4 text-gray-800">Stock Management</h4>
+                            <h4 class="text-base font-semibold mb-4 text-gray-800">{{ $t('pageTitles.Stock') }}</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Stock</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.currentStock') }}</label>
                                     <input v-model.number="form.stock" type="number" min="0" class="input" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Stock (Alert)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.minimumStockAlert') }}</label>
                                     <input v-model.number="form.minimum_stock" type="number" min="0" class="input" />
                                 </div>
                             </div>
@@ -486,11 +485,11 @@
                     <!-- Tab 2: Specifications 1 to 20 -->
                     <div v-show="formModalTab === 'specs'" class="space-y-4">
                         <div class="bg-amber-50 p-5 rounded-lg">
-                            <h4 class="text-base font-semibold mb-2 text-gray-800">Product Specifications (spec1 s/d spec20)</h4>
-                            <p class="text-xs text-gray-600 mb-4">Input baris spesifikasi produk (menampilkan ringkasan spesifikasi di kartu / detail produk)</p>
+                            <h4 class="text-base font-semibold mb-2 text-gray-800">{{ $t('ui.productSpecificationsSpec1SDSpec20') }}</h4>
+                            <p class="text-xs text-gray-600 mb-4">{{ $t('ui.enterProductSpecificationRowsShownOnProductCardsAndDetailPages') }}</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div v-for="i in 20" :key="'spec' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Spec {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.specification') }} {{ i }}</label>
                                     <input v-model="form['spec' + i]" type="text" class="input text-sm" :placeholder="`Spec line ${i}...`" />
                                 </div>
                             </div>
@@ -500,11 +499,11 @@
                     <!-- Tab 3: Features 1 to 20 -->
                     <div v-show="formModalTab === 'features'" class="space-y-4">
                         <div class="bg-indigo-50 p-5 rounded-lg">
-                            <h4 class="text-base font-semibold mb-2 text-gray-800">Product Features (fitur1 s/d fitur20)</h4>
-                            <p class="text-xs text-gray-600 mb-4">Daftar keunggulan / fitur utama produk</p>
+                            <h4 class="text-base font-semibold mb-2 text-gray-800">{{ $t('ui.productFeaturesFitur1SDFitur20') }}</h4>
+                            <p class="text-xs text-gray-600 mb-4">{{ $t('ui.listOfKeyProductBenefitsFeatures') }}</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div v-for="i in 20" :key="'fitur' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Fitur {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('labels.features') }} {{ i }}</label>
                                     <input v-model="form['fitur' + i]" type="text" class="input text-sm" :placeholder="`Fitur line ${i}...`" />
                                 </div>
                             </div>
@@ -515,45 +514,45 @@
                     <div v-show="formModalTab === 'tech'" class="space-y-6">
                         <!-- Wireless & Controller -->
                         <div class="bg-blue-50 p-4 rounded-lg">
-                            <h5 class="font-semibold text-gray-800 text-sm mb-3">Wireless & Controller</h5>
+                            <h5 class="font-semibold text-gray-800 text-sm mb-3">{{ $t('ui.wirelessController') }}</h5>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Wireless Standard</label>
-                                    <input v-model="form.wireless_standard" type="text" class="input text-sm" placeholder="e.g. 802.11ax" />
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.wirelessStandard') }}</label>
+                                    <input v-model="form.wireless_standard" type="text" class="input text-sm" :placeholder="$t('ui.eG80211ax')" />
                                 </div>
                                 <div v-for="i in 5" :key="'ws' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Wireless Stream {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.wirelessStream') }} {{ i }}</label>
                                     <input v-model="form['wireless_stream' + i]" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Manageable APs</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.manageableAps') }}</label>
                                     <input v-model="form.manageable_aps" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">AP Number</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.apNumber') }}</label>
                                     <input v-model="form.ap_number" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Number of Clients</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.numberOfClients') }}</label>
                                     <input v-model="form.number_of_clients" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Capacity</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.capacity') }}</label>
                                     <input v-model="form.capacity" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">IP Rating</label>
-                                    <input v-model="form.ip_rating" type="text" class="input text-sm" placeholder="e.g. IP67" />
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.ipRating') }}</label>
+                                    <input v-model="form.ip_rating" type="text" class="input text-sm" :placeholder="$t('ui.eGIp67')" />
                                 </div>
                             </div>
                         </div>
 
                         <!-- Switch & Memory -->
                         <div class="bg-purple-50 p-4 rounded-lg">
-                            <h5 class="font-semibold text-gray-800 text-sm mb-3">Switch & Memory</h5>
+                            <h5 class="font-semibold text-gray-800 text-sm mb-3">{{ $t('ui.switchMemory') }}</h5>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Switching Capacity</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.switchingCapacity') }}</label>
                                     <input v-model="form.switching" type="text" class="input text-sm" />
                                 </div>
                                 <div>
@@ -561,11 +560,11 @@
                                     <input v-model="form.throughput" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Flash Memory</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.flashMemory') }}</label>
                                     <input v-model="form.flash_memory" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">SDRAM Memory</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.sdramMemory') }}</label>
                                     <input v-model="form.sdram_memory" type="text" class="input text-sm" />
                                 </div>
                             </div>
@@ -573,26 +572,26 @@
 
                         <!-- Interface & Control Unit -->
                         <div class="bg-teal-50 p-4 rounded-lg">
-                            <h5 class="font-semibold text-gray-800 text-sm mb-3">Interfaces & Control Unit</h5>
+                            <h5 class="font-semibold text-gray-800 text-sm mb-3">{{ $t('ui.interfacesControlUnit') }}</h5>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Interface Main</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.interfaceMain') }}</label>
                                     <input v-model="form.interface_main" type="text" class="input text-sm" />
                                 </div>
                                 <div v-for="i in 5" :key="'iface' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Interface {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.interface') }} {{ i }}</label>
                                     <input v-model="form['interface' + i]" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Antenna</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.antenna') }}</label>
                                     <input v-model="form.antenna" type="text" class="input text-sm" />
                                 </div>
                                 <div v-for="i in 5" :key="'cu' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Control Unit {{ i }} (cu{{ i }})</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.controlUnit') }} {{ i }} (cu{{ i }})</label>
                                     <input v-model="form['cu' + i]" type="text" class="input text-sm" />
                                 </div>
                                 <div v-for="i in 5" :key="'addif' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Additional Interface {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.additionalInterface') }} {{ i }}</label>
                                     <input v-model="form['additional_interface' + i]" type="text" class="input text-sm" />
                                 </div>
                             </div>
@@ -600,22 +599,22 @@
 
                         <!-- Network & Environment -->
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <h5 class="font-semibold text-gray-800 text-sm mb-3">Network & Environment</h5>
+                            <h5 class="font-semibold text-gray-800 text-sm mb-3">{{ $t('ui.networkEnvironment') }}</h5>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">MAC Address</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.macAddress') }}</label>
                                     <input v-model="form.mac_address" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Routing Table</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.routingTable') }}</label>
                                     <input v-model="form.routing_table" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Dustproof / Waterproof</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.dustproofWaterproof') }}</label>
                                     <input v-model="form.dustproof_waterproof" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Noise</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.noise') }}</label>
                                     <input v-model="form.noise" type="text" class="input text-sm" />
                                 </div>
                                 <div>
@@ -623,15 +622,15 @@
                                     <input v-model="form.mtbf" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Operating Temp</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.operatingTemp') }}</label>
                                     <input v-model="form.operating_temperature" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Storage Temp</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.storageTemp') }}</label>
                                     <input v-model="form.storage_temperature" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Operating Humidity</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.operatingHumidity') }}</label>
                                     <input v-model="form.operating_humidity" type="text" class="input text-sm" />
                                 </div>
                             </div>
@@ -639,39 +638,39 @@
 
                         <!-- Power Specs -->
                         <div class="bg-amber-50 p-4 rounded-lg">
-                            <h5 class="font-semibold text-gray-800 text-sm mb-3">Power & Physical Specifications</h5>
+                            <h5 class="font-semibold text-gray-800 text-sm mb-3">{{ $t('ui.powerPhysicalSpecifications') }}</h5>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div v-for="i in 5" :key="'pwr' + i">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Power {{ i }}</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.power') }} {{ i }}</label>
                                     <input v-model="form['power' + i]" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Power Consumptions</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.powerConsumption') }}</label>
                                     <input v-model="form.power_consumptions" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Power Consumption (with PoE)</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.powerConsumptionWithPoe') }}</label>
                                     <input v-model="form.power_consumption_with_poe" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Power Consumption (Excl PoE)</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.powerConsumptionExclPoe') }}</label>
                                     <input v-model="form.power_consumption_excluding_poe" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">PoE Budget</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.poeBudget') }}</label>
                                     <input v-model="form.poe_budget" type="text" class="input text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Dimensions</label>
-                                    <input v-model="form.dimensions" type="text" class="input text-sm" placeholder="e.g. 440 x 220 x 44mm" />
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.dimensions') }}</label>
+                                    <input v-model="form.dimensions" type="text" class="input text-sm" :placeholder="$t('ui.eG440X220X44mm')" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Diagram (Multi: pisahkan |)</label>
-                                    <input v-model="form.diagram" type="text" class="input text-sm" placeholder="e.g. xgspon_olt | gpon_olt" />
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.diagramMultiple') }}</label>
+                                    <input v-model="form.diagram" type="text" class="input text-sm" :placeholder="$t('ui.eGXgsponOltGponOlt')" />
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Network Diagram (Multi: pisahkan |)</label>
-                                    <input v-model="form.network_diagram" type="text" class="input text-sm" placeholder="e.g. gpon | xgspon" />
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('ui.networkDiagramMultiple') }}</label>
+                                    <input v-model="form.network_diagram" type="text" class="input text-sm" :placeholder="$t('ui.eGGponXgspon')" />
                                 </div>
                             </div>
                         </div>
@@ -680,9 +679,9 @@
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-3 pt-4 border-t">
                         <button type="button" @click="cancelProductForm"
-                            class="btn-secondary">Cancel</button>
+                            class="btn-secondary">{{ $t('common.cancel') }}</button>
                         <button type="submit" :disabled="saving" class="btn-primary disabled:opacity-50">
-                            {{ saving ? 'Saving...' : (editingProduct ? 'Update Product' : 'Save Product') }}
+                            {{ saving ? $t('sales.saving') : (editingProduct ? $t('ui.updateProduct') : $t('ui.saveProduct')) }}
                         </button>
                     </div>
                 </form>
@@ -693,7 +692,7 @@
         <div v-if="activeTab === 'adjustments'">
             <div class="table-wrapper">
                 <div class="card-header">
-                    <h3 class="text-lg font-semibold text-gray-900">Stock Adjustments</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.stockAdjustments') }}</h3>
                 </div>
 
                 <div v-if="adjustmentsLoading" class="p-12 text-center">
@@ -704,22 +703,22 @@
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        Loading adjustments...
+                        {{ $t('ui.loadingAdjustments') }}
                     </div>
                 </div>
 
                 <table v-else class="min-w-full">
                     <thead class="table-header">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Before → After
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.code') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.type') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.reason') }}</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.beforeAfter') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.date') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.user') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -735,7 +734,7 @@
                                     {{ adj.adjustment_type === 'in' ? '+ IN' : '- OUT' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm capitalize text-gray-700">{{ adj.reason?.replace(/_/g, ' ') }}
+                            <td class="px-6 py-4 text-sm capitalize text-gray-700">{{ $label(adj.reason) }}
                             </td>
                             <td class="px-6 py-4 text-sm font-semibold text-center">{{ adj.quantity }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ adj.before_qty }} → {{ adj.after_qty }}</td>
@@ -750,7 +749,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
-                                No adjustments found
+                                {{ $t('ui.noAdjustmentsFound') }}
                             </td>
                         </tr>
                     </tbody>
@@ -760,15 +759,15 @@
                 <div v-if="adjustments.data?.length"
                     class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
                     <p class="text-sm text-gray-700">
-                        Showing {{ adjustments.from }} to {{ adjustments.to }} of {{ adjustments.total }} adjustments
+                        {{ $t('sales.showing') }} {{ adjustments.from }} {{ $t('ui.to') }} {{ adjustments.to }} {{ $t('sales.of') }} {{ adjustments.total }} {{ $t('ui.adjustments') }}
                     </p>
                     <div class="flex space-x-2">
                         <button @click="loadAdjustments(adjustments.current_page - 1)"
                             :disabled="!adjustments.prev_page_url"
-                            class="btn-secondary disabled:opacity-50">Previous</button>
+                            class="btn-secondary disabled:opacity-50">{{ $t('sales.previous') }}</button>
                         <button @click="loadAdjustments(adjustments.current_page + 1)"
                             :disabled="!adjustments.next_page_url"
-                            class="btn-secondary disabled:opacity-50">Next</button>
+                            class="btn-secondary disabled:opacity-50">{{ $t('sales.next') }}</button>
                     </div>
                 </div>
             </div>
@@ -780,52 +779,52 @@
             @click.self="closeProductSubview">
             <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl" :class="formPage ? 'max-w-4xl' : ''">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">Stock Adjustment</h3>
+                    <h3 class="text-xl font-bold text-gray-900">{{ $t('ui.stockAdjustments') }}</h3>
                     <button @click="closeProductSubview"
                         class="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors">&times;</button>
                 </div>
 
                 <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                     <p class="font-medium text-gray-900">{{ adjustingProduct?.title }}</p>
-                    <p class="text-sm text-gray-600">Current Stock: <span class="font-semibold text-indigo-600">{{
+                    <p class="text-sm text-gray-600">{{ $t('ui.currentStock2') }} <span class="font-semibold text-indigo-600">{{
                         adjustingProduct?.stock || 0 }}</span></p>
                 </div>
 
                 <form @submit.prevent="submitAdjustment" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.type2') }}</label>
                             <select v-model="adjustForm.adjustment_type" required class="input">
-                                <option value="in">Stock In (+)</option>
-                                <option value="out">Stock Out (-)</option>
+                                <option value="in">{{ $t('ui.stockIn') }}</option>
+                                <option value="out">{{ $t('ui.stockOut') }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.quantity') }}</label>
                             <input v-model.number="adjustForm.quantity" type="number" min="1" required class="input" />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.reason2') }}</label>
                         <select v-model="adjustForm.reason" required class="input">
-                            <option value="">Select Reason</option>
-                            <option v-for="(label, key) in adjustmentReasons" :key="key" :value="key">{{ label }}
+                            <option value="">{{ $t('ui.selectReason') }}</option>
+                            <option v-for="(label, key) in adjustmentReasons" :key="key" :value="key">{{ $label(key) }}
                             </option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
                         <textarea v-model="adjustForm.notes" rows="2" class="input"
-                            placeholder="Optional notes..."></textarea>
+                            :placeholder="$t('ui.optionalNotes2')"></textarea>
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-4 border-t">
-                        <button type="button" @click="closeProductSubview" class="btn-secondary">Cancel</button>
+                        <button type="button" @click="closeProductSubview" class="btn-secondary">{{ $t('common.cancel') }}</button>
                         <button type="submit" :disabled="adjustSaving"
-                            class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 disabled:opacity-50 font-medium">
-                            {{ adjustSaving ? 'Saving...' : 'Save Adjustment' }}
+                            class="px-4 py-2 bg-linear-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 disabled:opacity-50 font-medium">
+                            {{ adjustSaving ? $t('sales.saving') : $t('ui.saveAdjustment') }}
                         </button>
                     </div>
                 </form>
@@ -839,7 +838,7 @@
             <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" :class="formPage ? 'max-w-6xl max-h-none' : ''">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900">Stock Breakdown</h3>
+                        <h3 class="text-xl font-bold text-gray-900">{{ $t('ui.stockBreakdown') }}</h3>
                         <p class="text-sm text-gray-600">{{ stockProduct?.title || '-' }}</p>
                     </div>
                     <button @click="closeStockModal"
@@ -847,16 +846,16 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                    <div class="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
-                        <div class="text-xs text-gray-500 uppercase font-medium">Product Stock</div>
+                    <div class="p-4 bg-linear-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
+                        <div class="text-xs text-gray-500 uppercase font-medium">{{ $t('ui.productStock') }}</div>
                         <div class="text-xl font-bold text-indigo-600 mt-1">{{ stockProduct?.stock || 0 }}</div>
                     </div>
-                    <div class="p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
-                        <div class="text-xs text-gray-500 uppercase font-medium">Total Warehouses</div>
+                    <div class="p-4 bg-linear-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                        <div class="text-xs text-gray-500 uppercase font-medium">{{ $t('ui.totalWarehouses') }}</div>
                         <div class="text-xl font-bold text-emerald-600 mt-1">{{ totalWarehouseStock }}</div>
                     </div>
-                    <div class="p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg border border-purple-100">
-                        <div class="text-xs text-gray-500 uppercase font-medium">Locations</div>
+                    <div class="p-4 bg-linear-to-br from-purple-50 to-violet-50 rounded-lg border border-purple-100">
+                        <div class="text-xs text-gray-500 uppercase font-medium">{{ $t('projectInvestment.projectLocation') }}</div>
                         <div class="text-xl font-bold text-purple-600 mt-1">{{ productStocks.length }}</div>
                     </div>
                 </div>
@@ -869,23 +868,23 @@
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        Loading stock data...
+                        {{ $t('ui.loadingStockData') }}
                     </div>
                 </div>
                 <table v-else-if="productStocks.length" class="min-w-full text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Last Updated
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('nav.warehouses') }}</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.projectLocation') }}</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('ui.lastUpdated') }}
                             </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <tr v-for="stock in productStocks" :key="stock.id" class="hover:bg-gray-50">
                             <td class="px-4 py-2 font-medium text-gray-900">{{ stock.warehouse?.name || '-' }}</td>
-                            <td class="px-4 py-2 text-gray-600">{{ stock.location?.name || 'No Location' }}</td>
+                            <td class="px-4 py-2 text-gray-600">{{ stock.location?.name || $t('ui.noLocation') }}</td>
                             <td class="px-4 py-2 text-right font-semibold text-indigo-600">{{ stock.quantity }}</td>
                             <td class="px-4 py-2 text-right text-gray-500">
                                 {{ stock.last_updated ? new Date(stock.last_updated).toLocaleDateString() : '-' }}
@@ -893,10 +892,10 @@
                         </tr>
                     </tbody>
                 </table>
-                <p v-else class="text-center text-gray-500 py-6">No warehouse stock data found.</p>
+                <p v-else class="text-center text-gray-500 py-6">{{ $t('ui.noWarehouseStockDataFound') }}</p>
 
                 <div class="flex justify-end mt-4">
-                    <button @click="closeStockModal" class="btn-secondary">Close</button>
+                    <button @click="closeStockModal" class="btn-secondary">{{ $t('ui.close') }}</button>
                 </div>
             </div>
         </div>
@@ -914,14 +913,14 @@
             <div v-if="uploadMessage" class="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 max-w-md border"
                 :class="uploadMessage.type === 'success' ? 'border-green-200' : 'border-red-200'">
                 <div class="flex items-start gap-3">
-                    <div v-if="uploadMessage.type === 'success'" class="text-green-500 flex-shrink-0">
+                    <div v-if="uploadMessage.type === 'success'" class="text-green-500 shrink-0">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                 clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <div v-else class="text-red-500 flex-shrink-0">
+                    <div v-else class="text-red-500 shrink-0">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -929,8 +928,8 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-gray-900">{{ uploadMessage.title }}</p>
-                        <p class="text-sm text-gray-600">{{ uploadMessage.message }}</p>
+                        <p class="font-semibold text-gray-900">{{ $ui(uploadMessage.title) }}</p>
+                        <p class="text-sm text-gray-600">{{ $ui(uploadMessage.message) }}</p>
                     </div>
                     <button @click="uploadMessage = null" class="text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -946,6 +945,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted, onActivated, onBeforeUnmount, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../services/api';
@@ -968,7 +969,7 @@ const categories = ref([]);
 const brands = ref([]);
 
 const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID').format(price || 0);
+    return new Intl.NumberFormat(uiLocale()).format(price || 0);
 };
 
 const getRowNumber = (index) => {
@@ -1249,7 +1250,7 @@ const loadCategories = async () => {
         const response = await api.get('/categories');
         categories.value = response.data || [];
     } catch (error) {
-        console.error('Failed to load categories:', error);
+        console.error('Gagal memuat kategori:', error);
     }
 };
 
@@ -1262,7 +1263,7 @@ const loadFilterOptions = async () => {
         categories.value = categoriesResponse.data || [];
         brands.value = filterResponse.data.brands || [];
     } catch (error) {
-        console.error('Failed to load filter options:', error);
+        console.error('Gagal memuat pilihan filter:', error);
     }
 };
 
@@ -1277,7 +1278,7 @@ const loadProducts = async (page = 1) => {
         const response = await api.get('/products', { params });
         products.value = response.data;
     } catch (error) {
-        console.error('Failed to load products:', error);
+        console.error('Gagal memuat produk:', error);
     } finally {
         loading.value = false;
     }
@@ -1382,8 +1383,8 @@ const editProduct = (product) => {
     f.power4 = product.power4 || '';
     f.power5 = product.power5 || '';
     f.power_consumptions = product.power_consumptions || product.powercomsumptions || '';
-    f.power_consumption_with_poe = product.power_consumption_with_poe || product['PowerConsumption(withPoE)'] || '';
-    f.power_consumption_excluding_poe = product.power_consumption_excluding_poe || product['PowerConsumption(ExcludingPoE)'] || '';
+    f.power_consumption_with_poe = product.power_consumption_with_poe || product[uiText("Konsumsi Daya (Dengan PoE)")] || '';
+    f.power_consumption_excluding_poe = product.power_consumption_excluding_poe || product[uiText("Konsumsi Daya (Tanpa PoE)")] || '';
     f.poe_budget = product.poe_budget || product.PoEBudget || '';
     f.dimensions = product.dimensions || '';
     f.diagram = product.diagram || '';
@@ -1429,16 +1430,16 @@ const saveProduct = async () => {
 
         uploadMessage.value = {
             type: 'success',
-            title: wasEditing ? 'Product Updated' : 'Product Created',
-            message: 'Product saved successfully'
+            title: wasEditing ? uiText("Produk Diperbarui") : uiText("Produk Dibuat"),
+            message: uiText("Produk berhasil disimpan")
         };
         setTimeout(() => { uploadMessage.value = null; }, 3000);
     } catch (error) {
-        console.error('Failed to save product:', error);
+        console.error('Gagal menyimpan produk:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Save Failed',
-            message: error.response?.data?.message || 'Failed to save product'
+            title: uiText("Gagal Menyimpan"),
+            message: error.response?.data?.message || uiText("Gagal menyimpan produk")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     } finally {
@@ -1447,22 +1448,22 @@ const saveProduct = async () => {
 };
 
 const deleteProduct = async (id) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm(uiText("Yakin ingin menghapus produk ini?"))) return;
     try {
         await api.delete(`/products/${id}`);
         loadProducts();
         uploadMessage.value = {
             type: 'success',
-            title: 'Deleted',
-            message: 'Product deleted successfully'
+            title: uiText("Dihapus"),
+            message: uiText("Produk berhasil dihapus")
         };
         setTimeout(() => { uploadMessage.value = null; }, 3000);
     } catch (error) {
-        console.error('Failed to delete product:', error);
+        console.error('Gagal menghapus produk:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Delete Failed',
-            message: error.response?.data?.message || 'Failed to delete product'
+            title: uiText("Gagal Menghapus"),
+            message: error.response?.data?.message || uiText("Gagal menghapus produk")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     }
@@ -1485,7 +1486,7 @@ const syncProductToPublic = async (product) => {
 
         uploadMessage.value = {
             type: 'success',
-            title: data.is_new ? '✅ Produk Dipublikasikan!' : '✅ Data Publik Diperbarui',
+            title: data.is_new ? uiText("✅ Produk Dipublikasikan!") : '✅ Data Publik Diperbarui',
             message: data.message,
         };
         setTimeout(() => { uploadMessage.value = null; }, 5000);
@@ -1493,8 +1494,8 @@ const syncProductToPublic = async (product) => {
         console.error('Sync failed:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Sync Gagal',
-            message: error.response?.data?.message || 'Gagal sync produk ke website'
+            title: uiText("Sinkronisasi Gagal"),
+            message: error.response?.data?.message || uiText("Gagal menyinkronkan produk ke situs")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     } finally {
@@ -1507,7 +1508,7 @@ const syncProductToPublic = async (product) => {
  */
 const bulkSyncToPublic = async () => {
     if (selectedProducts.value.length === 0) return;
-    if (!confirm(`Sync ${selectedProducts.value.length} produk ke website publik?`)) return;
+    if (!confirm(uiText('ui.syncProductsCount', { p0: selectedProducts.value.length }))) return;
 
     bulkSyncing.value = true;
     try {
@@ -1522,7 +1523,7 @@ const bulkSyncToPublic = async () => {
 
         uploadMessage.value = {
             type: data.success ? 'success' : 'error',
-            title: data.success ? '✅ Bulk Sync Selesai' : '⚠️ Sync Selesai dengan Error',
+            title: data.success ? uiText("✅ Sinkronisasi Semua Data Selesai") : uiText("⚠️ Sinkronisasi Selesai dengan Kesalahan"),
             message: data.message,
         };
         setTimeout(() => { uploadMessage.value = null; }, 6000);
@@ -1530,8 +1531,8 @@ const bulkSyncToPublic = async () => {
         console.error('Bulk sync failed:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Bulk Sync Gagal',
-            message: error.response?.data?.message || 'Gagal melakukan bulk sync'
+            title: uiText("Sinkronisasi Semua Data Gagal"),
+            message: error.response?.data?.message || uiText("Gagal menyinkronkan semua data")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     } finally {
@@ -1544,7 +1545,7 @@ const bulkSyncToPublic = async () => {
  */
 const syncAllLoading = ref(false);
 const syncAllToPublic = async () => {
-    if (!confirm('Apakah Anda yakin ingin menyinkronkan SEMUA produk ke website publik?')) return;
+    if (!confirm(uiText("Yakin ingin menyinkronkan semua produk ke situs publik?"))) return;
 
     syncAllLoading.value = true;
     try {
@@ -1555,16 +1556,16 @@ const syncAllToPublic = async () => {
 
         uploadMessage.value = {
             type: data.success ? 'success' : 'error',
-            title: data.success ? '✅ Sinkronisasi Selesai' : '⚠️ Sinkronisasi dengan Error',
-            message: data.message || 'Semua produk berhasil disinkronkan ke website publik.'
+            title: data.success ? '✅ Sinkronisasi Selesai' : uiText("⚠️ Sinkronisasi dengan Kesalahan"),
+            message: data.message || uiText("Semua produk berhasil disinkronkan ke situs publik.")
         };
         setTimeout(() => { uploadMessage.value = null; }, 6000);
     } catch (error) {
         console.error('Sync all failed:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Sinkronisasi Gagal',
-            message: error.response?.data?.message || 'Gagal menyinkronkan semua produk ke website'
+            title: uiText("Sinkronisasi Gagal"),
+            message: error.response?.data?.message || uiText("Gagal menyinkronkan semua produk ke situs")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     } finally {
@@ -1587,8 +1588,8 @@ const downloadExcel = async () => {
         link.remove();
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Failed to download Excel:', error);
-        alert('Failed to download Excel file');
+        console.error('Gagal mengunduh Excel:', error);
+        alert(uiText("Gagal mengunduh berkas Excel"));
     }
 };
 
@@ -1606,8 +1607,8 @@ const downloadTemplate = async () => {
         link.remove();
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Failed to download template:', error);
-        alert('Failed to download template');
+        console.error('Gagal mengunduh template:', error);
+        alert(uiText("Gagal mengunduh template"));
     }
 };
 
@@ -1627,7 +1628,7 @@ const uploadExcel = async (event) => {
 
         uploadMessage.value = {
             type: 'success',
-            title: 'Upload Successful',
+            title: uiText("Unggahan Berhasil"),
             message: response.data.message
         };
 
@@ -1642,12 +1643,12 @@ const uploadExcel = async (event) => {
             uploadMessage.value = null;
         }, 5000);
     } catch (error) {
-        console.error('Failed to upload Excel:', error);
+        console.error('Gagal mengunggah Excel:', error);
         const validationErrors = Object.values(error.response?.data?.errors || {}).flat();
         uploadMessage.value = {
             type: 'error',
-            title: 'Upload Failed',
-            message: validationErrors.join(' ') || error.response?.data?.message || 'Failed to upload file'
+            title: uiText("Unggahan Gagal"),
+            message: validationErrors.join(' ') || error.response?.data?.message || uiText("Gagal mengunggah berkas")
         };
 
         // Auto-hide error after 8 seconds
@@ -1668,7 +1669,7 @@ const loadAdjustments = async (page = 1) => {
         });
         adjustments.value = response.data;
     } catch (error) {
-        console.error('Failed to load adjustments:', error);
+        console.error('Gagal memuat penyesuaian stok:', error);
     } finally {
         adjustmentsLoading.value = false;
     }
@@ -1679,20 +1680,20 @@ const loadAdjustmentReasons = async () => {
         const response = await api.get('/stock-adjustments/reasons');
         adjustmentReasons.value = response.data;
     } catch (error) {
-        console.error('Failed to load adjustment reasons:', error);
+        console.error('Gagal memuat alasan penyesuaian:', error);
         // Fallback reasons
         adjustmentReasons.value = {
-            damaged: 'Damaged',
-            expired: 'Expired',
-            lost: 'Lost',
+            damaged: uiText("Rusak"),
+            expired: uiText("Kedaluwarsa"),
+            lost: uiText("Hilang"),
             found: 'Found',
-            correction: 'Correction',
-            audit: 'Stock Opname/Audit',
-            theft: 'Theft',
-            donation: 'Donation',
-            return_from_lending: 'Return from Lending',
-            warranty_replacement: 'Warranty Replacement',
-            other: 'Other'
+            correction: uiText("Koreksi"),
+            audit: 'Stok Opname/Audit',
+            theft: uiText("Pencurian"),
+            donation: uiText("Donasi"),
+            return_from_lending: uiText("Pengembalian Peminjaman"),
+            warranty_replacement: uiText("Penggantian Garansi"),
+            other: uiText("Lainnya")
         };
     }
 };
@@ -1739,16 +1740,16 @@ const submitAdjustment = async () => {
         // Show success message
         uploadMessage.value = {
             type: 'success',
-            title: 'Adjustment Saved',
-            message: `Stock adjusted successfully for ${adjustingProduct.value.title}`
+            title: uiText("Penyesuaian Disimpan"),
+            message: uiText('ui.stockAdjustedFor', { p0: adjustingProduct.value.title })
         };
         setTimeout(() => { uploadMessage.value = null; }, 5000);
     } catch (error) {
-        console.error('Failed to save adjustment:', error);
+        console.error('Gagal menyimpan penyesuaian stok:', error);
         uploadMessage.value = {
             type: 'error',
-            title: 'Adjustment Failed',
-            message: error.response?.data?.message || 'Failed to save adjustment'
+            title: uiText("Penyesuaian Gagal"),
+            message: error.response?.data?.message || uiText("Gagal menyimpan penyesuaian stok")
         };
         setTimeout(() => { uploadMessage.value = null; }, 8000);
     } finally {
@@ -1784,7 +1785,7 @@ const loadProductStocks = async (productId) => {
         });
         productStocks.value = response.data.data || response.data || [];
     } catch (error) {
-        console.error('Failed to load product stocks:', error);
+        console.error('Gagal memuat stok produk:', error);
         productStocks.value = [];
     } finally {
         stockLoading.value = false;
@@ -1804,7 +1805,7 @@ onMounted(() => {
                 const response = await api.get(`/products/${editId}`);
                 editProduct(response.data);
             } catch (error) {
-                console.error('Failed to load product for edit:', error);
+                console.error('Gagal memuat produk untuk diubah:', error);
             }
         } else if (formPage.value) {
             if (adjustId || stockId) {
@@ -1820,11 +1821,11 @@ onMounted(() => {
                         await loadProductStocks(response.data.id);
                     }
                 } catch (error) {
-                    console.error('Failed to load product stock details:', error);
+                    console.error('Gagal memuat detail stok produk:', error);
                     uploadMessage.value = {
                         type: 'error',
-                        title: 'Unable to open product',
-                        message: error.response?.data?.message || 'Failed to load product details'
+                        title: uiText("Tidak dapat membuka produk"),
+                        message: error.response?.data?.message || uiText("Gagal memuat detail produk")
                     };
                 }
             } else {

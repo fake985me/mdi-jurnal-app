@@ -3,58 +3,58 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-          Warehouse Management
+        <h2 class="text-2xl font-bold bg-linear-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          {{ $t('pageTitles.Warehouses') }}
         </h2>
-        <p class="text-sm text-gray-600 mt-1">Manage your warehouses and storage locations</p>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageYourWarehousesAndStorageLocations') }}</p>
       </div>
       <div class="flex gap-3">
         <button
           @click="openAddProductModal()"
-          class="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-          + Add Product to Warehouse
+          class="px-6 py-3 bg-linear-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+          {{ $t('ui.addProductToWarehouse') }}
         </button>
         <button
           @click="openWarehouseForm()"
-          class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-          + New Warehouse
+          class="px-6 py-3 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+          {{ $t('ui.newWarehouse') }}
         </button>
       </div>
     </div>
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="card p-4 bg-gradient-to-br from-emerald-50 to-teal-50">
+      <div class="card p-4 bg-linear-to-br from-emerald-50 to-teal-50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">Total Warehouses</p>
+            <p class="text-sm text-gray-600">{{ $t('ui.totalWarehouses') }}</p>
             <p class="text-2xl font-bold text-emerald-600">{{ stats.total_warehouses || 0 }}</p>
           </div>
           <span class="text-3xl">🏭</span>
         </div>
       </div>
-      <div class="card p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div class="card p-4 bg-linear-to-br from-blue-50 to-indigo-50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">Active Warehouses</p>
+            <p class="text-sm text-gray-600">{{ $t('ui.activeWarehouses') }}</p>
             <p class="text-2xl font-bold text-blue-600">{{ stats.active_warehouses || 0 }}</p>
           </div>
           <span class="text-3xl">✅</span>
         </div>
       </div>
-      <div class="card p-4 bg-gradient-to-br from-purple-50 to-pink-50">
+      <div class="card p-4 bg-linear-to-br from-purple-50 to-pink-50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">Total Locations</p>
+            <p class="text-sm text-gray-600">{{ $t('ui.totalLocations') }}</p>
             <p class="text-2xl font-bold text-purple-600">{{ stats.total_locations || 0 }}</p>
           </div>
           <span class="text-3xl">📍</span>
         </div>
       </div>
-      <div class="card p-4 bg-gradient-to-br from-orange-50 to-amber-50">
+      <div class="card p-4 bg-linear-to-br from-orange-50 to-amber-50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">Active Locations</p>
+            <p class="text-sm text-gray-600">{{ $t('ui.activeLocations') }}</p>
             <p class="text-2xl font-bold text-orange-600">{{ stats.active_locations || 0 }}</p>
           </div>
           <span class="text-3xl">📦</span>
@@ -69,12 +69,12 @@
           v-model="filters.search"
           @input="loadWarehouses"
           type="text"
-          placeholder="Search warehouses..."
+          :placeholder="$t('ui.searchWarehouses')"
           class="input" />
         <select v-model="filters.is_active" @change="loadWarehouses" class="input">
-          <option value="">All Status</option>
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="1">{{ $t('labels.active') }}</option>
+          <option value="0">{{ $t('labels.inactive') }}</option>
         </select>
       </div>
     </div>
@@ -82,7 +82,7 @@
     <!-- Warehouse Tabs Navigation -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div class="border-b border-gray-200">
-        <nav class="flex overflow-x-auto" aria-label="Warehouse Tabs">
+        <nav class="flex overflow-x-auto" :aria-label="$t('ui.warehouseTabs')">
           <button
             v-for="warehouse in allWarehouses"
             :key="warehouse.id"
@@ -94,8 +94,8 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
             ]">
             <span>{{ warehouse.name }}</span>
-            <span v-if="warehouse.is_default" class="px-1.5 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700">Default</span>
-            <span v-if="warehouse.project_investment" class="px-1.5 py-0.5 text-xs rounded bg-indigo-100 text-indigo-700">Project</span>
+            <span v-if="warehouse.is_default" class="px-1.5 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700">{{ $t('ui.default') }}</span>
+            <span v-if="warehouse.project_investment" class="px-1.5 py-0.5 text-xs rounded bg-indigo-100 text-indigo-700">{{ $t('labels.project') }}</span>
             <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600">{{ warehouse.stocks_sum_quantity || 0 }}</span>
           </button>
         </nav>
@@ -112,52 +112,52 @@
           <div class="flex items-center gap-3">
             <span :class="selectedWarehouse.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
               class="px-3 py-1 text-sm rounded-full">
-              {{ selectedWarehouse.is_active ? 'Active' : 'Inactive' }}
+              {{ selectedWarehouse.is_active ? $t('labels.active') : $t('labels.inactive') }}
             </span>
-            <button @click="editWarehouse(selectedWarehouse)" class="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
-            <button v-if="!selectedWarehouse.is_default" @click="setDefault(selectedWarehouse)" class="text-yellow-600 hover:text-yellow-900 text-sm">Set Default</button>
-            <button @click="deleteWarehouse(selectedWarehouse)" class="text-red-600 hover:text-red-900 text-sm">Delete</button>
+            <button @click="editWarehouse(selectedWarehouse)" class="text-blue-600 hover:text-blue-900 text-sm">{{ $t('common.edit') }}</button>
+            <button v-if="!selectedWarehouse.is_default" @click="setDefault(selectedWarehouse)" class="text-yellow-600 hover:text-yellow-900 text-sm">{{ $t('ui.setAsDefault') }}</button>
+            <button @click="deleteWarehouse(selectedWarehouse)" class="text-red-600 hover:text-red-900 text-sm">{{ $t('common.delete') }}</button>
           </div>
         </div>
 
         <!-- Warehouse Info -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-          <div><span class="text-gray-500">Address:</span> {{ selectedWarehouse.address || '-' }}</div>
-          <div><span class="text-gray-500">Phone:</span> {{ selectedWarehouse.phone || '-' }}</div>
-          <div><span class="text-gray-500">Email:</span> {{ selectedWarehouse.email || '-' }}</div>
-          <div><span class="text-gray-500">Total Stock:</span> <strong class="text-emerald-600">{{ selectedWarehouse.stocks_sum_quantity || 0 }}</strong></div>
+          <div><span class="text-gray-500">{{ $t('ui.address') }}</span> {{ selectedWarehouse.address || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.phone') }}</span> {{ selectedWarehouse.phone || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.email2') }}</span> {{ selectedWarehouse.email || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.totalStock') }}</span> <strong class="text-emerald-600">{{ selectedWarehouse.stocks_sum_quantity || 0 }}</strong></div>
         </div>
 
         <!-- Project & Contract Section -->
         <div v-if="selectedWarehouse.project_investment" class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
           <div class="flex justify-between items-start">
             <div>
-              <h4 class="font-semibold text-indigo-900">Project Investment</h4>
+              <h4 class="font-semibold text-indigo-900">{{ $t('labels.invest') }}</h4>
               <p class="text-sm text-indigo-700">
                 {{ selectedWarehouse.project_investment.project_name }} ({{ selectedWarehouse.project_investment.project_code }})
               </p>
               <p class="text-xs text-indigo-600">
-                Type: {{ selectedWarehouse.project_investment.type || '-' }} |
-                Status: {{ selectedWarehouse.project_investment.status || '-' }}
+                {{ $t('ui.type3') }} {{ $label(selectedWarehouse.project_investment.type) }} |
+                Status: {{ $label(selectedWarehouse.project_investment.status) }}
               </p>
             </div>
-            <span class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700">Project Warehouse</span>
+            <span class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700">{{ $t('ui.projectWarehouse') }}</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-sm">
-            <div><span class="text-gray-500">Client:</span> {{ selectedWarehouse.project_investment.client_name || '-' }}</div>
-            <div><span class="text-gray-500">Start:</span> {{ formatDate(selectedWarehouse.project_investment.start_date) }}</div>
-            <div><span class="text-gray-500">Expected End:</span> {{ formatDate(selectedWarehouse.project_investment.expected_end_date) }}</div>
+            <div><span class="text-gray-500">{{ $t('ui.client2') }}</span> {{ selectedWarehouse.project_investment.client_name || '-' }}</div>
+            <div><span class="text-gray-500">{{ $t('ui.start') }}</span> {{ formatDate(selectedWarehouse.project_investment.start_date) }}</div>
+            <div><span class="text-gray-500">{{ $t('ui.expectedEnd') }}</span> {{ formatDate(selectedWarehouse.project_investment.expected_end_date) }}</div>
           </div>
 
           <div v-if="selectedContract" class="mt-4 p-3 bg-white rounded-lg border border-indigo-100">
             <div class="flex justify-between items-center mb-2">
-              <h5 class="font-semibold text-gray-800">Contract</h5>
-              <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">{{ selectedContract.status || '-' }}</span>
+              <h5 class="font-semibold text-gray-800">{{ $t('ui.contract') }}</h5>
+              <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">{{ $label(selectedContract.status) }}</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div><span class="text-gray-500">Contract No:</span> {{ selectedContract.contract_number || '-' }}</div>
-              <div><span class="text-gray-500">Contract Date:</span> {{ formatDate(selectedContract.contract_date) }}</div>
-              <div><span class="text-gray-500">Value:</span> {{ formatCurrency(selectedContract.contract_value || 0) }}</div>
+              <div><span class="text-gray-500">{{ $t('ui.contractNo') }}</span> {{ selectedContract.contract_number || '-' }}</div>
+              <div><span class="text-gray-500">{{ $t('ui.contractDate') }}</span> {{ formatDate(selectedContract.contract_date) }}</div>
+              <div><span class="text-gray-500">{{ $t('ui.value2') }}</span> {{ formatCurrency(selectedContract.contract_value || 0) }}</div>
             </div>
           </div>
         </div>
@@ -165,143 +165,143 @@
         <!-- Contract Payments -->
         <div v-if="selectedContract" class="border-t pt-4 mt-4">
           <div class="flex justify-between items-center mb-2">
-            <h4 class="font-semibold text-gray-800">Contract Payments</h4>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.contractPayments') }}</h4>
             <button @click="togglePaymentForm" class="text-sm text-indigo-600 hover:text-indigo-800">
-              {{ showPaymentForm ? 'Hide Form' : '+ Add Payment' }}
+              {{ showPaymentForm ? $t('ui.hideForm') : $t('ui.addPayment') }}
             </button>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-4">
             <div class="p-3 bg-gray-50 rounded">
-              <div class="text-gray-500">Contract Total</div>
+              <div class="text-gray-500">{{ $t('ui.contractTotal') }}</div>
               <div class="font-semibold text-gray-800">{{ formatCurrency(contractTotal) }}</div>
             </div>
             <div class="p-3 bg-gray-50 rounded">
-              <div class="text-gray-500">Paid</div>
+              <div class="text-gray-500">{{ $t('labels.paid') }}</div>
               <div class="font-semibold text-emerald-600">{{ formatCurrency(totalPaid) }}</div>
             </div>
             <div class="p-3 bg-gray-50 rounded">
-              <div class="text-gray-500">Remaining</div>
+              <div class="text-gray-500">{{ $t('ui.remaining') }}</div>
               <div class="font-semibold text-orange-600">{{ formatCurrency(remainingAmount) }}</div>
             </div>
           </div>
 
           <div v-if="showPaymentForm" class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
             <div class="flex justify-between items-center mb-3">
-              <h4 class="font-semibold text-gray-800">{{ editingPaymentId ? 'Edit Payment' : 'Add Payment' }}</h4>
+              <h4 class="font-semibold text-gray-800">{{ editingPaymentId ? $t('ui.editPayment') : $t('ui.addPayment2') }}</h4>
               <button v-if="editingPaymentId" @click="resetPaymentForm" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-                Cancel Edit
+                {{ $t('ui.cancelEdit') }}
               </button>
             </div>
             <form @submit.prevent="submitPayment" class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.type2') }}</label>
                 <select v-model="paymentForm.payment_type" required class="input">
                   <option value="dp">DP</option>
-                  <option value="termin">Termin</option>
-                  <option value="full">Full Payment</option>
-                  <option value="sharing_profit">Sharing Profit</option>
+                  <option value="termin">{{ $t('labels.installment') }}</option>
+                  <option value="full">{{ $t('labels.full') }}</option>
+                  <option value="sharing_profit">{{ $t('ui.sharingProfit') }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.amount2') }}</label>
                 <input v-model.number="paymentForm.amount" type="number" min="0.01" step="0.01" required class="input" />
                 <p v-if="paymentForm.amount && contractTotal > 0 && paymentForm.amount > remainingAvailable"
                   class="text-xs text-red-600 mt-1">
-                  Amount exceeds remaining balance.
+                  {{ $t('ui.amountExceedsRemainingBalance') }}
                 </p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.paymentDate') }}</label>
                 <input v-model="paymentForm.payment_date" type="date" class="input" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Method</label>
-                <input v-model="paymentForm.method" class="input" placeholder="Transfer/Cash/..." />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.method') }}</label>
+                <input v-model="paymentForm.method" class="input" :placeholder="$t('ui.transferCash')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Reference No</label>
-                <input v-model="paymentForm.reference_number" class="input" placeholder="Optional" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.referenceNo') }}</label>
+                <input v-model="paymentForm.reference_number" class="input" :placeholder="$t('ui.optional')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.materials.status') }}</label>
                 <select v-model="paymentForm.status" class="input">
-                  <option value="paid">Paid</option>
-                  <option value="pending">Pending</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="paid">{{ $t('labels.paid') }}</option>
+                  <option value="pending">{{ $t('labels.pending') }}</option>
+                  <option value="cancelled">{{ $t('labels.cancelled') }}</option>
                 </select>
               </div>
               <div class="md:col-span-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea v-model="paymentForm.notes" rows="2" class="input" placeholder="Optional notes"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
+                <textarea v-model="paymentForm.notes" rows="2" class="input" :placeholder="$t('ui.optionalNotes')"></textarea>
               </div>
 
               <div v-if="paymentError" class="md:col-span-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ paymentError }}</div>
 
               <div class="md:col-span-3 flex justify-end gap-3">
-                <button type="button" @click="togglePaymentForm" class="btn-secondary">Cancel</button>
+                <button type="button" @click="togglePaymentForm" class="btn-secondary">{{ $t('projectInvestment.actions.cancel') }}</button>
                 <button type="submit" :disabled="paymentSaving" class="btn-primary">
-                  {{ paymentSaving ? 'Saving...' : 'Save Payment' }}
+                  {{ paymentSaving ? $t('sales.saving') : $t('ui.savePayment') }}
                 </button>
               </div>
             </form>
           </div>
 
-          <div v-if="paymentsLoading" class="text-center py-4 text-gray-500">Loading payments...</div>
+          <div v-if="paymentsLoading" class="text-center py-4 text-gray-500">{{ $t('ui.loadingPayments') }}</div>
           <table v-else-if="contractPayments.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left">Date</th>
-                <th class="px-4 py-2 text-left">Type</th>
-                <th class="px-4 py-2 text-left">Method</th>
-                <th class="px-4 py-2 text-left">Ref</th>
-                <th class="px-4 py-2 text-right">Amount</th>
-              <th class="px-4 py-2 text-right">Status</th>
-              <th class="px-4 py-2 text-right">Actions</th>
+                <th class="px-4 py-2 text-left">{{ $t('sales.date') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.type') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.method') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.reference') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('ui.amount') }}</th>
+              <th class="px-4 py-2 text-right">{{ $t('projectInvestment.materials.status') }}</th>
+              <th class="px-4 py-2 text-right">{{ $t('sales.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
             <tr v-for="payment in contractPayments" :key="payment.id">
                 <td class="px-4 py-2">{{ formatDate(payment.payment_date) }}</td>
-                <td class="px-4 py-2 capitalize">{{ payment.payment_type?.replace('_', ' ') }}</td>
+                <td class="px-4 py-2 capitalize">{{ $label(payment.payment_type) }}</td>
                 <td class="px-4 py-2">{{ payment.method || '-' }}</td>
                 <td class="px-4 py-2">{{ payment.reference_number || '-' }}</td>
                 <td class="px-4 py-2 text-right font-semibold">{{ formatCurrency(payment.amount || 0) }}</td>
               <td class="px-4 py-2 text-right">
                 <span :class="payment.status === 'paid' ? 'text-emerald-600' : payment.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'">
-                  {{ payment.status }}
+                  {{ $label(payment.status) }}
                 </span>
               </td>
               <td class="px-4 py-2 text-right space-x-2">
-                <button @click="editPayment(payment)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                <button @click="deletePayment(payment)" class="text-red-600 hover:text-red-900">Delete</button>
+                <button @click="editPayment(payment)" class="text-blue-600 hover:text-blue-900">{{ $t('common.edit') }}</button>
+                <button @click="deletePayment(payment)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
-          <p v-else class="text-center text-gray-500 py-4">No payments recorded</p>
+          <p v-else class="text-center text-gray-500 py-4">{{ $t('ui.noPaymentsRecorded') }}</p>
         </div>
 
         <!-- Product Stocks Section -->
         <div class="border-t pt-4 mt-4">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="font-semibold text-gray-800">Product Stocks ({{ warehouseStocks.length }})</h4>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.productStocks') }}{{ warehouseStocks.length }})</h4>
             <button v-if="selectedWarehouse.is_default" @click="openAddProductModal()" 
-              class="text-sm text-orange-600 hover:text-orange-800">+ Add Product</button>
+              class="text-sm text-orange-600 hover:text-orange-800">{{ $t('ui.addProduct2') }}</button>
           </div>
 
-          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">Loading stocks...</div>
+          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">{{ $t('ui.loadingStocks') }}</div>
           
           <table v-else-if="warehouseStocks.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left">SKU</th>
-                <th class="px-4 py-2 text-left">Product</th>
-                <th class="px-4 py-2 text-left">Brand</th>
-                <th class="px-4 py-2 text-left">Location</th>
-                <th class="px-4 py-2 text-right">Quantity</th>
-                <th class="px-4 py-2 text-right">Last Updated</th>
-                <th class="px-4 py-2 text-right">Actions</th>
+                <th class="px-4 py-2 text-left">{{ $t('dashboard.sku') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('sales.product') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.brand') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('projectInvestment.projectLocation') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.quantity') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('ui.lastUpdated') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -309,7 +309,7 @@
                 <td class="px-4 py-2 font-mono text-sm">{{ stock.product?.sku || '-' }}</td>
                 <td class="px-4 py-2 font-medium">{{ stock.product?.title || '-' }}</td>
                 <td class="px-4 py-2 text-gray-600">{{ stock.product?.brand || '-' }}</td>
-                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || 'No Location' }}</td>
+                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || $t('ui.noLocation') }}</td>
                 <td class="px-4 py-2 text-right">
                   <span class="font-bold text-emerald-600">{{ stock.quantity }}</span>
                 </td>
@@ -321,32 +321,32 @@
                   :disabled="!stock.product"
                   @click="editProduct(stock.product)"
                   class="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed">
-                  Edit
+                  {{ $t('common.edit') }}
                 </button>
               </td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-center text-gray-500 py-4">No products in this warehouse</p>
+          <p v-else class="text-center text-gray-500 py-4">{{ $t('ui.noProductsInThisWarehouse') }}</p>
         </div>
 
         <!-- Locations Section -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="font-semibold text-gray-800">Locations ({{ selectedWarehouse.locations?.length || 0 }})</h4>
-            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.locations') }}{{ selectedWarehouse.locations?.length || 0 }})</h4>
+            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">{{ $t('ui.addLocation') }}</button>
           </div>
 
           <table v-if="selectedWarehouse.locations?.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left">Code</th>
-                <th class="px-4 py-2 text-left">Name</th>
-                <th class="px-4 py-2 text-left">Zone/Aisle/Rack</th>
-                <th class="px-4 py-2 text-right">Capacity</th>
-                <th class="px-4 py-2 text-right">Stock</th>
-                <th class="px-4 py-2 text-center">Status</th>
-                <th class="px-4 py-2 text-right">Actions</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.code') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.name') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.zoneAisleRack') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('ui.capacity') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.stock') }}</th>
+                <th class="px-4 py-2 text-center">{{ $t('projectInvestment.materials.status') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -360,85 +360,85 @@
                   <span :class="loc.is_active ? 'text-green-600' : 'text-gray-400'">{{ loc.is_active ? '●' : '○' }}</span>
                 </td>
                 <td class="px-4 py-2 text-right space-x-2">
-                  <button @click="editLocation(loc)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                  <button @click="deleteLocation(loc)" class="text-red-600 hover:text-red-900">Delete</button>
+                  <button @click="editLocation(loc)" class="text-blue-600 hover:text-blue-900">{{ $t('common.edit') }}</button>
+                  <button @click="deleteLocation(loc)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
                 </td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-center text-gray-500 py-4">No locations defined</p>
+          <p v-else class="text-center text-gray-500 py-4">{{ $t('ui.noLocationsDefined') }}</p>
         </div>
 
       </div>
 
       <div v-else class="p-8 text-center text-gray-500">
-        <p v-if="loading">Loading warehouses...</p>
-        <p v-else>Select a warehouse tab to view details</p>
+        <p v-if="loading">{{ $t('ui.loadingWarehouses') }}</p>
+        <p v-else>{{ $t('ui.selectAWarehouseTabToViewDetails') }}</p>
       </div>
     </div>
 
     <!-- Create/Edit Modal -->
     <div v-if="showModal" class="tab-form" :class="formPage ? 'mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
       <div class="bg-white rounded-xl p-6 w-full overflow-y-auto shadow-md" :class="formPage" ? >
-        <h3 class="text-2xl font-bold mb-6">{{ editingId ? 'Edit Warehouse' : 'New Warehouse' }}</h3>
+        <h3 class="text-2xl font-bold mb-6">{{ editingId ? $t('ui.editWarehouse') : $t('ui.newWarehouse') }}</h3>
         
         <form @submit.prevent="saveWarehouse" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-              <input v-model="form.code" class="input" placeholder="Auto-generated if empty" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.code') }}</label>
+              <input v-model="form.code" class="input" :placeholder="$t('ui.autoGeneratedIfEmpty')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input v-model="form.name" required class="input" placeholder="Warehouse name" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.name2') }}</label>
+              <input v-model="form.name" required class="input" :placeholder="$t('ui.warehouseName')" />
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <textarea v-model="form.address" rows="2" class="input" placeholder="Full address"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
+            <textarea v-model="form.address" rows="2" class="input" :placeholder="$t('ui.fullAddress')"></textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input v-model="form.phone" class="input" placeholder="Phone number" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
+              <input v-model="form.phone" class="input" :placeholder="$t('ui.phoneNumber')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input v-model="form.email" type="email" class="input" placeholder="Email address" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.email') }}</label>
+              <input v-model="form.email" type="email" class="input" :placeholder="$t('ui.emailAddress')" />
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="form.description" rows="2" class="input" placeholder="Optional description"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
+            <textarea v-model="form.description" rows="2" class="input" :placeholder="$t('ui.optionalDescription2')"></textarea>
           </div>
 
           <div class="flex items-center space-x-6">
             <label class="flex items-center">
               <input v-model="form.is_active" type="checkbox" class="h-4 w-4 text-emerald-600 rounded" />
-              <span class="ml-2 text-sm text-gray-700">Active</span>
+              <span class="ml-2 text-sm text-gray-700">{{ $t('labels.active') }}</span>
             </label>
             <label class="flex items-center">
               <input v-model="form.is_default" type="checkbox" class="h-4 w-4 text-yellow-600 rounded" />
-              <span class="ml-2 text-sm text-gray-700">Set as Default</span>
+              <span class="ml-2 text-sm text-gray-700">{{ $t('ui.setAsDefault') }}</span>
             </label>
           </div>
 
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ $ui(error) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Saving...' : 'Save Warehouse' }}</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? $t('sales.saving') : $t('ui.saveWarehouse') }}</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- View Warehouse Modal -->
-    <div v-if="showViewModal" class="tab-form" :class="formPage ? 'max-w-6xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
-      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-md" :class="formPage ? 'max-w-6xl max-h-none' : ''">
+    <div v-if="showViewModal" class="tab-form" :class="formPage ? 'mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full overflow-y-auto shadow-md" :class="formPage">
         <div class="flex justify-between items-start mb-6">
           <div>
             <h3 class="text-2xl font-bold text-gray-900">{{ selectedWarehouse?.name }}</h3>
@@ -446,35 +446,35 @@
           </div>
           <span :class="selectedWarehouse?.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
             class="px-3 py-1 text-sm rounded-full">
-            {{ selectedWarehouse?.is_active ? 'Active' : 'Inactive' }}
+            {{ selectedWarehouse?.is_active ? $t('labels.active') : $t('labels.inactive') }}
           </span>
         </div>
 
         <!-- Warehouse Info -->
         <div class="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-          <div><span class="text-gray-500">Address:</span> {{ selectedWarehouse?.address || '-' }}</div>
-          <div><span class="text-gray-500">Phone:</span> {{ selectedWarehouse?.phone || '-' }}</div>
-          <div><span class="text-gray-500">Email:</span> {{ selectedWarehouse?.email || '-' }}</div>
-          <div><span class="text-gray-500">Total Stock:</span> <strong>{{ selectedWarehouse?.stocks_sum_quantity || 0 }}</strong></div>
+          <div><span class="text-gray-500">{{ $t('ui.address') }}</span> {{ selectedWarehouse?.address || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.phone') }}</span> {{ selectedWarehouse?.phone || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.email2') }}</span> {{ selectedWarehouse?.email || '-' }}</div>
+          <div><span class="text-gray-500">{{ $t('ui.totalStock') }}</span> <strong>{{ selectedWarehouse?.stocks_sum_quantity || 0 }}</strong></div>
         </div>
 
         <!-- Locations Section -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="font-semibold text-gray-800">Locations ({{ selectedWarehouse?.locations?.length || 0 }})</h4>
-            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">+ Add Location</button>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.locations') }}{{ selectedWarehouse?.locations?.length || 0 }})</h4>
+            <button @click="openLocationForm()" class="text-sm text-emerald-600 hover:text-emerald-800">{{ $t('ui.addLocation') }}</button>
           </div>
 
           <table v-if="selectedWarehouse?.locations?.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left">Code</th>
-                <th class="px-4 py-2 text-left">Name</th>
-                <th class="px-4 py-2 text-left">Zone/Aisle/Rack</th>
-                <th class="px-4 py-2 text-right">Capacity</th>
-                <th class="px-4 py-2 text-right">Stock</th>
-                <th class="px-4 py-2 text-center">Status</th>
-                <th class="px-4 py-2 text-right">Actions</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.code') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.name') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.zoneAisleRack') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('ui.capacity') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.stock') }}</th>
+                <th class="px-4 py-2 text-center">{{ $t('projectInvestment.materials.status') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -488,35 +488,35 @@
                   <span :class="loc.is_active ? 'text-green-600' : 'text-gray-400'">{{ loc.is_active ? '●' : '○' }}</span>
                 </td>
                 <td class="px-4 py-2 text-right space-x-2">
-                  <button @click="editLocation(loc)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                  <button @click="deleteLocation(loc)" class="text-red-600 hover:text-red-900">Delete</button>
+                  <button @click="editLocation(loc)" class="text-blue-600 hover:text-blue-900">{{ $t('common.edit') }}</button>
+                  <button @click="deleteLocation(loc)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
                 </td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-center text-gray-500 py-4">No locations defined</p>
+          <p v-else class="text-center text-gray-500 py-4">{{ $t('ui.noLocationsDefined') }}</p>
         </div>
 
         <!-- Product Stocks Section -->
         <div class="border-t pt-4 mt-4">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="font-semibold text-gray-800">Product Stocks ({{ warehouseStocks.length }})</h4>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.productStocks') }}{{ warehouseStocks.length }})</h4>
             <button v-if="selectedWarehouse?.is_default" @click="openAddProductModal()" 
-              class="text-sm text-orange-600 hover:text-orange-800">+ Add Product</button>
+              class="text-sm text-orange-600 hover:text-orange-800">{{ $t('ui.addProduct2') }}</button>
           </div>
 
-          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">Loading stocks...</div>
+          <div v-if="loadingStocks" class="text-center py-4 text-gray-500">{{ $t('ui.loadingStocks') }}</div>
           
           <table v-else-if="warehouseStocks.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left">SKU</th>
-                <th class="px-4 py-2 text-left">Product</th>
-                <th class="px-4 py-2 text-left">Brand</th>
-                <th class="px-4 py-2 text-left">Location</th>
-                <th class="px-4 py-2 text-right">Quantity</th>
-                <th class="px-4 py-2 text-right">Last Updated</th>
-                <th class="px-4 py-2 text-right">Actions</th>
+                <th class="px-4 py-2 text-left">{{ $t('dashboard.sku') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('sales.product') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('ui.brand') }}</th>
+                <th class="px-4 py-2 text-left">{{ $t('projectInvestment.projectLocation') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.quantity') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('ui.lastUpdated') }}</th>
+                <th class="px-4 py-2 text-right">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -524,7 +524,7 @@
                 <td class="px-4 py-2 font-mono text-sm">{{ stock.product?.sku || '-' }}</td>
                 <td class="px-4 py-2 font-medium">{{ stock.product?.title || '-' }}</td>
                 <td class="px-4 py-2 text-gray-600">{{ stock.product?.brand || '-' }}</td>
-                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || 'No Location' }}</td>
+                <td class="px-4 py-2 text-gray-500">{{ stock.location?.name || $t('ui.noLocation') }}</td>
                 <td class="px-4 py-2 text-right">
                   <span class="font-bold text-emerald-600">{{ stock.quantity }}</span>
                 </td>
@@ -536,17 +536,17 @@
                   :disabled="!stock.product"
                   @click="editProduct(stock.product)"
                   class="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed">
-                  Edit
+                  {{ $t('common.edit') }}
                 </button>
               </td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-center text-gray-500 py-4">No products in this warehouse</p>
+          <p v-else class="text-center text-gray-500 py-4">{{ $t('ui.noProductsInThisWarehouse') }}</p>
         </div>
 
         <div class="flex justify-end mt-6">
-          <button @click="closeFormTab" class="btn-secondary">Close</button>
+          <button @click="closeFormTab" class="btn-secondary">{{ $t('ui.close') }}</button>
         </div>
       </div>
     </div>
@@ -554,102 +554,102 @@
     <!-- Location Modal -->
     <div v-if="showLocationModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-md" :class="formPage ? 'max-w-4xl' : ''">
-        <h3 class="text-xl font-bold mb-4">{{ editingLocationId ? 'Edit Location' : 'New Location' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ editingLocationId ? $t('ui.editLocation') : $t('ui.newLocation') }}</h3>
         
         <form @submit.prevent="saveLocation" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-              <input v-model="locationForm.code" class="input" placeholder="Auto-generated" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.code') }}</label>
+              <input v-model="locationForm.code" class="input" :placeholder="$t('ui.autoGenerated')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input v-model="locationForm.name" required class="input" placeholder="Location name" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.name2') }}</label>
+              <input v-model="locationForm.name" required class="input" :placeholder="$t('ui.locationName')" />
             </div>
           </div>
 
           <div class="grid grid-cols-4 gap-2">
             <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Zone</label>
+              <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('ui.zone') }}</label>
               <input v-model="locationForm.zone" class="input" placeholder="A" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Aisle</label>
+              <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('ui.aisle') }}</label>
               <input v-model="locationForm.aisle" class="input" placeholder="1" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Rack</label>
+              <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('ui.rack') }}</label>
               <input v-model="locationForm.rack" class="input" placeholder="01" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Shelf</label>
+              <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('ui.shelf') }}</label>
               <input v-model="locationForm.shelf" class="input" placeholder="A" />
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-            <input v-model.number="locationForm.capacity" type="number" min="0" class="input" placeholder="Max items (optional)" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.capacity') }}</label>
+            <input v-model.number="locationForm.capacity" type="number" min="0" class="input" :placeholder="$t('ui.maxItemsOptional')" />
           </div>
 
           <label class="flex items-center">
             <input v-model="locationForm.is_active" type="checkbox" class="h-4 w-4 text-emerald-600 rounded" />
-            <span class="ml-2 text-sm text-gray-700">Active</span>
+            <span class="ml-2 text-sm text-gray-700">{{ $t('labels.active') }}</span>
           </label>
 
           <div v-if="locationError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ locationError }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="savingLocation" class="btn-primary">{{ savingLocation ? 'Saving...' : 'Save Location' }}</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="submit" :disabled="savingLocation" class="btn-primary">{{ savingLocation ? $t('sales.saving') : $t('ui.saveLocation') }}</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Add Product Stock Modal -->
-    <div v-if="showAddProductModal" class="tab-form" :class="formPage ? 'max-w-4xl mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-md" :class="formPage ? 'max-w-4xl' : ''">
-        <h3 class="text-xl font-bold mb-4">Add Product to Default Warehouse</h3>
+    <div v-if="showAddProductModal" class="tab-form" :class="formPage ? 'mx-auto py-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
+      <div class="bg-white rounded-xl p-6 w-full shadow-md" :class="formPage">
+        <h3 class="text-xl font-bold mb-4">{{ $t('ui.addProductToDefaultWarehouse') }}</h3>
         
         <div v-if="!defaultWarehouse" class="bg-yellow-50 text-yellow-700 p-4 rounded-lg mb-4">
-          <p class="font-medium">No default warehouse set!</p>
-          <p class="text-sm">Please set a warehouse as default first by clicking "Set Default" on a warehouse.</p>
+          <p class="font-medium">{{ $t('ui.noDefaultWarehouseSet') }}</p>
+          <p class="text-sm">{{ $t('ui.pleaseSetAWarehouseAsDefaultFirstByClickingSetDefaultOnAWarehouse') }}</p>
         </div>
         
         <div v-else class="mb-4 p-3 bg-emerald-50 rounded-lg">
-          <p class="text-sm text-gray-600">Adding to:</p>
+          <p class="text-sm text-gray-600">{{ $t('ui.addingTo') }}</p>
           <p class="font-medium text-emerald-700">{{ defaultWarehouse.name }} ({{ defaultWarehouse.code }})</p>
         </div>
         
         <form @submit.prevent="submitAddProduct" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Search Product *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.searchProduct') }}</label>
 
             <select v-model="addProductForm.product_id" @change="onProductSelect" required class="input text-sm">
-                    <option value="">Select Product</option>
+                    <option value="">{{ $t('sales.selectProduct') }}</option>
                     <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
-                      {{ product.title || product.name }} - {{ product.brand }} (Stock: {{ product.stock || 0 }})
+                      {{ product.title || product.name }} - {{ product.brand }} {{ $t('ui.stock') }} {{ product.stock || 0 }})
                     </option>
                   </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
-            <input v-model.number="addProductForm.quantity" type="number" min="1" required class="input" placeholder="Enter quantity" :disabled="!defaultWarehouse" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.quantity') }}</label>
+            <input v-model.number="addProductForm.quantity" type="number" min="1" required class="input" :placeholder="$t('ui.enterQuantity')" :disabled="!defaultWarehouse" />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="addProductForm.notes" rows="2" class="input" placeholder="Optional notes..." :disabled="!defaultWarehouse"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
+            <textarea v-model="addProductForm.notes" rows="2" class="input" :placeholder="$t('ui.optionalNotes2')" :disabled="!defaultWarehouse"></textarea>
           </div>
 
           <div v-if="addProductError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ addProductError }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="closeFormTab" class="btn-secondary">Cancel</button>
+            <button type="button" @click="closeFormTab" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="addingProduct || !defaultWarehouse || !addProductForm.product_id" class="btn-primary">
-              {{ editingProduct ? 'Edit Product' : 'Add Product' }}
+              {{ editingProduct ? $t('ui.editProduct') : $t('ui.addProduct') }}
             </button>
           </div>
         </form>
@@ -659,6 +659,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../../services/api';
@@ -786,7 +788,7 @@ const loadWarehouses = async (page = 1) => {
       selectWarehouseTab(defaultWh);
     }
   } catch (err) {
-    console.error('Failed to load warehouses:', err);
+    console.error('Gagal memuat gudang:', err);
   } finally {
     loading.value = false;
   }
@@ -802,7 +804,7 @@ const selectWarehouseTab = async (warehouse) => {
     resetPaymentForm();
     await loadContractPayments(response.data?.project_investment?.contract?.id);
   } catch (err) {
-    console.error('Failed to load warehouse details:', err);
+    console.error('Gagal memuat detail gudang:', err);
   }
 };
 
@@ -811,7 +813,7 @@ const loadStats = async () => {
     const response = await api.get('/warehouses/statistics');
     stats.value = response.data;
   } catch (err) {
-    console.error('Failed to load statistics:', err);
+    console.error('Gagal memuat statistik:', err);
   }
 };
 
@@ -878,7 +880,7 @@ const saveWarehouse = async () => {
       loadStats();
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save warehouse';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan gudang");
   } finally {
     saving.value = false;
   }
@@ -902,7 +904,7 @@ const loadWarehouseStocks = async (warehouseId) => {
     const allStocks = response.data.data || response.data || [];
     warehouseStocks.value = allStocks.filter(s => s.warehouse_id === warehouseId && s.quantity > 0);
   } catch (err) {
-    console.error('Failed to load warehouse stocks:', err);
+    console.error('Gagal memuat stok gudang:', err);
     // Try alternate endpoint
     try {
       const res = await api.get('/current-stocks', { params: { warehouse_id: warehouseId } });
@@ -929,18 +931,18 @@ const viewWarehouse = async (warehouse) => {
     loadWarehouseStocks(warehouse.id);
     await loadContractPayments(response.data?.project_investment?.contract?.id);
   } catch (err) {
-    alert('Failed to load warehouse details');
+    alert(uiText("Gagal memuat detail gudang"));
   }
 };
 
 const deleteWarehouse = async (warehouse) => {
-  if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
+  if (!confirm(uiText('ui.deleteWarehouseNamed', { p0: warehouse.name }))) return;
   try {
     await api.delete(`/warehouses/${warehouse.id}`);
     loadWarehouses();
     loadStats();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete warehouse');
+    alert(err.response?.data?.message || uiText("Gagal menghapus gudang"));
   }
 };
 
@@ -949,7 +951,7 @@ const setDefault = async (warehouse) => {
     await api.post(`/warehouses/${warehouse.id}/set-default`);
     loadWarehouses();
   } catch (err) {
-    alert('Failed to set default warehouse');
+    alert(uiText("Gagal menetapkan gudang utama"));
   }
 };
 
@@ -970,7 +972,7 @@ const saveLocation = async () => {
       loadStats();
     }
   } catch (err) {
-    locationError.value = err.response?.data?.message || 'Failed to save location';
+    locationError.value = err.response?.data?.message || uiText("Gagal menyimpan lokasi");
   } finally {
     savingLocation.value = false;
   }
@@ -981,13 +983,13 @@ const editLocation = (location) => {
 };
 
 const deleteLocation = async (location) => {
-  if (!confirm(`Delete location "${location.name}"?`)) return;
+  if (!confirm(uiText('ui.deleteLocationNamed', { p0: location.name }))) return;
   try {
     await api.delete(`/warehouse-locations/${location.id}`);
     viewWarehouse(selectedWarehouse.value); // Refresh
     loadStats();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete location');
+    alert(err.response?.data?.message || uiText("Gagal menghapus lokasi"));
   }
 };
 
@@ -1020,21 +1022,21 @@ const saveProduct = async () => {
         resetForm();
         loadWarehouseStocks();
     } catch (error) {
-        console.error('Failed to save product:', error);
-        alert('Failed to save product: ' + (error.response?.data?.message || 'Unknown error'));
+        console.error('Gagal menyimpan produk:', error);
+        alert('Failed to save product: ' + (error.response?.data?.message || uiText("Kesalahan tidak diketahui")));
     } finally {
         saving.value = false;
     }
 };
 
 const deleteProduct = async (id) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm(uiText("Yakin ingin menghapus produk ini?"))) return;
     try {
         await api.delete(`/products/${id}`);
         loadWarehouseStocks();
     } catch (error) {
-        console.error('Failed to delete product:', error);
-        alert('Failed to delete product');
+        console.error('Gagal menghapus produk:', error);
+        alert(uiText("Gagal menghapus produk"));
     }
 };
 
@@ -1078,7 +1080,7 @@ const loadDefaultWarehouse = async () => {
     const warehouses = response.data.data || [];
     defaultWarehouse.value = warehouses.find(w => w.is_default) || null;
   } catch (err) {
-    console.error('Failed to load default warehouse:', err);
+    console.error('Gagal memuat gudang utama:', err);
   }
 };
 
@@ -1114,7 +1116,7 @@ const searchProducts = () => {
       });
       productSearchResults.value = response.data;
     } catch (err) {
-      console.error('Failed to search products:', err);
+      console.error('Gagal mencari produk:', err);
     }
   }, 300);
 };
@@ -1136,7 +1138,7 @@ const loadProducts = async () => {
     const response = await api.get('/products', { params: { per_page: 1000 } });
     products.value = response.data.data || response.data || [];
   } catch (err) {
-    console.error('Failed to load products:', err);
+    console.error('Gagal memuat produk:', err);
     products.value = [];
   }
 };
@@ -1158,10 +1160,10 @@ const submitAddProduct = async () => {
       showAddProductModal.value = false;
       loadWarehouses();
       loadStats();
-      alert('Product stock added successfully!');
+      alert(uiText("Stok produk berhasil ditambahkan!"));
     }
   } catch (err) {
-    addProductError.value = err.response?.data?.message || 'Failed to add product stock';
+    addProductError.value = err.response?.data?.message || uiText("Gagal menambahkan stok produk");
   } finally {
     addingProduct.value = false;
   }
@@ -1180,7 +1182,7 @@ const loadContractPayments = async (contractId) => {
     });
     contractPayments.value = response.data.data || response.data || [];
   } catch (err) {
-    console.error('Failed to load contract payments:', err);
+    console.error('Gagal memuat pembayaran kontrak:', err);
     contractPayments.value = [];
   } finally {
     paymentsLoading.value = false;
@@ -1218,11 +1220,11 @@ const submitPayment = async () => {
 
   const amount = Number(paymentForm.value.amount || 0);
   if (amount <= 0) {
-    paymentError.value = 'Amount must be greater than 0.';
+    paymentError.value = uiText("Nominal harus lebih besar dari 0.");
     return;
   }
   if (contractTotal.value > 0 && amount > remainingAvailable.value + 0.0001) {
-    paymentError.value = 'Payment exceeds remaining balance.';
+    paymentError.value = uiText("Pembayaran melebihi saldo tersisa.");
     return;
   }
 
@@ -1251,7 +1253,7 @@ const submitPayment = async () => {
     resetPaymentForm();
     await loadContractPayments(selectedContract.value.id);
   } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to save payment';
+    paymentError.value = err.response?.data?.message || uiText("Gagal menyimpan pembayaran");
   } finally {
     paymentSaving.value = false;
   }
@@ -1274,7 +1276,7 @@ const editPayment = (payment) => {
 };
 
 const deletePayment = async (payment) => {
-  if (!confirm('Delete this payment?')) return;
+  if (!confirm(uiText("Hapus pembayaran ini?"))) return;
   try {
     await api.delete(`/payments/${payment.id}`);
     await loadContractPayments(selectedContract.value?.id);
@@ -1282,13 +1284,13 @@ const deletePayment = async (payment) => {
       resetPaymentForm();
     }
   } catch (err) {
-    paymentError.value = err.response?.data?.message || 'Failed to delete payment';
+    paymentError.value = err.response?.data?.message || uiText("Gagal menghapus pembayaran");
   }
 };
 
 const formatCurrency = (value) => {
   const num = Number(value || 0);
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+  return new Intl.NumberFormat(uiLocale(), { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 };
 
 const formatDate = (value) => {

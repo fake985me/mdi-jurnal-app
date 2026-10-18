@@ -3,14 +3,14 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Purchase Management</h2>
-        <p class="text-sm text-gray-600 mt-1">Manage purchase orders and inventory</p>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t('pageTitles.Purchases') }}</h2>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.managePurchaseOrdersAndInventory') }}</p>
       </div>
       <button
         @click="$router.push({ name: 'PurchaseCreate' })"
         class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
       >
-        + Create Purchase Order
+        {{ $t('ui.createPurchaseOrder') }}
       </button>
     </div>
 
@@ -21,14 +21,14 @@
           v-model="filters.search"
           @input="loadPurchases"
           type="text"
-          placeholder="Search by PO or supplier..."
+          :placeholder="$t('ui.searchByPoOrSupplier')"
           class="input"
         />
         <select v-model="filters.status" @change="loadPurchases" class="input">
-          <option value="">All Status</option>
-          <option value="unpaid">Unpaid</option>
-          <option value="paid">Paid</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="unpaid">{{ $t('labels.unpaid') }}</option>
+          <option value="paid">{{ $t('labels.paid') }}</option>
+          <option value="cancelled">{{ $t('labels.cancelled') }}</option>
         </select>
         <input v-model="filters.start_date" @change="loadPurchases" type="date" class="input" />
         <input v-model="filters.end_date" @change="loadPurchases" type="date" class="input" />
@@ -38,25 +38,25 @@
     <!-- Purchases Table -->
     <div class="table-wrapper">
       <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">Purchase Orders</h3>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('projectInvestment.po.title') }}</h3>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading purchases...</p>
+        <p class="text-gray-600">{{ $t('ui.loadingPurchases') }}</p>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="table-header">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PO Number</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.po.number') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('nav.suppliers') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.orderDate2') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('nav.warehouses') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.total') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -81,12 +81,12 @@
             <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(purchase.total_amount) }}</td>
             <td class="px-6 py-4">
               <span :class="getStatusBadgeClass(purchase.status)" class="text-xs font-medium px-2 py-1 rounded-full">
-                {{ purchase.status }}
+                {{ $label(purchase.status) }}
               </span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button @click="viewPurchase(purchase)" class="text-blue-600 hover:text-blue-900 font-medium">View</button>
-              <button @click="deletePurchase(purchase.id)" class="text-red-600 hover:text-red-900 font-medium">Delete</button>
+              <button @click="viewPurchase(purchase)" class="text-blue-600 hover:text-blue-900 font-medium">{{ $t('projectInvestment.actions.view') }}</button>
+              <button @click="deletePurchase(purchase.id)" class="text-red-600 hover:text-red-900 font-medium">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -94,21 +94,21 @@
 
       <!-- Pagination -->
       <div v-if="purchases.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
-        <p class="text-sm text-gray-700">Showing {{ purchases.from }} to {{ purchases.to }} of {{ purchases.total }} purchases</p>
+        <p class="text-sm text-gray-700">{{ $t('sales.showing') }} {{ purchases.from }} {{ $t('ui.to') }} {{ purchases.to }} {{ $t('sales.of') }} {{ purchases.total }} {{ $t('ui.purchases') }}</p>
         <div class="flex space-x-2">
           <button
             @click="loadPurchases(purchases.current_page - 1)"
             :disabled="!purchases.prev_page_url"
             class="btn-secondary disabled:opacity-50"
           >
-            Previous
+            {{ $t('sales.previous') }}
           </button>
           <button
             @click="loadPurchases(purchases.current_page + 1)"
             :disabled="!purchases.next_page_url"
             class="btn-secondary disabled:opacity-50"
           >
-            Next
+            {{ $t('sales.next') }}
           </button>
         </div>
       </div>
@@ -117,50 +117,50 @@
     <!-- Create Purchase Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
       <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Create Purchase Order</h3>
+        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t('ui.createPurchaseOrder2') }}</h3>
         
         <form @submit.prevent="savePurchase" class="space-y-6">
           <!-- Supplier Information -->
           <div class="p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">Supplier Information</h4>
+            <h4 class="font-semibold text-gray-900 mb-3">{{ $t('ui.supplierInformation') }}</h4>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">PO Number *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.poNumber') }}</label>
                 <input v-model="form.po_number" required class="input" placeholder="PO-001" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Order Date *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.orderDate') }}</label>
                 <input v-model="form.order_date" type="date" required class="input" />
               </div>
               <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.supplier') }}</label>
                 <div class="flex gap-2">
                   <select v-model="form.supplier_id" @change="onSupplierSelect" class="input flex-1">
-                    <option value="">— Select Supplier —</option>
+                    <option value="">{{ $t('ui.selectSupplier') }}</option>
                     <option v-for="s in supplierList" :key="s.id" :value="s.id">
                       {{ s.company ? `${s.company} (${s.name})` : s.name }} — {{ s.phone || '' }}
                     </option>
                   </select>
-                  <button type="button" @click="showSupplierModal = true" class="btn-secondary text-sm whitespace-nowrap">+ New Supplier</button>
+                  <button type="button" @click="showSupplierModal = true" class="btn-secondary text-sm whitespace-nowrap">{{ $t('ui.newSupplier') }}</button>
                 </div>
               </div>
               <div v-if="!form.supplier_id">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.supplierName') }}</label>
                 <input v-model="form.supplier_name" :required="!form.supplier_id" class="input" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('nav.warehouses') }}</label>
                 <select v-model="form.warehouse_id" class="input">
-                  <option value="">Default Warehouse</option>
+                  <option value="">{{ $t('ui.defaultWarehouse') }}</option>
                   <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
                 </select>
               </div>
               <div v-if="!form.supplier_id">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
                 <input v-model="form.supplier_phone" class="input" />
               </div>
               <div v-if="!form.supplier_id" class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
                 <textarea v-model="form.supplier_address" rows="2" class="input"></textarea>
               </div>
               <div v-if="form.supplier_id" class="col-span-2">
@@ -176,39 +176,39 @@
           <!-- Line Items -->
           <div class="p-4 bg-cyan-50 rounded-lg">
             <div class="flex justify-between items-center mb-3">
-              <h4 class="font-semibold text-gray-900">Purchase Items</h4>
+              <h4 class="font-semibold text-gray-900">{{ $t('ui.purchaseItems') }}</h4>
               <div class="flex gap-2">
                 <input 
                   v-model="productSearch" 
                   type="text" 
-                  placeholder="Search products..." 
+                  :placeholder="$t('sales.searchProducts')"
                   class="input text-sm w-48"
                 />
-                <button type="button" @click="showProductModal = true" class="btn-secondary text-sm">+ New Product</button>
-                <button type="button" @click="addLineItem" class="btn-primary text-sm">+ Add Item</button>
+                <button type="button" @click="showProductModal = true" class="btn-secondary text-sm">{{ $t('sales.newProduct') }}</button>
+                <button type="button" @click="addLineItem" class="btn-primary text-sm">{{ $t('sales.addItem') }}</button>
               </div>
             </div>
             <div class="space-y-3">
               <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 items-end p-3 bg-white rounded-lg shadow-sm">
                 <div class="col-span-5">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.product') }}</label>
                   <select v-model="item.product_id" @change="updatePrice(index)" required class="input text-sm">
-                    <option value="">Select Product</option>
+                    <option value="">{{ $t('sales.selectProduct') }}</option>
                     <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
                       {{ product.title || product.name }} - {{ product.brand }} ({{ product.sku }})
                     </option>
                   </select>
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.quantity') }}</label>
                   <input v-model.number="item.quantity" type="number" min="1" required class="input text-sm" />
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Price</label>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('labels.pricing') }}</label>
                   <input v-model.number="item.unit_price" type="number" step="0.01" required class="input text-sm" />
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Subtotal</label>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.subtotal') }}</label>
                   <input :value="formatPrice(item.quantity * item.unit_price)" disabled class="input text-sm bg-gray-50" />
                 </div>
                 <div class="col-span-1">
@@ -226,29 +226,29 @@
             <div>
               <label class="flex items-center space-x-2 h-full pt-6">
                 <input v-model="form.is_for_asset" type="checkbox" class="w-5 h-5 text-blue-600 rounded border-gray-300" />
-                <span class="text-sm font-medium text-gray-700">Purchase for Asset (not for sale)</span>
+                <span class="text-sm font-medium text-gray-700">{{ $t('ui.purchaseForAssetNotForSale') }}</span>
               </label>
             </div>
             <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
               <textarea v-model="form.notes" rows="2" class="input"></textarea>
             </div>
           </div>
 
           <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">
-            <strong>Note:</strong> Purchase akan dibuat dengan status <strong>Unpaid</strong>. Pembayaran dilakukan di halaman <strong>Accounting</strong>. Stock akan ditambahkan otomatis setelah pembayaran di-confirm.
+            <strong>{{ $t('ui.note') }}</strong> {{ $t('ui.purchaseAkanDibuatDenganStatus') }} <strong>{{ $t('labels.unpaid') }}</strong>{{ $t('ui.paymentsAreMadeOnThe') }} <strong>{{ $t('pageTitles.Accounting') }}</strong>{{ $t('ui.stockAkanDitambahkanOtomatisSetelahPembayaranDiConfirm') }}
           </div>
 
           <div v-if="form.is_for_asset" class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm text-amber-700">
-            <strong>Note:</strong> Pembelian ini akan dicatat sebagai Asset. Produk tidak akan masuk stock penjualan.
+            <strong>{{ $t('ui.note') }}</strong> {{ $t('ui.pembelianIniAkanDicatatSebagaiAssetProdukTidakAkanMasukStockPenjualan') }}
           </div>
 
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ error }}</div>
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ $ui(error) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? 'Saving...' : 'Create Purchase Order' }}
+              {{ saving ? $t('sales.saving') : $t('ui.createPurchaseOrder2') }}
             </button>
           </div>
         </form>
@@ -258,34 +258,34 @@
     <!-- Quick Add Product Modal -->
     <div v-if="showProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">Quick Add Product</h3>
+        <h3 class="text-xl font-bold mb-4">{{ $t('ui.quickAddProduct') }}</h3>
         
         <form @submit.prevent="saveProduct" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Product Title *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.productTitle') }}</label>
             <input v-model="productForm.title" required class="input" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.brand2') }}</label>
             <input v-model="productForm.brand" required class="input" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.price') }}</label>
               <input v-model.number="productForm.price" type="number" step="0.01" required class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('sales.stock') }}</label>
               <input v-model.number="productForm.stock" type="number" class="input" />
             </div>
           </div>
 
-          <div v-if="productError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ productError }}</div>
+          <div v-if="productError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ $ui(productError) }}</div>
 
           <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showProductModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showProductModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="savingProduct" class="btn-primary">
-              {{ savingProduct ? 'Saving...' : 'Add Product' }}
+              {{ savingProduct ? $t('sales.saving') : $t('ui.addProduct') }}
             </button>
           </div>
         </form>
@@ -295,38 +295,38 @@
     <!-- Quick Add Supplier Modal -->
     <div v-if="showSupplierModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Quick Add Supplier</h3>
+        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{{ $t('ui.quickAddSupplier') }}</h3>
         
         <form @submit.prevent="saveNewSupplier" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.contactName') }}</label>
             <input v-model="supplierForm.name" required class="input" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.company') }}</label>
             <input v-model="supplierForm.company" class="input" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
               <input v-model="supplierForm.phone" class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.email') }}</label>
               <input v-model="supplierForm.email" type="email" class="input" />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
             <textarea v-model="supplierForm.address" rows="2" class="input"></textarea>
           </div>
 
-          <div v-if="supplierError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ supplierError }}</div>
+          <div v-if="supplierError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ $ui(supplierError) }}</div>
 
           <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showSupplierModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showSupplierModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="savingSupplier" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all text-sm font-medium disabled:opacity-50">
-              {{ savingSupplier ? 'Saving...' : 'Add Supplier' }}
+              {{ savingSupplier ? $t('sales.saving') : $t('ui.addSupplier2') }}
             </button>
           </div>
         </form>
@@ -336,6 +336,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -404,7 +406,7 @@ const filteredProducts = computed(() => {
 });
 
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('id-ID').format(price || 0);
+  return new Intl.NumberFormat(uiLocale()).format(price || 0);
 };
 
 const getStatusBadgeClass = (status) => {
@@ -424,7 +426,7 @@ const loadPurchases = async (page = 1) => {
     const response = await api.get('/purchases', { params });
     purchases.value = response.data;
   } catch (err) {
-    console.error('Failed to load purchases:', err);
+    console.error('Gagal memuat pembelian:', err);
   } finally {
     loading.value = false;
   }
@@ -435,7 +437,7 @@ const loadProducts = async () => {
     const response = await api.get('/products', { params: { per_page: 1000 } });
     products.value = response.data.data;
   } catch (err) {
-    console.error('Failed to load products:', err);
+    console.error('Gagal memuat produk:', err);
   }
 };
 
@@ -444,7 +446,7 @@ const loadWarehouses = async () => {
     const response = await api.get('/warehouses', { params: { per_page: 200 } });
     warehouses.value = response.data.data || response.data || [];
   } catch (err) {
-    console.error('Failed to load warehouses:', err);
+    console.error('Gagal memuat gudang:', err);
   }
 };
 
@@ -453,7 +455,7 @@ const loadSuppliers = async () => {
     const response = await api.get('/suppliers', { params: { all: true } });
     supplierList.value = response.data;
   } catch (err) {
-    console.error('Failed to load suppliers:', err);
+    console.error('Gagal memuat pemasok:', err);
   }
 };
 
@@ -513,7 +515,7 @@ const savePurchase = async () => {
     loadPurchases();
     resetForm();
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to create purchase order';
+    error.value = err.response?.data?.message || uiText("Gagal membuat pesanan pembelian");
   } finally {
     saving.value = false;
   }
@@ -532,26 +534,26 @@ const saveProduct = async () => {
     showProductModal.value = false;
     productForm.value = { title: '', brand: '', price: 0, stock: 0, sku: '' };
     
-    alert('Product added successfully!');
+    alert(uiText("Produk berhasil ditambahkan!"));
   } catch (err) {
-    productError.value = err.response?.data?.message || 'Failed to add product';
+    productError.value = err.response?.data?.message || uiText("Gagal menambahkan produk");
   } finally {
     savingProduct.value = false;
   }
 };
 
 const viewPurchase = (purchase) => {
-  alert(`Purchase Order Details:\nPO: ${purchase.po_number}\nSupplier: ${purchase.supplier_name}\nTotal: Rp ${formatPrice(purchase.total_amount)}\nStatus: ${purchase.status}`);
+  alert(uiText('ui.purchaseOrderDetails', { p0: purchase.po_number, p1: purchase.supplier_name, p2: formatPrice(purchase.total_amount), p3: purchase.status }));
 };
 
 const deletePurchase = async (id) => {
-  if (!confirm('Are you sure you want to delete this purchase order?')) return;
+  if (!confirm(uiText("Yakin ingin menghapus pesanan pembelian ini?"))) return;
   
   try {
     await api.delete(`/purchases/${id}`);
     loadPurchases();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete purchase');
+    alert(err.response?.data?.message || uiText("Gagal menghapus pembelian"));
   }
 };
 
@@ -566,7 +568,7 @@ const saveNewSupplier = async () => {
     showSupplierModal.value = false;
     supplierForm.value = { name: '', company: '', phone: '', email: '', address: '' };
   } catch (err) {
-    supplierError.value = err.response?.data?.message || 'Failed to add supplier';
+    supplierError.value = err.response?.data?.message || uiText("Gagal menambahkan pemasok");
   } finally {
     savingSupplier.value = false;
   }

@@ -1,7 +1,7 @@
 <template>
   <div class="py-12 px-4 max-w-7xl mx-auto">
     <div class="text-center mb-4">
-      <h2 class="text-3xl font-bold text-gray-900">Product</h2>
+      <h2 class="text-3xl font-bold text-gray-900">{{ $t('sales.product') }}</h2>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -11,10 +11,10 @@
         <img v-if="solution.image" :src="solution.image" :alt="solution.title"
           class="w-full h-82 object-contain mb-4" />
         <h3 class="text-xl font-semibold mb-2 text-gray-800">{{ solution.title }}</h3>
-        <p class="text-gray-600 mb-4">{{ solution.desc || 'No description available.' }}</p>
+        <p class="text-gray-600 mb-4">{{ solution.desc || $t('ui.noDescriptionAvailable') }}</p>
         <router-link :to="`/product?category=${solution.title.toUpperCase()}`"
           class="text-blue-600 hover:underline text-sm font-medium">
-          View Product →
+          {{ $t('ui.viewProduct') }}
         </router-link>
       </div>
     </div>
@@ -25,12 +25,12 @@
 
   <div class="py-4 mt-12">
     <div class="text-center mb-14">
-      <h2 class="text-3xl font-bold text-gray-900">Our Service</h2>
+      <h2 class="text-3xl font-bold text-gray-900">{{ $t('ui.ourService') }}</h2>
     </div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-      <p v-if="loading" class="text-center text-gray-500">Loading services...</p>
-      <p v-else-if="error" class="text-center text-red-600">{{ error }}</p>
-      <p v-else-if="solutions.length === 0" class="text-center text-gray-500">No services are available right now.</p>
+      <p v-if="loading" class="text-center text-gray-500">{{ $t('ui.loadingServices') }}</p>
+      <p v-else-if="error" class="text-center text-red-600">{{ $ui(error) }}</p>
+      <p v-else-if="solutions.length === 0" class="text-center text-gray-500">{{ $t('ui.noServicesAreAvailableRightNow') }}</p>
       <template v-else>
         <div
           v-for="(solution, index) in solutions"

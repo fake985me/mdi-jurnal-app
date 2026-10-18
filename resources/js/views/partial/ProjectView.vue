@@ -2,9 +2,9 @@
   <section id="project" class="container relative mx-auto px-5 flex flex-col md:flex-row gap-10 py-10 h-full">
     <!-- Title -->
     <div class="md:w-1/3 text-center md:text-left">
-      <h2 class="text-3xl md:text-4xl font-bold font-theme-heading">Our Projects</h2>
+      <h2 class="text-3xl md:text-4xl font-bold font-theme-heading">{{ $t('ui.ourProjects') }}</h2>
       <p class="text-theme-grayish-blue mt-2 font-theme-content text-lg">
-        We are not just clients, but we are partners
+        {{ $t('ui.weAreNotJustClientsButWeArePartners') }}
       </p>
     </div>
     <div class="w-full md:w-2/3">

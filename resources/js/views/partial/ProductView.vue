@@ -1,7 +1,7 @@
 <template>
   <section class="py-8 px-4 relative">
-    <h2 class="text-3xl font-bold text-center">Product Solutions</h2>
-    <p class="text-gray-800 mb-3">choose what you need</p>
+    <h2 class="text-3xl font-bold text-center">{{ $t('ui.productSolutions') }}</h2>
+    <p class="text-gray-800 mb-3">{{ $t('ui.chooseWhatYouNeed') }}</p>
 
     <!-- Tabs -->
     <div class="flex flex-wrap gap-3 mb-4 justify-center">
@@ -13,7 +13,7 @@
             ? 'border-blue-600 text-blue-600 font-bold'
             : 'border-transparent border-b-slate-900 text-gray-800 hover:text-blue-800',
         ]">
-        {{ tab.title }}
+        {{ $ui(tab.title) }}
       </div>
     </div>
 
@@ -28,7 +28,7 @@
             : 'bg-white border-slate-900 text-gray-900 hover:text-blue-800',
         ]"
       >
-        All
+        {{ $t('labels.all') }}
       </div>
       <div
         v-for="(sub, j) in currentSubCategories"
@@ -250,7 +250,7 @@
       v-if="filteredProducts.length === 0"
       class="text-center text-gray-500 py-8"
     >
-      No products found in this category.
+      {{ $t('ui.noProductsFoundInThisCategory') }}
     </div>
   </section>
 </template>

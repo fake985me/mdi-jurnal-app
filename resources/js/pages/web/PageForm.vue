@@ -5,11 +5,11 @@
       <div class="flex justify-between items-center px-6 py-3">
         <div class="flex items-center gap-4">
           <router-link to="/dashboard/pages" class="text-gray-600 hover:text-gray-900">
-            ← Back
+            {{ $t('ui.back') }}
           </router-link>
           <div class="border-l border-gray-300 pl-4">
-            <h1 class="text-lg font-bold text-gray-900">{{ isEdit ? 'Edit Page' : 'Create Page' }}</h1>
-            <p class="text-xs text-gray-500">{{ page.title || 'Untitled Page' }}</p>
+            <h1 class="text-lg font-bold text-gray-900">{{ isEdit ? $t('pageTitles.PageEdit') : $t('pageTitles.PageCreate') }}</h1>
+            <p class="text-xs text-gray-500">{{ page.title || $t('ui.untitledPage') }}</p>
           </div>
         </div>
         <div class="flex items-center gap-3">
@@ -18,21 +18,21 @@
             <button
               @click="previewMode = 'mobile'"
               :class="['px-3 py-1 rounded text-sm', previewMode === 'mobile' ? 'bg-white shadow' : 'hover:bg-gray-200']"
-              title="Mobile Preview"
+              :title="$t('ui.mobilePreview')"
             >
               📱
             </button>
             <button
               @click="previewMode = 'tablet'"
               :class="['px-3 py-1 rounded text-sm', previewMode === 'tablet' ? 'bg-white shadow' : 'hover:bg-gray-200']"
-              title="Tablet Preview"
+              :title="$t('ui.tabletPreview')"
             >
               💻
             </button>
             <button
               @click="previewMode = 'desktop'"
               :class="['px-3 py-1 rounded text-sm', previewMode === 'desktop' ? 'bg-white shadow' : 'hover:bg-gray-200']"
-              title="Desktop Preview"
+              :title="$t('ui.desktopPreview')"
             >
               🖥️
             </button>
@@ -42,19 +42,19 @@
             @click="showMetaModal = true"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
           >
-            ⚙️ Page Settings
+            {{ $t('ui.pageSettings') }}
           </button>
           <button
             @click="togglePreview"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
           >
-            {{ showPreview ? '✏️ Edit' : '👁️ Preview' }}
+            {{ showPreview ? $t('ui.edit') : $t('ui.preview3') }}
           </button>
           <button
             @click="undoAction"
             :disabled="!canUndo"
             class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-30 text-sm"
-            title="Undo"
+            :title="$t('ui.undo')"
           >
             ↶
           </button>
@@ -62,23 +62,23 @@
             @click="redoAction"
             :disabled="!canRedo"
             class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-30 text-sm"
-            title="Redo"
+            :title="$t('ui.redo')"
           >
             ↷
           </button>
           <button
             @click="exportHTML"
             class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-            title="Export HTML"
+            :title="$t('ui.exportHtml')"
           >
-            📤 Export
+            {{ $t('ui.export') }}
           </button>
           <button
             @click="savePage"
             :disabled="saving"
             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium"
           >
-            {{ saving ? 'Saving...' : '💾 Save Page' }}
+            {{ saving ? $t('sales.saving') : $t('ui.savePage') }}
           </button>
         </div>
       </div>
@@ -88,7 +88,7 @@
     <div v-if="loading" class="flex items-center justify-center h-screen">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-        <p class="text-gray-600 mt-4">Loading page...</p>
+        <p class="text-gray-600 mt-4">{{ $t('ui.loadingPage') }}</p>
       </div>
     </div>
 
@@ -125,16 +125,16 @@
     <!-- Page Settings Modal -->
     <div v-if="showMetaModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
-        <h3 class="text-xl font-bold mb-4">Page Settings</h3>
+        <h3 class="text-xl font-bold mb-4">{{ $t('ui.pageSettings2') }}</h3>
 
         <form @submit.prevent="showMetaModal = false" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Page Title *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.pageTitle') }}</label>
             <input
               v-model="page.title"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="My Awesome Page"
+              :placeholder="$t('ui.myAwesomePage')"
             />
           </div>
 
@@ -149,21 +149,21 @@
                 placeholder="my-awesome-page"
               />
             </div>
-            <p class="text-xs text-gray-500 mt-1">URL-friendly name (lowercase, hyphens only)</p>
+            <p class="text-xs text-gray-500 mt-1">{{ $t('ui.urlFriendlyNameLowercaseHyphensOnly') }}</p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.metaDescription') }}</label>
             <textarea
               v-model="page.meta_description"
               rows="2"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="A brief description for search engines (150-160 characters)"
+              :placeholder="$t('ui.aBriefDescriptionForSearchEngines150160Characters')"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.metaKeywords') }}</label>
             <input
               v-model="page.meta_keywords"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -173,7 +173,7 @@
 
           <!-- Navigation Settings -->
           <div class="border-t border-gray-200 pt-4 mt-4">
-            <h4 class="text-md font-semibold text-gray-800 mb-3">🧭 Navigation Settings</h4>
+            <h4 class="text-md font-semibold text-gray-800 mb-3">{{ $t('ui.navigationSettings') }}</h4>
             
             <div class="flex items-center gap-3 mb-3">
               <input
@@ -182,45 +182,45 @@
                 v-model="page.show_in_nav"
                 class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
               />
-              <label for="showInNav" class="text-sm text-gray-700">Show this page in navigation menu</label>
+              <label for="showInNav" class="text-sm text-gray-700">{{ $t('ui.showThisPageInNavigationMenu') }}</label>
             </div>
 
             <div v-if="page.show_in_nav" class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nav Label</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.navLabel') }}</label>
                 <input
                   v-model="page.nav_label"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Menu label (default: page title)"
+                  :placeholder="$t('ui.menuLabelDefaultPageTitle')"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nav Order</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.navOrder') }}</label>
                 <input
                   type="number"
                   v-model.number="page.nav_order"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   placeholder="100"
                 />
-                <p class="text-xs text-gray-500 mt-1">Lower = appears first</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $t('ui.lowerAppearsFirst') }}</p>
               </div>
               <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Menu (optional)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.parentMenuOptional') }}</label>
                 <select
                   v-model="page.nav_parent"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="">-- Top Level (no parent) --</option>
-                  <option value="Product">Product</option>
-                  <option value="Projects">Projects</option>
-                  <option value="Service & Solutions">Service & Solutions</option>
+                  <option value="">{{ $t('ui.topLevelNoParent') }}</option>
+                  <option value="Product">{{ $t('sales.product') }}</option>
+                  <option value="Projects">{{ $t('labels.project') }}</option>
+                  <option value="Service & Solutions">{{ $t('ui.serviceSolutions') }}</option>
                 </select>
               </div>
             </div>
           </div>
 
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
@@ -229,7 +229,7 @@
               @click="showMetaModal = false"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Close
+              {{ $t('ui.close') }}
             </button>
           </div>
         </form>
@@ -239,6 +239,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../../services/api'
@@ -308,8 +310,8 @@ const loadPage = async () => {
       order: section.order,
     }))
   } catch (err) {
-    console.error('Failed to load page:', err)
-    error.value = 'Failed to load page'
+    console.error('Gagal memuat halaman:', err)
+    error.value = uiText("Gagal memuat halaman")
   } finally {
     loading.value = false
   }
@@ -361,7 +363,7 @@ const exportHTML = () => {
   htmlParts.push('<head>')
   htmlParts.push('  <meta charset="UTF-8">')
   htmlParts.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">')
-  htmlParts.push('  <title>' + (page.value.title || 'Untitled Page') + '</title>')
+  htmlParts.push('  <title>' + (page.value.title || uiText("Halaman Tanpa Judul")) + '</title>')
 
   if (page.value.meta_description) {
     htmlParts.push('  <meta name="description" content="' + page.value.meta_description + '">')
@@ -424,7 +426,7 @@ const exportHTML = () => {
 
 const savePage = async () => {
   if (!page.value.title || !page.value.slug) {
-    error.value = 'Please fill in required fields (Title and Slug)'
+    error.value = uiText("Isi kolom wajib (Judul dan Slug)")
     showMetaModal.value = true
     return
   }
@@ -482,8 +484,8 @@ const savePage = async () => {
 
     router.push('/dashboard/pages')
   } catch (err) {
-    console.error('Failed to save page:', err)
-    error.value = err.response?.data?.message || 'Failed to save page'
+    console.error('Gagal menyimpan halaman:', err)
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan halaman")
   } finally {
     saving.value = false
   }

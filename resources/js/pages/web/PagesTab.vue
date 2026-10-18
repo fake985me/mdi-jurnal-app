@@ -10,7 +10,7 @@
             : 'bg-green-600 text-white'
         ]">
         <span>{{ toast.type === 'error' ? '✕' : '✓' }}</span>
-        {{ toast.message }}
+        {{ $ui(toast.message) }}
       </div>
     </Transition>
 
@@ -19,9 +19,9 @@
       <div class="flex items-start gap-3">
         <span class="text-2xl">🌐</span>
         <div>
-          <p class="text-sm font-semibold text-blue-900 mb-1">Struktur Halaman Publik — <a href="http://moimstone.test/" target="_blank" class="underline hover:text-blue-600">moimstone.test</a></p>
+          <p class="text-sm font-semibold text-blue-900 mb-1">{{ $t('ui.publicPageStructure') }} <a href="http://moimstone.test/" target="_blank" class="underline hover:text-blue-600">moimstone.test</a></p>
           <p class="text-xs text-blue-700">
-            Halaman default bawaan website tidak bisa dihapus. Halaman custom baru yang Anda tambahkan bisa diaktifkan di navbar publik.
+            {{ $t('ui.halamanDefaultBawaanWebsiteTidakBisaDihapusHalamanCustomBaruYangAndaTambahkanBisa') }}
           </p>
         </div>
       </div>
@@ -29,16 +29,16 @@
 
     <!-- DEFAULT PAGES (Fixed — isi dari homepage moimstone.test) -->
     <div>
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Halaman Default (Fixed)</h2>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ $t('ui.halamanDefaultFixed') }}</h2>
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Halaman</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">URL Publik</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sections / Konten</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Kelola</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{{ $t('nav.pages') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{{ $t('ui.publicUrl') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{{ $t('ui.sectionsKonten') }}</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{{ $t('ui.manage') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -47,8 +47,8 @@
                 <div class="flex items-center gap-2">
                   <span class="text-xl">{{ page.icon }}</span>
                   <div>
-                    <div class="text-sm font-semibold text-gray-900">{{ page.name }}</div>
-                    <div class="text-xs text-gray-400">{{ page.description }}</div>
+                    <div class="text-sm font-semibold text-gray-900">{{ $ui(page.name) }}</div>
+                    <div class="text-xs text-gray-400">{{ $ui(page.description) }}</div>
                   </div>
                 </div>
               </td>
@@ -62,14 +62,14 @@
                 <div class="flex flex-wrap gap-1">
                   <span v-for="sec in page.sections" :key="sec"
                     class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
-                    {{ sec }}
+                    {{ $ui(sec) }}
                   </span>
                 </div>
               </td>
               <td class="px-4 py-3 text-center">
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
                   <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
-                  Aktif
+                  {{ $t('labels.active') }}
                 </span>
               </td>
               <td class="px-4 py-3 text-right">
@@ -77,11 +77,11 @@
                   <router-link v-for="action in page.actions" :key="action.label"
                     :to="action.to"
                     class="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-all">
-                    {{ action.label }}
+                    {{ $ui(action.label) }}
                   </router-link>
                   <a :href="page.path" target="_blank"
                     class="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-all">
-                    Preview ↗
+                    {{ $t('ui.preview2') }}
                   </a>
                 </div>
               </td>
@@ -95,34 +95,34 @@
     <div>
       <div class="flex justify-between items-center mb-3">
         <div>
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Halaman Custom</h2>
-          <p class="text-xs text-gray-400 mt-0.5">Halaman baru yang ditambahkan — bisa muncul di navbar publik</p>
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">{{ $t('ui.halamanCustom') }}</h2>
+          <p class="text-xs text-gray-400 mt-0.5">{{ $t('ui.newPagesCanAppearInThePublicNavigationMenu') }}</p>
         </div>
         <router-link
           to="/dashboard/pages/create"
           class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1.5 shadow-sm"
         >
-          <span class="text-base leading-none">+</span> Tambah Halaman
+          <span class="text-base leading-none">+</span> {{ $t('ui.addPage') }}
         </router-link>
       </div>
 
       <div v-if="loading" class="py-10 text-center">
         <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-indigo-600 mx-auto"></div>
-        <p class="text-gray-400 text-xs mt-3">Memuat halaman...</p>
+        <p class="text-gray-400 text-xs mt-3">{{ $t('ui.loadingPage') }}</p>
       </div>
 
       <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
-        {{ error }}
+        {{ $ui(error) }}
       </div>
 
       <div v-else-if="pages.length === 0"
         class="bg-white rounded-xl border border-dashed border-gray-300 py-14 text-center">
         <p class="text-gray-300 text-4xl mb-3">📄</p>
-        <p class="text-gray-500 text-sm font-medium mb-1">Belum ada halaman custom</p>
-        <p class="text-gray-400 text-xs mb-4">Tambahkan halaman baru seperti Blog, FAQ, atau landing page khusus</p>
+        <p class="text-gray-500 text-sm font-medium mb-1">{{ $t('ui.belumAdaHalamanCustom') }}</p>
+        <p class="text-gray-400 text-xs mb-4">{{ $t('ui.tambahkanHalamanBaruSepertiBlogFaqAtauLandingPageKhusus') }}</p>
         <router-link to="/dashboard/pages/create"
           class="inline-flex items-center gap-1 text-indigo-600 hover:underline text-sm font-medium">
-          + Buat halaman pertama
+          {{ $t('ui.createYourFirstPage2') }}
         </router-link>
       </div>
 
@@ -130,11 +130,11 @@
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Halaman</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{{ $t('nav.pages') }}</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">URL</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Di Navbar</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">{{ $t('ui.inNav') }}</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -142,7 +142,7 @@
               :class="['transition-colors', confirmDeleteId === page.id ? 'bg-red-50' : 'hover:bg-gray-50']">
               <td class="px-4 py-3">
                 <div class="text-sm font-medium text-gray-900">{{ page.title }}</div>
-                <div class="text-xs text-gray-400">{{ page.sections?.length || 0 }} sections</div>
+                <div class="text-xs text-gray-400">{{ page.sections?.length || 0 }} {{ $t('ui.sectionS') }}</div>
               </td>
               <td class="px-4 py-3">
                 <a :href="`/pages/${page.slug}`" target="_blank"
@@ -156,14 +156,14 @@
                   page.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
                 ]">
                   <span :class="['w-1.5 h-1.5 rounded-full inline-block', page.is_published ? 'bg-green-500' : 'bg-yellow-400']"></span>
-                  {{ page.is_published ? 'Published' : 'Draft' }}
+                  {{ page.is_published ? $t('labels.published') : $t('labels.draft') }}
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
                 <button
                   @click="toggleNav(page)"
                   :disabled="!page.is_published"
-                  :title="!page.is_published ? 'Publish dulu sebelum tampil di navbar' : ''"
+                  :title="!page.is_published ? $t('ui.publishFirstToAppearInNavigation') : ''"
                   :class="[
                     'relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none',
                     !page.is_published ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
@@ -176,36 +176,36 @@
                   ]" />
                 </button>
                 <div class="text-xs mt-0.5" :class="page.show_in_nav ? 'text-indigo-600' : 'text-gray-400'">
-                  {{ page.show_in_nav ? 'Tampil' : 'Sembunyi' }}
+                  {{ page.show_in_nav ? $t('ui.visible') : $t('ui.hidden') }}
                 </div>
               </td>
               <td class="px-4 py-3 text-right">
                 <!-- Mode normal -->
                 <div v-if="confirmDeleteId !== page.id" class="flex justify-end items-center gap-1.5">
                   <router-link :to="`/dashboard/pages/${page.id}/edit`"
-                    class="px-2.5 py-1 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</router-link>
+                    class="px-2.5 py-1 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">{{ $t('common.edit') }}</router-link>
                   <button @click="togglePublish(page)"
                     class="px-2.5 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    {{ page.is_published ? 'Unpublish' : 'Publish' }}
+                    {{ page.is_published ? $t('ui.unpublish') : $t('ui.publish') }}
                   </button>
                   <button @click="duplicatePage(page.id)"
-                    class="px-2.5 py-1 text-xs text-green-600 hover:bg-green-50 rounded-lg transition-colors">Duplikat</button>
+                    class="px-2.5 py-1 text-xs text-green-600 hover:bg-green-50 rounded-lg transition-colors">{{ $t('ui.duplicate') }}</button>
                   <button @click="confirmDeleteId = page.id"
-                    class="px-2.5 py-1 text-xs text-red-500 hover:bg-red-50 hover:border-red-200 border border-transparent rounded-lg transition-colors">Hapus</button>
+                    class="px-2.5 py-1 text-xs text-red-500 hover:bg-red-50 hover:border-red-200 border border-transparent rounded-lg transition-colors">{{ $t('common.delete') }}</button>
                 </div>
                 <!-- Mode konfirmasi hapus (inline — tidak butuh window.confirm) -->
                 <div v-else class="flex justify-end items-center gap-2">
-                  <span class="text-xs text-red-600 font-medium">Yakin hapus?</span>
+                  <span class="text-xs text-red-600 font-medium">{{ $t('ui.confirmDeletion2') }}</span>
                   <button
                     @click="deletePage(page.id)"
                     :disabled="deletingId === page.id"
                     class="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60">
-                    {{ deletingId === page.id ? 'Menghapus...' : 'Ya, Hapus' }}
+                    {{ deletingId === page.id ? $t('ui.deleting') : $t('ui.yesDelete') }}
                   </button>
                   <button
                     @click="confirmDeleteId = null"
                     class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                    Batal
+                    {{ $t('common.cancel') }}
                   </button>
                 </div>
               </td>
@@ -218,6 +218,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '../../services/api'
@@ -228,50 +230,50 @@ const navigationStore = useNavigationStore()
 // Halaman default moimstone.test — sesuai home.vue dan routes publik
 const defaultPages = [
   {
-    name: 'Homepage',
+    name: 'Beranda',
     icon: '🏠',
-    description: 'Landing page utama website',
+    description: uiText("Halaman utama situs"),
     path: '/',
-    sections: ['Carousel', 'Product Solutions', 'Firmware', 'Solutions', 'About Us', 'Projects'],
+    sections: [uiText("Carousel"), uiText("Solusi Produk"), 'Firmware', uiText("Solusi"), uiText("Tentang Kami"), uiText("Proyek")],
     actions: [
       { label: '🖼 Carousel', to: '/dashboard/cms/website-content' },
       { label: '📦 Products', to: '/dashboard/cms/website-content' },
-      { label: 'Settings', to: '/dashboard/cms/settings' },
-      { label: 'Solutions', to: '/dashboard/cms/solutions' },
-      { label: 'Projects', to: '/dashboard/cms/projects' },
+      { label: uiText("Pengaturan"), to: '/dashboard/cms/settings' },
+      { label: uiText("Solusi"), to: '/dashboard/cms/solutions' },
+      { label: uiText("Proyek"), to: '/dashboard/cms/projects' },
     ]
   },
   {
-    name: 'Product',
+    name: "Produk",
     icon: '📦',
-    description: 'Katalog produk publik',
+    description: uiText("Katalog produk publik"),
     path: '/product',
-    sections: ['Category Tabs', 'Sub-Category', 'Product Cards'],
-    actions: [{ label: '📦 Kelola Produk', to: '/dashboard/cms/website-content' }]
+    sections: [uiText("Tab Kategori"), uiText("Subkategori"), uiText("Kartu Produk")],
+    actions: [{ label: uiText("📦 Kelola Produk"), to: '/dashboard/cms/website-content' }]
   },
   {
-    name: 'Service & Solutions',
+    name: "Layanan dan Solusi",
     icon: '🛠',
-    description: 'Halaman layanan dan solusi',
+    description: uiText("Halaman layanan dan solusi"),
     path: '/solutions',
-    sections: ['Solutions Cards', 'Features'],
-    actions: [{ label: 'Kelola', to: '/dashboard/cms/solutions' }]
+    sections: [uiText("Kartu Solusi"), uiText("Fitur")],
+    actions: [{ label: uiText("Kelola"), to: '/dashboard/cms/solutions' }]
   },
   {
-    name: 'Projects',
+    name: "Proyek",
     icon: '📂',
-    description: 'Portofolio proyek',
+    description: uiText("Portofolio proyek"),
     path: '/project',
-    sections: ['Project Cards', 'Stats'],
-    actions: [{ label: 'Kelola', to: '/dashboard/cms/projects' }]
+    sections: [uiText("Kartu Proyek"), uiText("Statistik")],
+    actions: [{ label: uiText("Kelola"), to: '/dashboard/cms/projects' }]
   },
   {
-    name: 'Contact',
+    name: "Kontak",
     icon: '📞',
-    description: 'Informasi kontak dan sales',
+    description: uiText("Informasi kontak dan penjualan"),
     path: '/contact',
-    sections: ['Contact Info', 'Sales', 'Social Media'],
-    actions: [{ label: '📞 Kelola', to: '/dashboard/cms/website-content' }]
+    sections: [uiText("Informasi Kontak"), uiText("Penjualan"), uiText("Media Sosial")],
+    actions: [{ label: uiText("📞 Kelola"), to: '/dashboard/cms/website-content' }]
   },
 ]
 
@@ -294,7 +296,7 @@ const loadPages = async () => {
     const response = await api.get('/pages')
     pages.value = response.data.data || response.data
   } catch (err) {
-    error.value = 'Gagal memuat halaman.'
+    error.value = uiText("Gagal memuat halaman.")
   } finally {
     loading.value = false
   }
@@ -305,24 +307,24 @@ const togglePublish = async (page) => {
     await api.post(`/pages/${page.id}/${page.is_published ? 'unpublish' : 'publish'}`)
     await loadPages()
     await navigationStore.refreshNavigation()
-    showToast(page.is_published ? 'Halaman di-unpublish' : 'Halaman dipublish')
+    showToast(page.is_published ? uiText("Penerbitan halaman dibatalkan") : uiText("Halaman diterbitkan"))
   } catch {
-    showToast('Gagal mengubah status halaman', 'error')
+    showToast(uiText("Gagal mengubah status halaman"), 'error')
   }
 }
 
 const toggleNav = async (page) => {
   if (!page.is_published) {
-    showToast('Publish halaman dulu sebelum tampil di navbar', 'error')
+    showToast(uiText("Terbitkan halaman terlebih dahulu agar tampil di menu navigasi"), 'error')
     return
   }
   try {
     await api.put(`/pages/${page.id}`, { show_in_nav: !page.show_in_nav })
     await loadPages()
     await navigationStore.refreshNavigation()
-    showToast(page.show_in_nav ? 'Halaman disembunyikan dari navbar' : 'Halaman ditampilkan di navbar')
+    showToast(page.show_in_nav ? uiText("Halaman disembunyikan dari menu navigasi") : uiText("Halaman ditampilkan di menu navigasi"))
   } catch {
-    showToast('Gagal mengubah status navbar', 'error')
+    showToast(uiText("Gagal mengubah status menu navigasi"), 'error')
   }
 }
 
@@ -330,9 +332,9 @@ const duplicatePage = async (id) => {
   try {
     await api.post(`/pages/${id}/duplicate`)
     await loadPages()
-    showToast('Halaman berhasil diduplikat')
+    showToast(uiText("Halaman berhasil diduplikat"))
   } catch {
-    showToast('Gagal menduplikat halaman', 'error')
+    showToast(uiText("Gagal menduplikat halaman"), 'error')
   }
 }
 
@@ -343,10 +345,10 @@ const deletePage = async (id) => {
     confirmDeleteId.value = null
     await loadPages()
     await navigationStore.refreshNavigation()
-    showToast('Halaman berhasil dihapus')
+    showToast(uiText("Halaman berhasil dihapus"))
   } catch (err) {
     console.error('Delete error:', err)
-    showToast('Gagal menghapus halaman', 'error')
+    showToast(uiText("Gagal menghapus halaman"), 'error')
   } finally {
     deletingId.value = null
   }

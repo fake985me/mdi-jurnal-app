@@ -1,20 +1,20 @@
 <template>
     <div class="space-y-6">
-        <h2 class="text-2xl font-bold">Products</h2>
+        <h2 class="text-2xl font-bold">{{ $t('sales.product') }}</h2>
 
         <div v-if="loading" class="text-center p-8">
-            <p>Loading...</p>
+            <p>{{ $t('common.loading') }}</p>
         </div>
 
         <table v-else class="min-w-full bg-white">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.category') }}</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.brand') }}</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.module') }}</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.stock') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,12 +33,12 @@
         </table>
 
         <div v-if="products.data?.length" class="flex justify-between items-center p-4">
-            <p>Showing {{ products.from }} to {{ products.to }} of {{ products.total }}</p>
+            <p>{{ $t('sales.showing') }} {{ products.from }} {{ $t('ui.to') }} {{ products.to }} {{ $t('sales.of') }} {{ products.total }}</p>
             <div class="space-x-2">
                 <button @click="loadProducts(products.current_page - 1)" :disabled="!products.prev_page_url"
-                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">Previous</button>
+                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">{{ $t('sales.previous') }}</button>
                 <button @click="loadProducts(products.current_page + 1)" :disabled="!products.next_page_url"
-                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">Next</button>
+                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">{{ $t('sales.next') }}</button>
             </div>
         </div>
     </div>
@@ -58,7 +58,7 @@ const loadProducts = async (page = 1) => {
         console.log('Products loaded:', response.data);
         products.value = response.data;
     } catch (error) {
-        console.error('Failed to load products:', error);
+        console.error('Gagal memuat produk:', error);
     } finally {
         loading.value = false;
     }

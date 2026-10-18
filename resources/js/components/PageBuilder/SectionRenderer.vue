@@ -23,8 +23,8 @@
         <div :class="`grid grid-cols-1 md:grid-cols-${section.settings?.columns || 3} gap-8`">
           <div v-for="(feature, index) in section.content.features" :key="index" class="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
             <div class="text-5xl mb-4">{{ feature.icon }}</div>
-            <h3 class="text-xl font-semibold mb-2">{{ feature.title }}</h3>
-            <p class="text-gray-600">{{ feature.description }}</p>
+            <h3 class="text-xl font-semibold mb-2">{{ $ui(feature.title) }}</h3>
+            <p class="text-gray-600">{{ $ui(feature.description) }}</p>
           </div>
         </div>
       </div>
@@ -60,8 +60,8 @@
           <div v-for="(item, index) in section.content.items" :key="index" class="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-shadow">
             <img :src="item.image_url" :alt="item.title" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300" />
             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-white">
-              <h3 class="text-xl font-semibold mb-1">{{ item.title }}</h3>
-              <p class="text-sm opacity-90">{{ item.description }}</p>
+              <h3 class="text-xl font-semibold mb-1">{{ $ui(item.title) }}</h3>
+              <p class="text-sm opacity-90">{{ $ui(item.description) }}</p>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@
         <div :class="`grid grid-cols-2 md:grid-cols-${section.settings?.columns || 4} gap-8`">
           <div v-for="(stat, index) in section.content.stats" :key="index" class="text-center">
             <div class="text-5xl font-bold text-indigo-600 mb-2">{{ stat.number }}</div>
-            <div class="text-gray-600">{{ stat.label }}</div>
+            <div class="text-gray-600">{{ $ui(stat.label) }}</div>
           </div>
         </div>
       </div>
@@ -106,17 +106,17 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div v-if="section.content.show_form" class="bg-white p-8 rounded-xl shadow-lg">
             <form class="space-y-4">
-              <input type="text" placeholder="Your Name" class="w-full px-4 py-3 border rounded-lg" />
-              <input type="email" placeholder="Your Email" class="w-full px-4 py-3 border rounded-lg" />
-              <textarea placeholder="Your Message" rows="4" class="w-full px-4 py-3 border rounded-lg"></textarea>
-              <button type="submit" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Send Message</button>
+              <input type="text" :placeholder="$t('ui.yourName')" class="w-full px-4 py-3 border rounded-lg" />
+              <input type="email" :placeholder="$t('ui.yourEmail')" class="w-full px-4 py-3 border rounded-lg" />
+              <textarea :placeholder="$t('ui.yourMessage')" rows="4" class="w-full px-4 py-3 border rounded-lg"></textarea>
+              <button type="submit" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">{{ $t('ui.sendMessage') }}</button>
             </form>
           </div>
           <div class="space-y-6">
             <div v-for="(info, index) in section.content.contact_info" :key="index" class="flex items-start gap-4">
               <span class="text-3xl">{{ info.icon }}</span>
               <div>
-                <div class="font-semibold text-gray-900">{{ info.type }}</div>
+                <div class="font-semibold text-gray-900">{{ $label(info.type) }}</div>
                 <div class="text-gray-600">{{ info.value }}</div>
               </div>
             </div>

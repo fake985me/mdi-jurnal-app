@@ -3,13 +3,13 @@
     <template v-if="!formPage && !confirmPage">
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold text-gray-900">Category Management</h2>
+      <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.Categories') }}</h2>
       <div class="flex gap-3">
         <button
           @click="openCategoryModal(null)"
           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
-          + Add Category
+          {{ $t('ui.addCategory') }}
         </button>
       </div>
     </div>
@@ -17,7 +17,7 @@
     <!-- Categories List -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading categories...</p>
+        <p class="text-gray-600">{{ $t('ui.loadingCategories') }}</p>
       </div>
 
       <div v-else class="divide-y divide-gray-200">
@@ -33,32 +33,32 @@
               </button>
               <div>
                 <div class="font-semibold text-gray-900">{{ category.name }}</div>
-                <div class="text-sm text-gray-500">{{ category.description || 'No description' }}</div>
+                <div class="text-sm text-gray-500">{{ category.description || $t('ui.noDescription') }}</div>
               </div>
             </div>
 
             <div class="flex items-center gap-4">
               <div class="text-sm text-gray-500">
-                <span class="font-medium">{{ category.sub_categories?.length || 0 }}</span> subcategories
+                <span class="font-medium">{{ category.sub_categories?.length || 0 }}</span> {{ $t('ui.subcategories') }}
               </div>
               <div class="flex gap-2">
                 <button
                   @click="openSubcategoryModal(category, null)"
                   class="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
                 >
-                  + Subcategory
+                  {{ $t('ui.subcategory') }}
                 </button>
                 <button
                   @click="openCategoryModal(category)"
                   class="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
                 >
-                  Edit
+                  {{ $t('common.edit') }}
                 </button>
                 <button
                   @click="deleteCategory(category)"
                   class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
                 >
-                  Delete
+                  {{ $t('common.delete') }}
                 </button>
               </div>
             </div>
@@ -67,7 +67,7 @@
           <!-- Subcategories (Expandable) -->
           <div v-if="expandedCategories.includes(category.id)" class="mt-3 ml-8">
             <div v-if="!category.sub_categories?.length" class="text-sm text-gray-500 italic py-2">
-              No subcategories yet
+              {{ $t('ui.noSubcategoriesYet') }}
             </div>
 
             <div v-else class="space-y-2">
@@ -84,14 +84,14 @@
                     </button>
                     <div>
                       <div class="font-medium text-gray-800">{{ sub.name }}</div>
-                      <div class="text-xs text-gray-500">{{ sub.description || 'No description' }}</div>
+                      <div class="text-xs text-gray-500">{{ sub.description || $t('ui.noDescription') }}</div>
                     </div>
                   </div>
 
                   <div class="flex items-center gap-3">
-                    <div class="text-xs text-gray-500"> {{ sub.products_count || 0 }} products</div>
-                    <button @click="openSubcategoryModal(category, sub)" class="text-indigo-600 hover:text-indigo-800 text-sm">Edit</button>
-                    <button @click="deleteSubcategory(sub)" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    <div class="text-xs text-gray-500"> {{ sub.products_count || 0 }} {{ $t('ui.products') }}</div>
+                    <button @click="openSubcategoryModal(category, sub)" class="text-indigo-600 hover:text-indigo-800 text-sm">{{ $t('common.edit') }}</button>
+                    <button @click="deleteSubcategory(sub)" class="text-red-600 hover:text-red-800 text-sm">{{ $t('common.delete') }}</button>
                   </div>
 
                 </div>
@@ -104,14 +104,14 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                         </svg>
-                        Loading products...
+                        {{ $t('ui.loadingProducts') }}
                     </div>
                   </div>
                   <table v-else class="w-full">
                       <thead class="table-header">
                         <tr>
-                          <th class="table-header-cell">Name</th>
-                          <th class="table-header-cell">Brand</th>
+                          <th class="table-header-cell">{{ $t('ui.name') }}</th>
+                          <th class="table-header-cell">{{ $t('ui.brand') }}</th>
                         </tr>
                       </thead>
 
@@ -123,7 +123,7 @@
 
                         <tr v-if="!sub.products || !sub.products.length">
                           <td colspan="3" class="text-center py-4 text-gray-500">
-                            No products found
+                            {{ $t('ui.noProductsFound') }}
                           </td>
                         </tr>
                       </tbody>
@@ -137,20 +137,20 @@
         </div>
 
         <div v-if="!categories.length && !loading" class="p-8 text-center text-gray-500">
-          No categories found. Click "Add Category" to create one.
+          {{ $t('ui.noCategoriesFoundClickAddCategoryToCreateOne') }}
         </div>
       </div>
     </div>
     </template>
 
     <section v-if="confirmPage" class="max-w-2xl mx-auto mt-8 rounded-lg bg-white p-6 shadow-md">
-      <h3 class="text-xl font-bold text-gray-900">Confirm deletion</h3>
+      <h3 class="text-xl font-bold text-gray-900">{{ $t('ui.confirmDeletion') }}</h3>
       <p class="mt-3 text-gray-600">{{ confirmMessage }}</p>
-      <p v-if="confirmError" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ confirmError }}</p>
+      <p v-if="confirmError" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ $ui(confirmError) }}</p>
       <div class="mt-6 flex justify-end gap-3">
-        <button type="button" @click="closeFormPage" class="rounded-lg bg-gray-200 px-4 py-2 text-gray-700">Cancel</button>
+        <button type="button" @click="closeFormPage" class="rounded-lg bg-gray-200 px-4 py-2 text-gray-700">{{ $t('common.cancel') }}</button>
         <button type="button" @click="confirmDelete" :disabled="saving" class="rounded-lg bg-red-600 px-4 py-2 text-white disabled:opacity-50">
-          {{ saving ? 'Deleting...' : 'Delete' }}
+          {{ saving ? $t('ui.deleting') : $t('common.delete') }}
         </button>
       </div>
     </section>
@@ -158,31 +158,31 @@
     <!-- Category Modal -->
     <div v-if="showCategoryModal" :class="formPage ? 'w-full mx-auto mt-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
       <div class="bg-white rounded-lg p-6 w-full" :class="formPage ? 'w-full shadow-md' : ''">
-        <h3 class="text-xl font-bold mb-4">{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ editingCategory ? $t('ui.editCategory') : $t('ui.addNewCategory') }}</h3>
         
         <form @submit.prevent="saveCategory" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.categoryName') }}</label>
             <input
               v-model="categoryForm.name"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="e.g., XGSPON, SWITCH, WIRELESS"
+              :placeholder="$t('ui.eGXgsponSwitchWireless')"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
             <textarea
               v-model="categoryForm.description"
               rows="3"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Optional description..."
+              :placeholder="$t('ui.optionalDescription')"
             ></textarea>
           </div>
 
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <div class="flex justify-end space-x-3">
@@ -191,14 +191,14 @@
               @click="closeFormPage"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="saving"
               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
-              {{ saving ? 'Saving...' : 'Save' }}
+              {{ saving ? $t('sales.saving') : $t('common.save') }}
             </button>
           </div>
         </form>
@@ -209,35 +209,35 @@
     <div v-if="showSubcategoryModal" :class="formPage ? 'mx-auto mt-8' : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'">
       <div class="bg-white rounded-lg p-6 w-full" :class="formPage ? 'shadow-md' : ''">
         <h3 class="text-xl font-bold mb-4">
-          {{ editingSubcategory ? 'Edit Subcategory' : 'Add New Subcategory' }}
+          {{ editingSubcategory ? $t('ui.editSubcategory') : $t('ui.addNewSubcategory') }}
         </h3>
         <p class="text-sm text-gray-600 mb-4">
-          Parent Category: <span class="font-semibold">{{ selectedCategory?.name }}</span>
+          {{ $t('ui.parentCategory') }} <span class="font-semibold">{{ selectedCategory?.name }}</span>
         </p>
         
         <form @submit.prevent="saveSubcategory" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory Name *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.subcategoryName') }}</label>
             <input
               v-model="subcategoryForm.name"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="e.g., ONU, OLT, L2 SWITCH"
+              :placeholder="$t('ui.eGOnuOltL2Switch')"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
             <textarea
               v-model="subcategoryForm.description"
               rows="3"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Optional description..."
+              :placeholder="$t('ui.optionalDescription')"
             ></textarea>
           </div>
 
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <div class="flex justify-end space-x-3">
@@ -246,14 +246,14 @@
               @click="closeFormPage"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="saving"
               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
-              {{ saving ? 'Saving...' : 'Save Subcategory' }}
+              {{ saving ? $t('sales.saving') : $t('ui.saveSubcategory') }}
             </button>
           </div>
         </form>
@@ -263,6 +263,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
 import { useRoute, useRouter } from 'vue-router';
@@ -308,7 +310,7 @@ const loadCategories = async () => {
     // Auto-expand all categories
     expandedCategories.value = categories.value.map(c => c.id);
   } catch (err) {
-    console.error('Failed to load categories:', err);
+    console.error('Gagal memuat kategori:', err);
   } finally {
     loading.value = false;
   }
@@ -402,7 +404,7 @@ const saveCategory = async () => {
       loadCategories();
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save category';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan kategori");
   } finally {
     saving.value = false;
   }
@@ -430,7 +432,7 @@ const confirmDelete = async () => {
       loadCategories();
     }
   } catch (err) {
-    confirmError.value = err.response?.data?.message || 'Failed to delete item';
+    confirmError.value = err.response?.data?.message || uiText("Gagal menghapus barang");
   } finally {
     saving.value = false;
   }
@@ -483,7 +485,7 @@ const saveSubcategory = async () => {
       loadCategories();
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save subcategory';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan subkategori");
   } finally {
     saving.value = false;
   }
@@ -517,8 +519,8 @@ onMounted(async () => {
       return;
     }
     confirmMessage.value = confirm === 'category'
-      ? `Are you sure you want to delete "${confirmItem.value.name}"? This will also delete all subcategories.`
-      : `Are you sure you want to delete subcategory "${confirmItem.value.name}"?`;
+      ? uiText('ui.confirmDeleteCategoryNamed', { p0: confirmItem.value.name })
+      : uiText('ui.confirmDeleteSubcategoryNamed', { p0: confirmItem.value.name });
     return;
   }
 

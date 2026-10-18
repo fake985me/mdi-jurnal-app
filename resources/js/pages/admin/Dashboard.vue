@@ -68,11 +68,11 @@
       <!-- Header -->
       <div class="px-6 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-medium text-gray-800">Statistik Penjualan</h2>
-          <p class="text-sm text-gray-400">Ringkasan berdasarkan status transaksi</p>
+          <h2 class="text-lg font-medium text-gray-800">{{ $t('ui.salesStatistics') }}</h2>
+          <p class="text-sm text-gray-400">{{ $t('ui.summaryByTransactionStatus') }}</p>
         </div>
         <div class="text-right">
-          <div class="text-xs text-gray-400 mb-0.5">Grand Total</div>
+          <div class="text-xs text-gray-400 mb-0.5">{{ $t('sales.grandTotal') }}</div>
           <div class="text-xl font-bold text-indigo-600">Rp {{ formatRp(salesGrandTotal) }}</div>
         </div>
       </div>
@@ -99,7 +99,7 @@
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
             <span class="text-2xl font-bold text-gray-800">{{ salesData.length }}</span>
-            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Transaksi</span>
+            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">{{ $t('ui.transactions2') }}</span>
           </div>
         </div>
 
@@ -113,7 +113,7 @@
               <span class="text-lg">{{ stat.icon }}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-xs font-bold uppercase tracking-wide" :style="'color:' + stat.color">{{ stat.label }}</div>
+              <div class="text-xs font-bold uppercase tracking-wide" :style="'color:' + stat.color">{{ $ui(stat.label) }}</div>
               <div class="text-2xl font-bold text-gray-800 mt-0.5">{{ stat.count }}</div>
               <div class="text-xs text-gray-400 mt-0.5">Rp {{ formatRp(stat.total) }}</div>
             </div>
@@ -127,11 +127,11 @@
 
         <!-- Monthly mini bar chart (SVG) -->
         <div class="shrink-0 hidden xl:block" style="width:180px">
-          <div class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3">6 Bulan Terakhir</div>
+          <div class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3">{{ $t('ui.last6Months') }}</div>
           <div class="flex items-end gap-1 h-20">
             <div v-for="(m, i) in monthlySales" :key="i" class="flex-1 flex flex-col items-center gap-1">
               <div class="w-full rounded-t-md bg-indigo-100 hover:bg-indigo-400 transition-colors"
-                :style="'height:' + (m.maxH) + 'px'" :title="m.label + ': ' + m.count + ' transaksi'"></div>
+                :style="'height:' + (m.maxH) + 'px'" :title="m.label + ': ' + m.count + ' ' + $t('dashboard.transactionCountUnit')"></div>
               <span class="text-[9px] text-gray-400">{{ m.shortLabel }}</span>
             </div>
           </div>
@@ -142,10 +142,10 @@
       <!-- Loading state -->
       <div v-if="salesLoading" class="px-6 pb-6 text-center text-sm text-gray-400">
         <span class="inline-block w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mr-2"></span>
-        Memuat data penjualan...
+        {{ $t('ui.loadingSalesData') }}
       </div>
       <div v-else-if="!salesData.length" class="px-6 pb-6 text-center text-sm text-gray-400">
-        Belum ada data penjualan
+        {{ $t('ui.noSalesDataYet') }}
       </div>
     </div>
       <!-- Recent Stock Report -->
@@ -192,7 +192,7 @@
                 <td class="py-4 text-right">
                   <span class="text-sm font-semibold text-gray-800">{{ item.value }}</span>
                 </td>
-                <td class="py-4 text-right text-sm text-gray-400">{{ item.date }}</td>
+                <td class="py-4 text-right text-sm text-gray-400">{{ $date(item.date) }}</td>
               </tr>
             </tbody>
           </table>
@@ -202,21 +202,21 @@
           <!-- Pagination -->
           <div v-if="stockPagination.last_page > 1" class="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
             <p class="text-sm text-gray-500">
-              Halaman {{ stockPagination.current_page }} dari {{ stockPagination.last_page }}
-              <span class="text-gray-400">({{ stockPagination.total }} produk)</span>
+              {{ $t('nav.pages') }} {{ stockPagination.current_page }} {{ $t('sales.of') }} {{ stockPagination.last_page }}
+              <span class="text-gray-400">({{ stockPagination.total }} {{ $t('ui.products3') }}</span>
             </p>
             <div class="flex gap-2">
               <button
                 @click="changeStockPage(stockPagination.current_page - 1)"
                 :disabled="stockPagination.current_page <= 1"
                 class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                ← Prev
+                {{ $t('ui.prev') }}
               </button>
               <button
                 @click="changeStockPage(stockPagination.current_page + 1)"
                 :disabled="stockPagination.current_page >= stockPagination.last_page"
                 class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                Next →
+                {{ $t('ui.next') }}
               </button>
             </div>
           </div>
@@ -227,19 +227,19 @@
       <div class="bg-white rounded-2xl p-6 border border-gray-100">
         <div class="flex justify-between items-center mb-6">
           <div>
-            <h2 class="text-lg font-medium text-gray-800">Top Products</h2>
-            <p class="text-sm text-gray-400">Units sold this period</p>
+            <h2 class="text-lg font-medium text-gray-800">{{ $t('ui.topProducts') }}</h2>
+            <p class="text-sm text-gray-400">{{ $t('ui.unitsSoldThisPeriod') }}</p>
           </div>
           <select v-model="selectedCategory" @change="loadDashboardData"
             class="text-sm px-3 py-2 border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-gray-400 transition-colors">
-            <option :value="null">All Categories</option>
+            <option :value="null">{{ $t('ui.allCategories') }}</option>
             <option v-for="category in categories" :key="category.id" :value="category.id">
               {{ category.name }}
             </option>
           </select>
         </div>
         <VueApexCharts v-if="stockChartOptions && stockChartSeries.length" type="bar" height="580"
-          :options="stockChartOptions" :series="stockChartSeries" />
+          :options="stockChartOptions" :series="localizedStockChartSeries" />
         <div v-else class="h-64 flex items-center justify-center text-gray-400">
           <p>{{ $t('common.noData') }}</p>
         </div>
@@ -301,6 +301,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted, computed } from 'vue';
 import api from '../../services/api';
 import VueApexCharts from 'vue3-apexcharts';
@@ -312,6 +314,10 @@ const salesLoading = ref(true)
 const stats = ref({});
 const stockChartOptions = ref(null);
 const stockChartSeries = ref([]);
+const localizedStockChartSeries = computed(() => stockChartSeries.value.map(series => ({
+  ...series,
+  name: uiText(series.name),
+})));
 const stockReports = ref([]);
 const categories = ref([]);
 const selectedCategory = ref(null);
@@ -332,7 +338,7 @@ const stockStatus = ref({
 });
 
 const currentDate = computed(() => {
-  return new Date().toLocaleDateString('id-ID', {
+  return new Date().toLocaleDateString(uiLocale(), {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -342,13 +348,13 @@ const currentDate = computed(() => {
 
 // ── Sales computed ───────────────────────────────────────────
 const salesStats = computed(() => [
-  { key: 'pending',   label: 'Pending',   icon: '🕐', color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe', iconBg: '#dbeafe', pctBg: '#eff6ff',
+  { key: 'pending',   label: uiText("Menunggu"),   icon: '🕐', color: '#3b82f6', bg: '#eff6ff', borderColor: '#bfdbfe', iconBg: '#dbeafe', pctBg: '#eff6ff',
     count: salesData.value.filter(s => s.status === 'pending').length,
     total: salesData.value.filter(s => s.status === 'pending').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
-  { key: 'completed', label: 'Completed', icon: '✅', color: '#10b981', bg: '#f0fdf4', borderColor: '#a7f3d0', iconBg: '#d1fae5', pctBg: '#f0fdf4',
+  { key: 'completed', label: uiText("Selesai"), icon: '✅', color: '#10b981', bg: '#f0fdf4', borderColor: '#a7f3d0', iconBg: '#d1fae5', pctBg: '#f0fdf4',
     count: salesData.value.filter(s => s.status === 'completed').length,
     total: salesData.value.filter(s => s.status === 'completed').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
-  { key: 'cancelled', label: 'Cancelled', icon: '❌', color: '#f43f5e', bg: '#fff1f2', borderColor: '#fecdd3', iconBg: '#fee2e2', pctBg: '#fff1f2',
+  { key: 'cancelled', label: uiText("Dibatalkan"), icon: '❌', color: '#f43f5e', bg: '#fff1f2', borderColor: '#fecdd3', iconBg: '#fee2e2', pctBg: '#fff1f2',
     count: salesData.value.filter(s => s.status === 'cancelled').length,
     total: salesData.value.filter(s => s.status === 'cancelled').reduce((a, x) => a + Number(x.grand_total || x.total_amount || 0), 0) },
 ])
@@ -375,11 +381,10 @@ const monthlySales = computed(() => {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
-    const shortLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
     months.push({
       key,
-      label: shortLabels[d.getMonth()] + ' ' + d.getFullYear(),
-      shortLabel: shortLabels[d.getMonth()],
+      label: d.toLocaleDateString(uiLocale(), { month: 'long', year: 'numeric' }),
+      shortLabel: d.toLocaleDateString(uiLocale(), { month: 'short' }),
       count: salesData.value.filter(s => s.sale_date && s.sale_date.startsWith(key)).length
     })
   }
@@ -387,7 +392,7 @@ const monthlySales = computed(() => {
   return months.map(m => ({ ...m, maxH: Math.max(4, Math.round((m.count / maxCount) * 64)) }))
 })
 
-const formatRp = (n) => Number(n || 0).toLocaleString('id-ID')
+const formatRp = (n) => Number(n || 0).toLocaleString(uiLocale())
 
 const loadSalesData = async () => {
   salesLoading.value = true
@@ -416,7 +421,7 @@ const loadCategories = async () => {
     const response = await api.get('/categories');
     categories.value = response.data;
   } catch (error) {
-    console.error('Failed to load categories:', error);
+    console.error('Gagal memuat kategori:', error);
   }
 };
 
@@ -481,7 +486,7 @@ const loadDashboardData = async () => {
       },
       tooltip: {
         y: {
-          formatter: (val) => val + ' units',
+          formatter: (val) => val + ' ' + uiText('unit'),
         },
       },
       legend: { show: false },
@@ -491,7 +496,7 @@ const loadDashboardData = async () => {
     await loadStockStatus();
     await loadStockReports();
   } catch (error) {
-    console.error('Failed to load dashboard data:', error);
+    console.error('Gagal memuat data dasbor:', error);
   }
 };
 
@@ -511,7 +516,7 @@ const loadStockStatus = async () => {
       needed: stocks.filter(s => s.quantity > 1 && s.quantity <= 5).length,
     };
   } catch (error) {
-    console.error('Failed to load stock status:', error);
+    console.error('Gagal memuat status stok:', error);
   }
 };
 
@@ -535,14 +540,14 @@ const loadStockReports = async (page = 1) => {
       return {
         code: stock.product?.sku || 'N/A',
         value: stock.quantity,
-        unit: stock.product?.title || stock.product?.name || 'Unknown',
+        unit: stock.product?.title || stock.product?.name || uiText("Tidak Diketahui"),
         categories: categoryPairs.map(p => p.category_name).filter(Boolean),
         subcategories: categoryPairs.map(p => p.sub_category_name).filter(Boolean),
-        date: new Date(stock.last_updated).toLocaleDateString('id-ID')
+        date: stock.last_updated,
       };
     });
   } catch (error) {
-    console.error('Failed to load stock reports:', error);
+    console.error('Gagal memuat laporan stok:', error);
   }
 };
 

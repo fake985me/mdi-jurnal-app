@@ -16,14 +16,14 @@
     <!-- Filters -->
     <div class="card p-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input v-model="filters.search" @input="loadProjects" type="text" placeholder="Search by project name, code, or client..." class="input" />
+        <input v-model="filters.search" @input="loadProjects" type="text" :placeholder="$t('ui.searchByProjectNameCodeOrClient')" class="input" />
         <select v-model="filters.status" @change="loadProjects" class="input">
-          <option value="">All Status</option>
-          <option value="pending">Pending Approval</option>
-          <option value="approved">Approved</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="pending">{{ $t('labels.pending_approval') }}</option>
+          <option value="approved">{{ $t('labels.approved') }}</option>
+          <option value="active">{{ $t('labels.active') }}</option>
+          <option value="completed">{{ $t('labels.completed') }}</option>
+          <option value="cancelled">{{ $t('labels.cancelled') }}</option>
         </select>
       </div>
     </div>
@@ -31,23 +31,23 @@
     <!-- Projects Table -->
     <div class="table-wrapper">
       <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">Project Investments</h3>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('labels.invest') }}</h3>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading...</p>
+        <p class="text-gray-600">{{ $t('common.loading') }}</p>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="table-header">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project Code</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.projectCode') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.type') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.projectName') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.client') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.totalValue') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -55,7 +55,7 @@
             <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ project.project_code }}</td>
             <td class="px-6 py-4">
               <span :class="project.type === 'invest' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'" class="px-2 py-1 text-xs rounded-full">
-                {{ project.type === 'invest' ? 'Invest' : 'Design & Build' }}
+                {{ project.type === 'invest' ? $t('ui.investment') : $t('labels.design_build') }}
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ project.project_name }}</td>
@@ -65,15 +65,15 @@
             </td>
             <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ formatCurrency(project.total_value) }}</td>
             <td class="px-6 py-4">
-              <span :class="getStatusBadge(project.status)">{{ project.status }}</span>
+              <span :class="getStatusBadge(project.status)">{{ $label(project.status) }}</span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button v-if="project.status === 'pending'" @click="approveProject(project)" class="text-green-600 hover:text-green-900">Approve</button>
-              <button v-if="project.status === 'approved'" @click="startProject(project)" class="text-blue-600 hover:text-blue-900">Start</button>
-              <button v-if="['approved', 'active'].includes(project.status)" @click="completeProject(project)" class="text-green-600 hover:text-green-900">Complete</button>
-              <button v-if="project.status !== 'completed'" @click="cancelProject(project)" class="text-red-600 hover:text-red-900">Cancel</button>
-              <router-link :to="{ name: 'ProjectInvestmentDetail', params: { id: project.id } }" class="text-indigo-600 hover:text-indigo-900">Kelola Barang</router-link>
-              <button @click="exportProject(project)" class="text-purple-600 hover:text-purple-900">Export</button>
+              <button v-if="project.status === 'pending'" @click="approveProject(project)" class="text-green-600 hover:text-green-900">{{ $t('projectInvestment.actions.approve') }}</button>
+              <button v-if="project.status === 'approved'" @click="startProject(project)" class="text-blue-600 hover:text-blue-900">{{ $t('projectInvestment.actions.start') }}</button>
+              <button v-if="['approved', 'active'].includes(project.status)" @click="completeProject(project)" class="text-green-600 hover:text-green-900">{{ $t('projectInvestment.actions.complete') }}</button>
+              <button v-if="project.status !== 'completed'" @click="cancelProject(project)" class="text-red-600 hover:text-red-900">{{ $t('projectInvestment.actions.cancel') }}</button>
+              <router-link :to="{ name: 'ProjectInvestmentDetail', params: { id: project.id } }" class="text-indigo-600 hover:text-indigo-900">{{ $t('ui.manageItems') }}</router-link>
+              <button @click="exportProject(project)" class="text-purple-600 hover:text-purple-900">{{ $t('projectInvestment.actions.export') }}</button>
             </td>
           </tr>
         </tbody>
@@ -81,10 +81,10 @@
 
       <!-- Pagination -->
       <div v-if="projects.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between">
-        <p class="text-sm text-gray-700">Showing {{ projects.from }} to {{ projects.to }} of {{ projects.total }}</p>
+        <p class="text-sm text-gray-700">{{ $t('sales.showing') }} {{ projects.from }} {{ $t('ui.to') }} {{ projects.to }} {{ $t('sales.of') }} {{ projects.total }}</p>
         <div class="flex space-x-2">
-          <button @click="loadProjects(projects.current_page - 1)" :disabled="!projects.prev_page_url" class="btn-secondary disabled:opacity-50">Previous</button>
-          <button @click="loadProjects(projects.current_page + 1)" :disabled="!projects.next_page_url" class="btn-secondary disabled:opacity-50">Next</button>
+          <button @click="loadProjects(projects.current_page - 1)" :disabled="!projects.prev_page_url" class="btn-secondary disabled:opacity-50">{{ $t('sales.previous') }}</button>
+          <button @click="loadProjects(projects.current_page + 1)" :disabled="!projects.next_page_url" class="btn-secondary disabled:opacity-50">{{ $t('sales.next') }}</button>
         </div>
       </div>
     </div>
@@ -92,25 +92,25 @@
     <!-- Create/Edit Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-2xl font-bold mb-6">New Project Investment</h3>
+        <h3 class="text-2xl font-bold mb-6">{{ $t('ui.newProjectInvestment') }}</h3>
         
         <form @submit.prevent="saveProject" class="space-y-4">
           <!-- Project Type Selector -->
           <div class="p-4 bg-gray-50 rounded-lg">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Project Type *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.projectType') }}</label>
             <div class="flex gap-4">
               <label class="flex items-center p-3 border rounded-lg cursor-pointer" :class="form.type === 'invest' ? 'bg-green-50 border-green-500' : 'hover:bg-gray-100'">
                 <input type="radio" v-model="form.type" value="invest" class="mr-2" />
                 <div>
-                  <span class="font-medium">Project Invest</span>
-                  <p class="text-xs text-gray-500">Auto-create dedicated warehouse & MSA</p>
+                  <span class="font-medium">{{ $t('labels.invest') }}</span>
+                  <p class="text-xs text-gray-500">{{ $t('ui.autoCreateDedicatedWarehouseMsa') }}</p>
                 </div>
               </label>
               <label class="flex items-center p-3 border rounded-lg cursor-pointer" :class="form.type === 'design_build' ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-100'">
                 <input type="radio" v-model="form.type" value="design_build" class="mr-2" />
                 <div>
-                  <span class="font-medium">Design & Build</span>
-                  <p class="text-xs text-gray-500">Requires MSA contract</p>
+                  <span class="font-medium">{{ $t('labels.design_build') }}</span>
+                  <p class="text-xs text-gray-500">{{ $t('ui.requiresMsaContract') }}</p>
                 </div>
               </label>
             </div>
@@ -118,47 +118,47 @@
           
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
-              <input v-model="form.project_name" required class="input" placeholder="Enter project name" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.projectName') }}</label>
+              <input v-model="form.project_name" required class="input" :placeholder="$t('ui.enterProjectName')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-              <input v-model="form.client_name" required class="input" placeholder="Enter client name" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.clientName') }}</label>
+              <input v-model="form.client_name" required class="input" :placeholder="$t('ui.enterClientName')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Client Contact</label>
-              <input v-model="form.client_contact" class="input" placeholder="Phone or email" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.clientContact') }}</label>
+              <input v-model="form.client_contact" class="input" :placeholder="$t('ui.phoneOrEmail')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.startDate') }}</label>
               <input v-model="form.start_date" type="date" required class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Expected End Date</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.expectedEndDate') }}</label>
               <input v-model="form.expected_end_date" type="date" class="input" />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
             <textarea v-model="form.description" rows="2" class="input"></textarea>
           </div>
 
           <!-- Items Section -->
           <div class="border-t pt-4 mt-4">
             <div class="flex justify-between items-center mb-3">
-              <h4 class="font-semibold text-gray-800">Project Items (Stock Allocation)</h4>
-              <button type="button" @click="addItem" class="text-sm text-purple-600 hover:text-purple-800">+ Add Item</button>
+              <h4 class="font-semibold text-gray-800">{{ $t('ui.projectItemsStockAllocation') }}</h4>
+              <button type="button" @click="addItem" class="text-sm text-purple-600 hover:text-purple-800">{{ $t('sales.addItem') }}</button>
             </div>
             
             <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-5 gap-2 mb-2">
               <select v-model="item.product_id" @change="setItemPrice(index)" class="input col-span-2">
-                <option value="">Select Product</option>
+                <option value="">{{ $t('sales.selectProduct') }}</option>
                 <option v-for="product in products" :key="product.id" :value="product.id">
                   {{ product.title }}
                 </option>
               </select>
-              <input v-model.number="item.quantity" type="number" min="1" class="input" placeholder="Qty" />
-              <input v-model.number="item.unit_price" type="number" step="0.01" class="input" placeholder="Unit Price" />
+              <input v-model.number="item.quantity" type="number" min="1" class="input" :placeholder="$t('sales.quantity')" />
+              <input v-model.number="item.unit_price" type="number" step="0.01" class="input" :placeholder="$t('ui.unitPrice')" />
               <button type="button" @click="form.items.splice(index, 1)" class="text-red-500 hover:text-red-700">✕</button>
             </div>
             
@@ -167,11 +167,11 @@
             </div>
           </div>
 
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ $ui(error) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Saving...' : 'Create Project' }}</button>
+            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? $t('sales.saving') : $t('ui.createProject') }}</button>
           </div>
         </form>
       </div>
@@ -181,6 +181,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../../services/api';
@@ -208,12 +210,12 @@ const form = ref({
 });
 
 const formatCurrency = (value) => {
-  return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+  return 'Rp ' + Number(value || 0).toLocaleString(uiLocale());
 };
 
 const formatDate = (date) => {
   if (!date) return '-';
-  return new Date(date).toLocaleDateString('id-ID');
+  return new Date(date).toLocaleDateString(uiLocale());
 };
 
 const getStatusBadge = (status) => {
@@ -287,19 +289,19 @@ const saveProject = async () => {
     showModal.value = false;
     loadProjects();
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save project';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan proyek");
   } finally {
     saving.value = false;
   }
 };
 
 const approveProject = async (project) => {
-  if (!confirm('Approve this project? Stock will be deducted for all items.')) return;
+  if (!confirm(uiText("Setujui proyek ini? Stok akan dikurangi untuk semua barang."))) return;
   try {
     await api.post(`/project-investments/${project.id}/approve`);
     loadProjects();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to approve project');
+    alert(err.response?.data?.message || uiText("Gagal menyetujui proyek"));
   }
 };
 
@@ -308,27 +310,27 @@ const startProject = async (project) => {
     await api.post(`/project-investments/${project.id}/start`);
     loadProjects();
   } catch (err) {
-    alert('Failed to start project');
+    alert(uiText("Gagal memulai proyek"));
   }
 };
 
 const completeProject = async (project) => {
-  if (!confirm('Mark this project as completed?')) return;
+  if (!confirm(uiText("Tandai proyek ini sebagai selesai?"))) return;
   try {
     await api.post(`/project-investments/${project.id}/complete`);
     loadProjects();
   } catch (err) {
-    alert('Failed to complete project');
+    alert(uiText("Gagal menyelesaikan proyek"));
   }
 };
 
 const cancelProject = async (project) => {
-  if (!confirm('Cancel this project? Stock will be returned.')) return;
+  if (!confirm(uiText("Batalkan proyek ini? Stok akan dikembalikan."))) return;
   try {
     await api.post(`/project-investments/${project.id}/cancel`);
     loadProjects();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to cancel project');
+    alert(err.response?.data?.message || uiText("Gagal membatalkan proyek"));
   }
 };
 

@@ -24,7 +24,7 @@
             </div>
             <div class="text-sm">
               <p class="font-semibold text-gray-800">{{ authStore.user?.name }}</p>
-              <p class="text-xs text-gray-500 capitalize">{{ authStore.user?.role }}</p>
+              <p class="text-xs text-gray-500 capitalize">{{ $label(authStore.user?.role) }}</p>
             </div>
           </div>
           <button @click="handleLogout"

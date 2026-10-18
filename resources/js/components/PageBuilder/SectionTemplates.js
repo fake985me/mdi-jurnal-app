@@ -4,15 +4,15 @@ export const sectionTemplates = [
   // Hero Sections
   {
     id: 'hero-gradient',
-    name: 'Hero - Gradient Background',
+    name: "Banner Utama - Latar Gradasi",
     category: 'hero',
     thumbnail: '🎨',
     template: {
       section_type: 'hero',
       content: {
-        heading: 'Welcome to Our Platform',
-        subheading: 'Build amazing things with our solutions',
-        button_text: 'Get Started',
+        heading: "Selamat Datang di Platform Kami",
+        subheading: "Wujudkan ide Anda dengan solusi kami",
+        button_text: "Mulai",
         button_url: '#',
         background_type: 'gradient',
         gradient: 'from-indigo-600 to-purple-600',
@@ -27,15 +27,15 @@ export const sectionTemplates = [
   },
   {
     id: 'hero-image',
-    name: 'Hero - With Background Image',
+    name: "Banner Utama - Gambar Latar",
     category: 'hero',
     thumbnail: '🖼️',
     template: {
       section_type: 'hero',
       content: {
-        heading: 'Transform Your Business apa yang ini',
-        subheading: 'Innovative solutions for modern challenges',
-        button_text: 'Learn More',
+        heading: "Transformasikan Bisnis Anda",
+        subheading: "Solusi inovatif untuk tantangan masa kini",
+        button_text: "Pelajari Lebih Lanjut",
         button_url: '#',
         background_type: 'image',
         image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c',
@@ -53,29 +53,29 @@ export const sectionTemplates = [
   // Feature Sections
   {
     id: 'features-3col',
-    name: 'Features - 3 Column Grid',
+    name: "Fitur - Kisi 3 Kolom",
     category: 'features',
     thumbnail: '📊',
     template: {
       section_type: 'features',
       content: {
-        heading: 'Our Features',
-        subheading: 'Everything you need to succeed',
+        heading: "Fitur Kami",
+        subheading: "Semua yang Anda butuhkan untuk berkembang",
         features: [
           {
             icon: '⚡',
-            title: 'Fast Performance',
-            description: 'Lightning-fast load times and optimal performance',
+            title: "Kinerja Cepat",
+            description: "Waktu muat cepat dan kinerja optimal",
           },
           {
             icon: '🔒',
-            title: 'Secure & Reliable',
-            description: 'Enterprise-grade security for your data',
+            title: "Aman dan Andal",
+            description: "Keamanan tingkat perusahaan untuk data Anda",
           },
           {
             icon: '🎨',
-            title: 'Beautiful Design',
-            description: 'Modern and responsive user interface',
+            title: "Desain Menarik",
+            description: "Antarmuka pengguna modern dan responsif",
           },
         ],
       },
@@ -88,17 +88,17 @@ export const sectionTemplates = [
   },
   {
     id: 'features-list',
-    name: 'Features - List with Icons',
+    name: "Fitur - Daftar dengan Ikon",
     category: 'features',
     thumbnail: '📋',
     template: {
       section_type: 'features',
       content: {
-        heading: 'Why Choose Us',
+        heading: "Mengapa Memilih Kami",
         features: [
-          { icon: '✓', title: 'Easy to Use', description: 'Intuitive interface' },
-          { icon: '✓', title: 'Scalable', description: 'Grows with your business' },
-          { icon: '✓', title: '24/7 Support', description: 'Always here to help' },
+          { icon: '✓', title: "Mudah Digunakan", description: "Antarmuka yang mudah dipahami" },
+          { icon: '✓', title: "Dapat Dikembangkan", description: "Berkembang bersama bisnis Anda" },
+          { icon: '✓', title: "Dukungan 24/7", description: "Selalu siap membantu" },
         ],
       },
       settings: {
@@ -112,14 +112,14 @@ export const sectionTemplates = [
   // Content Sections
   {
     id: 'content-2col',
-    name: 'Content - Two Column',
+    name: "Konten - Dua Kolom",
     category: 'content',
     thumbnail: '📄',
     template: {
       section_type: 'content',
       content: {
-        heading: 'About Our Solutions',
-        text: 'We provide cutting-edge solutions that help businesses transform digitally. Our platform offers comprehensive tools and features designed to streamline your operations.',
+        heading: "Tentang Solusi Kami",
+        text: "Kami menyediakan solusi teknologi terkini untuk membantu transformasi digital bisnis. Platform kami menawarkan perangkat dan fitur lengkap untuk menyederhanakan operasional Anda.",
         image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f',
         image_position: 'right',
       },
@@ -132,14 +132,14 @@ export const sectionTemplates = [
   },
   {
     id: 'content-centered',
-    name: 'Content - Centered Text',
+    name: "Konten - Teks Rata Tengah",
     category: 'content',
     thumbnail: '📝',
     template: {
       section_type: 'content',
       content: {
-        heading: 'Our Mission',
-        text: 'To empower businesses with innovative technology solutions that drive growth and success in the digital age.',
+        heading: "Misi Kami",
+        text: "Mendukung bisnis dengan solusi teknologi inovatif yang mendorong pertumbuhan dan keberhasilan di era digital.",
       },
       settings: {
         layout: 'centered',
@@ -152,29 +152,29 @@ export const sectionTemplates = [
   // Gallery/Projects
   {
     id: 'gallery-grid',
-    name: 'Gallery - Grid Layout',
+    name: "Galeri - Tata Letak Kisi",
     category: 'gallery',
     thumbnail: '🖼️',
     template: {
       section_type: 'gallery',
       content: {
-        heading: 'Our Projects',
-        subheading: 'Recent work we\'re proud of',
+        heading: "Proyek Kami",
+        subheading: "Karya terbaru yang kami banggakan",
         items: [
           {
             image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f',
-            title: 'Project Alpha',
-            description: 'Enterprise solution',
+            title: "Proyek Alfa",
+            description: "Solusi perusahaan",
           },
           {
             image_url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab',
-            title: 'Project Beta',
-            description: 'Mobile application',
+            title: "Proyek Beta",
+            description: "Aplikasi seluler",
           },
           {
             image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c',
-            title: 'Project Gamma',
-            description: 'Web platform',
+            title: "Proyek Gama",
+            description: "Platform web",
           },
         ],
       },
@@ -190,17 +190,17 @@ export const sectionTemplates = [
   // CTA Sections
   {
     id: 'cta-gradient',
-    name: 'Call to Action - Gradient',
+    name: "Ajakan Bertindak - Gradasi",
     category: 'cta',
     thumbnail: '🎯',
     template: {
       section_type: 'cta',
       content: {
-        heading: 'Ready to Get Started?',
-        text: 'Join thousands of satisfied customers today',
-        button_text: 'Start Free Trial',
+        heading: "Siap Memulai?",
+        text: "Bergabunglah bersama ribuan pelanggan yang puas",
+        button_text: "Mulai Uji Coba Gratis",
         button_url: '#',
-        secondary_button_text: 'Learn More',
+        secondary_button_text: "Pelajari Lebih Lanjut",
         secondary_button_url: '#',
       },
       settings: {
@@ -215,19 +215,19 @@ export const sectionTemplates = [
   // Contact Section
   {
     id: 'contact-form',
-    name: 'Contact - Form & Info',
+    name: "Kontak - Formulir dan Informasi",
     category: 'contact',
     thumbnail: '📞',
     template: {
       section_type: 'contact',
       content: {
-        heading: 'Get in Touch',
-        subheading: 'We\'d love to hear from you',
+        heading: "Hubungi Kami",
+        subheading: "Kami senang mendengar pendapat Anda",
         show_form: true,
         contact_info: [
           { type: 'email', value: 'info@example.com', icon: '📧' },
           { type: 'phone', value: '+1 234 567 890', icon: '📱' },
-          { type: 'address', value: '123 Business St, City', icon: '📍' },
+          { type: 'address', value: "Jl. Bisnis No. 123, Kota", icon: '📍' },
         ],
       },
       settings: {
@@ -241,17 +241,17 @@ export const sectionTemplates = [
   // Stats Section
   {
     id: 'stats-4col',
-    name: 'Statistics - 4 Column',
+    name: "Statistik - 4 Kolom",
     category: 'stats',
     thumbnail: '📊',
     template: {
       section_type: 'stats',
       content: {
         stats: [
-          { number: '10K+', label: 'Active Users' },
-          { number: '50+', label: 'Countries' },
-          { number: '99.9%', label: 'Uptime' },
-          { number: '24/7', label: 'Support' },
+          { number: '10K+', label: "Pengguna Aktif" },
+          { number: '50+', label: "Negara" },
+          { number: '99.9%', label: "Waktu Aktif" },
+          { number: '24/7', label: "Dukungan" },
         ],
       },
       settings: {
@@ -266,26 +266,26 @@ export const sectionTemplates = [
   // Team Section
   {
     id: 'team-grid',
-    name: 'Team - Grid Layout',
+    name: "Tim - Tata Letak Kisi",
     category: 'team',
     thumbnail: '👥',
     template: {
       section_type: 'team',
       content: {
-        heading: 'Meet Our Team',
-        subheading: 'The people behind our success',
+        heading: "Kenali Tim Kami",
+        subheading: "Sosok di balik keberhasilan kami",
         members: [
           {
             name: 'John Doe',
-            role: 'CEO & Founder',
+            role: "CEO dan Pendiri",
             image_url: 'https://ui-avatars.com/api/?name=John+Doe',
-            bio: 'Visionary leader with 15 years experience',
+            bio: "Pemimpin visioner dengan pengalaman 15 tahun",
           },
           {
             name: 'Jane Smith',
             role: 'CTO',
             image_url: 'https://ui-avatars.com/api/?name=Jane+Smith',
-            bio: 'Technology expert and innovator',
+            bio: "Ahli teknologi dan inovator",
           },
         ],
       },
@@ -300,24 +300,24 @@ export const sectionTemplates = [
   // Testimonials
   {
     id: 'testimonials-slider',
-    name: 'Testimonials - Slider',
+    name: "Testimoni - Slide",
     category: 'testimonials',
     thumbnail: '💬',
     template: {
       section_type: 'testimonials',
       content: {
-        heading: 'What Our Clients Say',
+        heading: "Pendapat Klien Kami",
         testimonials: [
           {
-            quote: 'This platform transformed our business operations completely.',
+            quote: "Platform ini mengubah operasional bisnis kami secara menyeluruh.",
             author: 'Sarah Johnson',
             role: 'CEO, TechCorp',
             avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson',
           },
           {
-            quote: 'Outstanding service and incredible results.',
+            quote: "Layanan istimewa dengan hasil luar biasa.",
             author: 'Michael Brown',
-            role: 'Director, InnovateCo',
+            role: "Direktur, InnovateCo",
             avatar: 'https://ui-avatars.com/api/?name=Michael+Brown',
           },
         ],
@@ -333,37 +333,37 @@ export const sectionTemplates = [
   // Pricing
   {
     id: 'pricing-3tier',
-    name: 'Pricing - 3 Tier',
+    name: "Harga - 3 Tingkat",
     category: 'pricing',
     thumbnail: '💰',
     template: {
       section_type: 'pricing',
       content: {
-        heading: 'Choose Your Plan',
-        subheading: 'Flexible pricing for every need',
+        heading: "Pilih Paket Anda",
+        subheading: "Harga fleksibel untuk setiap kebutuhan",
         plans: [
           {
-            name: 'Starter',
+            name: "Pemula",
             price: '$29',
-            period: 'month',
-            features: ['Feature 1', 'Feature 2', 'Feature 3'],
-            button_text: 'Get Started',
+            period: "bulan",
+            features: ["Fitur 1", "Fitur 2", "Fitur 3"],
+            button_text: "Mulai",
             highlighted: false,
           },
           {
-            name: 'Professional',
+            name: "Profesional",
             price: '$99',
-            period: 'month',
-            features: ['All Starter features', 'Feature 4', 'Feature 5', 'Priority Support'],
-            button_text: 'Get Started',
+            period: "bulan",
+            features: ["Semua fitur paket Pemula", "Fitur 4", "Fitur 5", "Dukungan Prioritas"],
+            button_text: "Mulai",
             highlighted: true,
           },
           {
-            name: 'Enterprise',
-            price: 'Custom',
+            name: "Perusahaan",
+            price: "Kustom",
             period: '',
-            features: ['All Pro features', 'Custom integration', 'Dedicated support'],
-            button_text: 'Contact Us',
+            features: ["Semua fitur paket Profesional", "Integrasi khusus", "Dukungan khusus"],
+            button_text: "Hubungi Kami",
             highlighted: false,
           },
         ],
@@ -378,25 +378,25 @@ export const sectionTemplates = [
   // FAQ
   {
     id: 'faq-accordion',
-    name: 'FAQ - Accordion',
+    name: "FAQ - Akordeon",
     category: 'faq',
     thumbnail: '❓',
     template: {
       section_type: 'faq',
       content: {
-        heading: 'Frequently Asked Questions',
+        heading: "Pertanyaan yang Sering Diajukan",
         questions: [
           {
-            question: 'How do I get started?',
-            answer: 'Simply sign up for an account and follow our quick start guide.',
+            question: "Bagaimana cara memulai?",
+            answer: "Daftar akun dan ikuti panduan singkat kami.",
           },
           {
-            question: 'What payment methods do you accept?',
-            answer: 'We accept all major credit cards, PayPal, and bank transfers.',
+            question: "Metode pembayaran apa yang tersedia?",
+            answer: "Kami menerima kartu kredit utama, PayPal, dan transfer bank.",
           },
           {
-            question: 'Can I cancel anytime?',
-            answer: 'Yes, you can cancel your subscription at any time without penalty.',
+            question: "Bisakah saya membatalkan kapan saja?",
+            answer: "Ya, Anda dapat membatalkan langganan kapan saja tanpa penalti.",
           },
         ],
       },
@@ -411,16 +411,16 @@ export const sectionTemplates = [
   // Newsletter
   {
     id: 'newsletter-simple',
-    name: 'Newsletter Signup',
+    name: "Pendaftaran Buletin",
     category: 'newsletter',
     thumbnail: '📧',
     template: {
       section_type: 'newsletter',
       content: {
-        heading: 'Stay Updated',
-        text: 'Subscribe to our newsletter for the latest updates and offers',
-        button_text: 'Subscribe',
-        placeholder: 'Enter your email',
+        heading: "Dapatkan Kabar Terbaru",
+        text: "Berlangganan buletin kami untuk kabar dan penawaran terbaru",
+        button_text: "Berlangganan",
+        placeholder: "Masukkan email Anda",
       },
       settings: {
         layout: 'inline',

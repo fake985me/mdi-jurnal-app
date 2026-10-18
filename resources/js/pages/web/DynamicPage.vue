@@ -2,16 +2,16 @@
   <div v-if="loading" class="min-h-screen flex items-center justify-center">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-      <p class="text-gray-600">Loading page...</p>
+      <p class="text-gray-600">{{ $t('ui.loadingPage') }}</p>
     </div>
   </div>
 
   <div v-else-if="error" class="min-h-screen flex items-center justify-center">
     <div class="text-center">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">Page Not Found</h1>
-      <p class="text-gray-600 mb-8">{{ error }}</p>
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ $t('ui.pageNotFound') }}</h1>
+      <p class="text-gray-600 mb-8">{{ $ui(error) }}</p>
       <router-link to="/" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-        Go Home
+        {{ $t('ui.goHome') }}
       </router-link>
     </div>
   </div>
@@ -29,6 +29,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, computed, onMounted, watch, defineComponent, h } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
@@ -38,7 +40,7 @@ const FallbackSection = defineComponent({
   props: ['content', 'settings'],
   render() {
     return h('div', { class: 'p-4 bg-gray-100 rounded-lg text-center text-gray-500' }, 
-      'Section content not available')
+      uiText("Konten bagian tidak tersedia"))
   }
 })
 
@@ -72,10 +74,10 @@ const fetchPage = async (slug) => {
       }
     }
   } catch (err) {
-    console.error('Failed to fetch page:', err)
+    console.error('Gagal memuat halaman:', err)
     error.value = err.response?.status === 404 
-      ? 'The page you are looking for does not exist.' 
-      : 'Failed to load page. Please try again later.'
+      ? uiText("Halaman yang Anda cari tidak ditemukan.")
+      : uiText("Gagal memuat halaman. Silakan coba lagi nanti.")
   } finally {
     loading.value = false
   }
@@ -91,7 +93,7 @@ const visibleSections = computed(() => {
 const getSectionComponent = (type) => {
   const component = SECTION_COMPONENTS[type]
   if (!component) {
-    console.warn(`Unknown section type: ${type}`)
+    console.warn(uiText('ui.unknownSectionType', { p0: type }))
     return FallbackSection
   }
   return component

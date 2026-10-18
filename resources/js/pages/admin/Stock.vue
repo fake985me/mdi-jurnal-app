@@ -2,32 +2,32 @@
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold text-gray-900">Stock Management</h2>
+      <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.Stock') }}</h2>
       <button
         v-if="activeTab === 'regular'"
         @click="showTransactionModal = true"
         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
-        + Record Transaction
+        {{ $t('ui.recordTransaction') }}
       </button>
     </div>
 
     <!-- Summary Cards (only for Regular Stock tab) -->
     <div v-if="activeTab === 'regular'" class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-indigo-500">
-        <div class="text-sm text-gray-500">Total Products</div>
+        <div class="text-sm text-gray-500">{{ $t('ui.totalProducts') }}</div>
         <div class="text-2xl font-bold text-indigo-600">{{ stocks.total || 0 }}</div>
       </div>
       <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-500">
-        <div class="text-sm text-gray-500">Low Stock</div>
+        <div class="text-sm text-gray-500">{{ $t('dashboard.lowStock') }}</div>
         <div class="text-2xl font-bold text-red-600">{{ stockSummary.lowStock }}</div>
       </div>
       <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-gray-500">
-        <div class="text-sm text-gray-500">Out of Stock</div>
+        <div class="text-sm text-gray-500">{{ $t('dashboard.outOfStock') }}</div>
         <div class="text-2xl font-bold text-gray-600">{{ stockSummary.outOfStock }}</div>
       </div>
       <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
-        <div class="text-sm text-gray-500">Healthy Stock</div>
+        <div class="text-sm text-gray-500">{{ $t('ui.healthyStock') }}</div>
         <div class="text-2xl font-bold text-green-600">{{ stockSummary.healthy }}</div>
       </div>
     </div>
@@ -45,7 +45,7 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
-            📦 Regular Stock
+            {{ $t('ui.regularStock') }}
           </button>
           <button
             @click="activeTab = 'rma'"
@@ -56,7 +56,7 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
-            ↩️ RMA Inventory
+            {{ $t('ui.rmaInventory') }}
           </button>
           <button
             @click="activeTab = 'investment'"
@@ -67,7 +67,7 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
-            📊 Investment Stock
+            {{ $t('ui.investmentStock') }}
           </button>
           <button
             @click="activeTab = 'msa'"
@@ -78,7 +78,7 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
-            🔧 MSA Project
+            {{ $t('ui.msaProject') }}
           </button>
           <button
             @click="activeTab = 'defective'"
@@ -89,7 +89,7 @@
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
-            ⚠️ Defective Items
+            {{ $t('ui.defectiveItems') }}
           </button>
         </nav>
       </div>
@@ -104,7 +104,7 @@
             v-model="filters.search"
             @input="debouncedLoadStocks"
             type="text"
-            placeholder="Search by product name, SKU, or brand..."
+            :placeholder="$t('ui.searchByProductNameSkuOrBrand')"
             class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           <select
@@ -112,9 +112,9 @@
             @change="loadStocks()"
             class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
-            <option value="">All Warehouses</option>
+            <option value="">{{ $t('ui.allWarehouses') }}</option>
             <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">
-              {{ wh.name }} {{ wh.is_default ? '(Default)' : '' }}
+              {{ wh.name }} {{ wh.is_default ? $t('ui.default2') : '' }}
             </option>
           </select>
           <div class="flex items-center">
@@ -126,7 +126,7 @@
               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             />
             <label for="low-stock" class="ml-2 text-sm text-gray-700">
-              Show only low stock items
+              {{ $t('ui.showOnlyLowStockItems') }}
             </label>
           </div>
           <div class="flex items-center">
@@ -138,7 +138,7 @@
               class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
             />
             <label for="out-of-stock" class="ml-2 text-sm text-gray-700">
-              Show only out of stock
+              {{ $t('ui.showOnlyOutOfStock') }}
             </label>
           </div>
         </div>
@@ -147,33 +147,33 @@
     <!-- Current Stock Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">Current Stock Levels</h3>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.currentStockLevels') }}</h3>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
-        <p class="text-gray-600 mt-2">Loading stock data...</p>
+        <p class="text-gray-600 mt-2">{{ $t('ui.loadingStockData') }}</p>
       </div>
 
       <div v-else-if="!stocks.data?.length" class="p-8 text-center">
-        <p class="text-gray-500 text-lg">📦 No stock data found</p>
-        <p class="text-gray-400 text-sm mt-1">Try adjusting your filters or add products first.</p>
+        <p class="text-gray-500 text-lg">{{ $t('ui.noStockDataFound') }}</p>
+        <p class="text-gray-400 text-sm mt-1">{{ $t('ui.tryAdjustingYourFiltersOrAddProductsFirst') }}</p>
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="min-w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category / Sub Category</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warehouse</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('dashboard.sku') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.categorySubCategory') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('nav.warehouses') }}</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {{ filters.warehouse_id ? 'Current Stock' : 'Total Stock' }}
+                {{ filters.warehouse_id ? $t('ui.currentStock') : $t('ui.totalStock2') }}
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Stock</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.minStock') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('projectInvestment.materials.status') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.lastUpdated') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -200,7 +200,7 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ filters.warehouse_id ? (stock.warehouse?.name || 'Default') : 'All Warehouses' }}
+                {{ filters.warehouse_id ? (stock.warehouse?.name || $t('ui.default')) : $t('ui.allWarehouses') }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="text-lg font-bold" :class="getStockColor(stock)">
@@ -229,7 +229,7 @@
       <!-- Pagination -->
       <div v-if="stocks.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center">
         <p class="text-sm text-gray-700">
-          Showing {{ stocks.from }} to {{ stocks.to }} of {{ stocks.total }} items
+          {{ $t('sales.showing') }} {{ stocks.from }} {{ $t('ui.to') }} {{ stocks.to }} {{ $t('sales.of') }} {{ stocks.total }} {{ $t('ui.items2') }}
         </p>
         <div class="flex space-x-2">
           <button
@@ -237,14 +237,14 @@
             :disabled="!stocks.prev_page_url"
             class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
           >
-            Previous
+            {{ $t('sales.previous') }}
           </button>
           <button
             @click="loadStocks(stocks.current_page + 1)"
             :disabled="!stocks.next_page_url"
             class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
           >
-            Next
+            {{ $t('sales.next') }}
           </button>
         </div>
       </div>
@@ -256,27 +256,27 @@
     <!-- RMA Inventory Section -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
-        <h3 class="text-lg font-semibold text-gray-900">↩️ RMA Inventory (Returned Items)</h3>
-        <p class="text-sm text-gray-600 mt-1">Barang retur layak guna, bernilai buku Rp 0, terpisah dari stok reguler.</p>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.rmaInventoryReturnedItems') }}</h3>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.usableReturnedItemsWithABookValueOfRp0KeptSeparateFromRegular') }}</p>
       </div>
 
       <div v-if="loadingRMA" class="p-8 text-center">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-        <p class="text-gray-600 mt-2">Loading RMA inventory...</p>
+        <p class="text-gray-600 mt-2">{{ $t('ui.loadingRmaInventory') }}</p>
       </div>
 
       <div v-else-if="!rmaStock.length" class="p-8 text-center">
-        <p class="text-gray-500">No RMA items in stock</p>
+        <p class="text-gray-500">{{ $t('ui.noRmaItemsInStock') }}</p>
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="min-w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.condition') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.quantity') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -284,12 +284,12 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ rma.product?.title }}</div>
                 <div class="text-xs text-gray-500">{{ rma.product?.brand }}</div>
-                <div class="text-xs font-mono text-gray-500">{{ rma.serial_number || 'Tanpa SN' }}</div>
-                <div class="text-xs text-gray-500">Nilai buku: Rp 0 · {{ rma.notes }}</div>
+                <div class="text-xs font-mono text-gray-500">{{ rma.serial_number || $t('ui.noSerialNumber') }}</div>
+                <div class="text-xs text-gray-500">{{ $t('ui.bookValueRp0') }} {{ rma.notes }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="getConditionBadge(rma.condition)" class="px-2 py-1 text-xs rounded-full capitalize">
-                  {{ rma.condition?.replace('_', ' ') || 'N/A' }}
+                  {{ $label(rma.condition) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -297,7 +297,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <router-link to="/dashboard/rmas" class="text-indigo-600 hover:text-indigo-900">
-                  View RMAs →
+                  {{ $t('ui.viewRmas') }}
                 </router-link>
               </td>
             </tr>
@@ -311,28 +311,28 @@
     <div v-show="activeTab === 'investment'">
       <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-          <h3 class="text-lg font-semibold text-gray-900">📊 Investment Stock (Project Allocations)</h3>
-          <p class="text-sm text-gray-600 mt-1">Items allocated to active projects</p>
+          <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.investmentStockProjectAllocations') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ $t('ui.itemsAllocatedToActiveProjects') }}</p>
         </div>
 
         <div v-if="loadingInvestment" class="p-8 text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div>
-          <p class="text-gray-600 mt-2">Loading investment stock...</p>
+          <p class="text-gray-600 mt-2">{{ $t('ui.loadingInvestmentStock') }}</p>
         </div>
 
         <div v-else-if="!investmentStock.length" class="p-8 text-center">
-          <p class="text-gray-500">No items allocated to projects</p>
+          <p class="text-gray-500">{{ $t('ui.noItemsAllocatedToProjects') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.product') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('labels.project') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.quantity') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('projectInvestment.totalValue') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -353,7 +353,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                   <router-link to="/dashboard/project-investments" class="text-indigo-600 hover:text-indigo-900">
-                    View Projects →
+                    {{ $t('ui.viewProjects') }}
                   </router-link>
                 </td>
               </tr>
@@ -367,29 +367,29 @@
     <div v-show="activeTab === 'msa'">
       <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
-          <h3 class="text-lg font-semibold text-gray-900">🔧 MSA Project (Items in Repair)</h3>
-          <p class="text-sm text-gray-600 mt-1">Items from projects currently being repaired or replaced</p>
+          <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.msaProjectItemsInRepair') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ $t('ui.itemsFromProjectsCurrentlyBeingRepairedOrReplaced') }}</p>
         </div>
 
         <div v-if="loadingMSA" class="p-8 text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-          <p class="text-gray-600 mt-2">Loading MSA items...</p>
+          <p class="text-gray-600 mt-2">{{ $t('ui.loadingMsaItems') }}</p>
         </div>
 
         <div v-else-if="!msaStock?.length" class="p-8 text-center">
-          <p class="text-gray-500">No MSA items in repair</p>
+          <p class="text-gray-500">{{ $t('ui.noMsaItemsInRepair') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MSA Code</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.msaCode') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('labels.project') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.issue') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -402,7 +402,7 @@
                 </td>
                 <td class="px-6 py-4 text-sm font-bold">{{ item.quantity }}</td>
                 <td class="px-6 py-4">
-                  <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ item.status?.replace('_', ' ') }}</span>
+                  <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ $label(item.status) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -415,29 +415,29 @@
     <div v-show="activeTab === 'defective'">
       <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-gray-50">
-          <h3 class="text-lg font-semibold text-gray-900">⚠️ Defective/Returned Items</h3>
-          <p class="text-sm text-gray-600 mt-1">Combined defective items from RMA, MSA, and Projects</p>
+          <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.defectiveReturnedItems') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ $t('ui.combinedDefectiveItemsFromRmaMsaAndProjects') }}</p>
         </div>
 
         <div v-if="loadingDefective" class="p-8 text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
-          <p class="text-gray-600 mt-2">Loading defective items...</p>
+          <p class="text-gray-600 mt-2">{{ $t('ui.loadingDefectiveItems') }}</p>
         </div>
 
         <div v-else-if="!defectiveStock?.length" class="p-8 text-center">
-          <p class="text-gray-500">No defective items</p>
+          <p class="text-gray-500">{{ $t('ui.noDefectiveItems') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.source') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.code') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.condition') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -448,13 +448,13 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.code }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}<p class="text-xs font-mono text-gray-500">{{ item.serial_number || 'Tanpa SN' }}</p></td>
+                <td class="px-6 py-4 text-sm text-gray-900">{{ item.product?.title }}<p class="text-xs font-mono text-gray-500">{{ item.serial_number || $t('ui.noSerialNumber') }}</p></td>
                 <td class="px-6 py-4 text-sm font-bold text-red-600">{{ item.quantity }}</td>
                 <td class="px-6 py-4">
-                  <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ item.condition }}</span>
+                  <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ $label(item.condition) }}</span>
                   <p class="mt-1 text-xs text-gray-500">{{ item.notes }}</p>
                 </td>
-                <td class="px-6 py-4 text-right"><button type="button" @click="openReturnInspection(item)" class="text-indigo-600 hover:underline">Hasil Perbaikan</button></td>
+                <td class="px-6 py-4 text-right"><button type="button" @click="openReturnInspection(item)" class="text-indigo-600 hover:underline">{{ $t('ui.repairResults') }}</button></td>
               </tr>
             </tbody>
           </table>
@@ -464,50 +464,50 @@
 
     <div v-if="returnInspection" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <form @submit.prevent="saveReturnInspection" class="w-full max-w-lg rounded-xl bg-white p-6 space-y-4">
-        <h3 class="text-lg font-bold">Tindak Lanjut Barang Retur</h3>
+        <h3 class="text-lg font-bold">{{ $t('ui.returnedItemFollowUp') }}</h3>
         <p>{{ returnInspection.product?.title }} · {{ returnInspection.serial_number || returnInspection.code }}</p>
-        <div><label class="block mb-1 text-sm">Hasil Perbaikan</label><select v-model="returnResult.condition" class="input" required><option value="unrepairable">Tidak dapat diperbaiki — tetap barang rusak</option><option value="limited">Layak guna dengan keterbatasan — stok RMA</option><option value="working">Normal — stok RMA</option></select></div>
-        <div><label class="block mb-1 text-sm">Catatan / Keterbatasan Penggunaan</label><textarea v-model="returnResult.notes" class="input" rows="3" required maxlength="5000"></textarea></div>
-        <p class="text-xs text-gray-500">Stok RMA bernilai buku Rp 0 dan terpisah dari stok reguler.</p>
+        <div><label class="block mb-1 text-sm">{{ $t('ui.repairResults') }}</label><select v-model="returnResult.condition" class="input" required><option value="unrepairable">{{ $t('ui.cannotBeRepairedRemainsADamagedItem') }}</option><option value="limited">{{ $t('ui.usableWithLimitationsRmaStock') }}</option><option value="working">{{ $t('ui.normalRmaStock') }}</option></select></div>
+        <div><label class="block mb-1 text-sm">{{ $t('ui.notesUsageLimitations') }}</label><textarea v-model="returnResult.notes" class="input" rows="3" required maxlength="5000"></textarea></div>
+        <p class="text-xs text-gray-500">{{ $t('ui.rmaStockHasABookValueOfRp0AndIsKeptSeparateFrom') }}</p>
         <p v-if="returnError" class="text-red-700 text-sm">{{ returnError }}</p>
-        <div class="flex justify-end gap-2"><button type="button" @click="returnInspection = null" class="btn-secondary">Batal</button><button :disabled="returnSaving" class="btn-primary">{{ returnSaving ? 'Menyimpan...' : 'Simpan' }}</button></div>
+        <div class="flex justify-end gap-2"><button type="button" @click="returnInspection = null" class="btn-secondary">{{ $t('common.cancel') }}</button><button :disabled="returnSaving" class="btn-primary">{{ returnSaving ? $t('sales.saving') : $t('common.save') }}</button></div>
       </form>
     </div>
     <!-- Transaction Modal -->
     <div v-if="showTransactionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">Record Stock Transaction</h3>
+        <h3 class="text-xl font-bold mb-4">{{ $t('ui.recordStockTransaction') }}</h3>
         
         <form @submit.prevent="saveTransaction" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.product2') }}</label>
             <select
               v-model="transactionForm.product_id"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">Select Product</option>
+              <option value="">{{ $t('sales.selectProduct') }}</option>
               <option v-for="stock in allStocks" :key="stock.product?.id" :value="stock.product?.id">
-                {{ stock.product?.title || stock.product?.name }} (Current: {{ stock.quantity }})
+                {{ stock.product?.title || stock.product?.name }} {{ $t('ui.current') }} {{ stock.quantity }})
               </option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Type *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.transactionType') }}</label>
             <select
               v-model="transactionForm.transaction_type"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">Select Type</option>
-              <option value="in">Stock In</option>
-              <option value="out">Stock Out</option>
+              <option value="">{{ $t('ui.selectType') }}</option>
+              <option value="in">{{ $t('ui.stockIn2') }}</option>
+              <option value="out">{{ $t('ui.stockOut2') }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.quantity') }}</label>
             <input
               v-model="transactionForm.quantity"
               type="number"
@@ -518,7 +518,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
             <textarea
               v-model="transactionForm.notes"
               rows="3"
@@ -527,11 +527,11 @@
           </div>
 
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <div v-if="success" class="bg-green-50 text-green-600 p-3 rounded-lg text-sm">
-            {{ success }}
+            {{ $ui(success) }}
           </div>
 
           <div class="flex justify-end space-x-3">
@@ -540,14 +540,14 @@
               @click="showTransactionModal = false"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="saving"
               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
-              {{ saving ? 'Saving...' : 'Save Transaction' }}
+              {{ saving ? $t('sales.saving') : $t('ui.saveTransaction') }}
             </button>
           </div>
         </form>
@@ -557,6 +557,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -581,7 +583,7 @@ const saveReturnInspection = async () => {
     await api.post(`/returned-items/${returnInspection.value.id}/inspect`, returnResult.value);
     returnInspection.value = null;
     await Promise.all([loadDefectiveStock(), loadRMAStock()]);
-  } catch (err) { returnError.value = err.response?.data?.message || 'Gagal menyimpan hasil perbaikan.'; }
+  } catch (err) { returnError.value = err.response?.data?.message || uiText("Gagal menyimpan hasil perbaikan."); }
   finally { returnSaving.value = false; }
 };
 const warehouses = ref([]);
@@ -657,10 +659,10 @@ const getStatusBadge = (stock) => {
 // Helper to get status label
 const getStatusLabel = (stock) => {
   const minStock = getMinStock(stock);
-  if (stock.quantity <= 0) return 'Out of Stock';
-  if (stock.quantity <= minStock) return 'Low Stock';
-  if (stock.quantity <= minStock * 2) return 'Medium';
-  return 'Good';
+  if (stock.quantity <= 0) return uiText("Habis");
+  if (stock.quantity <= minStock) return uiText("Stok Rendah");
+  if (stock.quantity <= minStock * 2) return uiText("Sedang");
+  return uiText("Baik");
 };
 
 // Format date safely
@@ -682,7 +684,7 @@ const loadStocks = async (page = 1) => {
     const response = await api.get('/stock', { params });
     stocks.value = response.data;
   } catch (err) {
-    console.error('Failed to load stocks:', err);
+    console.error('Gagal memuat stok:', err);
   } finally {
     loading.value = false;
   }
@@ -706,14 +708,14 @@ const loadInvestmentStock = async () => {
     const response = await api.get('/stock/investment-inventory');
     investmentStock.value = response.data;
   } catch (err) {
-    console.error('Failed to load investment stock:', err);
+    console.error('Gagal memuat stok investasi:', err);
   } finally {
     loadingInvestment.value = false;
   }
 };
 
 const formatCurrency = (value) => {
-  return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+  return 'Rp ' + Number(value || 0).toLocaleString(uiLocale());
 };
 
 const loadMSAStock = async () => {
@@ -734,7 +736,7 @@ const loadDefectiveStock = async () => {
     const response = await api.get('/stock/defective');
     defectiveStock.value = response.data;
   } catch (err) {
-    console.error('Failed to load defective stock:', err);
+    console.error('Gagal memuat stok barang rusak:', err);
   } finally {
     loadingDefective.value = false;
   }
@@ -745,7 +747,7 @@ const loadWarehouses = async () => {
     const response = await api.get('/warehouses');
     warehouses.value = response.data.data || response.data;
   } catch (err) {
-    console.error('Failed to load warehouses:', err);
+    console.error('Gagal memuat gudang:', err);
   }
 };
 
@@ -764,7 +766,7 @@ const loadAllStocks = async () => {
     const response = await api.get('/stock', { params: { per_page: 1000 } });
     allStocks.value = response.data.data;
   } catch (err) {
-    console.error('Failed to load all stocks:', err);
+    console.error('Gagal memuat semua stok:', err);
   }
 };
 
@@ -775,7 +777,7 @@ const saveTransaction = async () => {
   
   try {
     await api.post('/stock/transaction', transactionForm.value);
-    success.value = 'Transaction recorded successfully!';
+    success.value = uiText("Transaksi berhasil dicatat!");
     transactionForm.value = { product_id: '', transaction_type: '', quantity: 1, notes: '' };
     loadStocks();
     loadAllStocks();
@@ -784,7 +786,7 @@ const saveTransaction = async () => {
       success.value = '';
     }, 1500);
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to record transaction';
+    error.value = err.response?.data?.message || uiText("Gagal mencatat transaksi");
   } finally {
     saving.value = false;
   }

@@ -19,7 +19,7 @@
             <button @click="activeTab = 'tasks'; loadTasks()" :class="['px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap', activeTab === 'tasks' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
               {{ t('projectInvestment.tabs.tasks') }} ({{ taskStats.total || 0 }})
             </button>
-            <button @click="activeTab = 'history'" :class="['px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap', activeTab === 'history' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700']">Riwayat Barang</button>
+            <button @click="activeTab = 'history'" :class="['px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap', activeTab === 'history' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700']">{{ $t('ui.itemHistory') }}</button>
           </nav>
         </div>
 
@@ -91,31 +91,31 @@
         <div v-show="activeTab === 'materials'" class="space-y-4">
           <!-- Materials Stats -->
           <div class="grid grid-cols-5 gap-2 text-center text-xs">
-            <div class="p-2 bg-gray-50 rounded"><span class="font-bold">{{ materialStats.total_count || 0 }}</span> Total</div>
-            <div class="p-2 bg-yellow-50 rounded"><span class="font-bold text-yellow-600">{{ materialStats.pending || 0 }}</span> Pending</div>
-            <div class="p-2 bg-blue-50 rounded"><span class="font-bold text-blue-600">{{ materialStats.ordered || 0 }}</span> Ordered</div>
-            <div class="p-2 bg-green-50 rounded"><span class="font-bold text-green-600">{{ materialStats.received || 0 }}</span> Received</div>
-            <div class="p-2 bg-purple-50 rounded"><span class="font-bold text-purple-600">{{ materialStats.installed || 0 }}</span> Installed</div>
+            <div class="p-2 bg-gray-50 rounded"><span class="font-bold">{{ materialStats.total_count || 0 }}</span> {{ $t('sales.total') }}</div>
+            <div class="p-2 bg-yellow-50 rounded"><span class="font-bold text-yellow-600">{{ materialStats.pending || 0 }}</span> {{ $t('labels.pending') }}</div>
+            <div class="p-2 bg-blue-50 rounded"><span class="font-bold text-blue-600">{{ materialStats.ordered || 0 }}</span> {{ $t('projectInvestment.materials.statusOrdered') }}</div>
+            <div class="p-2 bg-green-50 rounded"><span class="font-bold text-green-600">{{ materialStats.received || 0 }}</span> {{ $t('labels.received') }}</div>
+            <div class="p-2 bg-purple-50 rounded"><span class="font-bold text-purple-600">{{ materialStats.installed || 0 }}</span> {{ $t('projectInvestment.materials.statusInstalled') }}</div>
           </div>
 
           <!-- Add Material -->
           <div class="flex gap-2">
-            <input v-model="newMaterialName" type="text" placeholder="Material name..." class="input flex-1" />
-            <input v-model.number="newMaterialQty" type="number" min="1" placeholder="Qty" class="input w-20" />
-            <button @click="addMaterial" :disabled="!newMaterialName.trim() || newMaterialQty < 1" class="btn-primary px-4">+ Add</button>
+            <input v-model="newMaterialName" type="text" :placeholder="$t('ui.materialName')" class="input flex-1" />
+            <input v-model.number="newMaterialQty" type="number" min="1" :placeholder="$t('sales.quantity')" class="input w-20" />
+            <button @click="addMaterial" :disabled="!newMaterialName.trim() || newMaterialQty < 1" class="btn-primary px-4">{{ $t('ui.add') }}</button>
           </div>
 
           <!-- Materials Table -->
-          <div v-if="loadingMaterials" class="text-center py-4 text-gray-500">Loading materials...</div>
+          <div v-if="loadingMaterials" class="text-center py-4 text-gray-500">{{ $t('ui.loadingMaterials') }}</div>
           <table v-else-if="materials.length" class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-3 py-2 text-left">Material</th>
-                <th class="px-3 py-2 text-center">Planned</th>
-                <th class="px-3 py-2 text-center">Received</th>
-                <th class="px-3 py-2 text-center">Installed</th>
-                <th class="px-3 py-2 text-center">Status</th>
-                <th class="px-3 py-2 text-right">Actions</th>
+                <th class="px-3 py-2 text-left">{{ $t('projectInvestment.materials.title') }}</th>
+                <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.planned') }}</th>
+                <th class="px-3 py-2 text-center">{{ $t('labels.received') }}</th>
+                <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.statusInstalled') }}</th>
+                <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.status') }}</th>
+                <th class="px-3 py-2 text-right">{{ $t('sales.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y">
@@ -132,7 +132,7 @@
                   <input v-model.number="mat.quantity_installed" @change="updateMaterialQty(mat)" type="number" min="0" :max="mat.quantity_received" class="w-16 text-center input py-1 text-sm" />
                 </td>
                 <td class="px-3 py-2 text-center">
-                  <span :class="getMaterialStatusBadge(mat.status)" class="px-2 py-0.5 text-xs rounded">{{ mat.status }}</span>
+                  <span :class="getMaterialStatusBadge(mat.status)" class="px-2 py-0.5 text-xs rounded">{{ $label(mat.status) }}</span>
                 </td>
                 <td class="px-3 py-2 text-right">
                   <button @click="deleteMaterial(mat)" class="text-red-600 hover:text-red-800">×</button>
@@ -140,54 +140,54 @@
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-center py-8 text-gray-500">No materials added yet.</p>
+          <p v-else class="text-center py-8 text-gray-500">{{ $t('projectInvestment.materials.noMaterials') }}</p>
         </div>
 
         <!-- Progress Tab -->
         <div v-show="activeTab === 'progress'" class="space-y-6">
           <!-- Update Progress -->
           <div class="p-4 bg-gray-50 rounded-lg space-y-4">
-            <h4 class="font-semibold text-gray-800">📊 Update Progress</h4>
+            <h4 class="font-semibold text-gray-800">{{ $t('ui.updateProgress') }}</h4>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Progress: {{ progressForm.delivery }}%</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.deliveryProgress') }} {{ progressForm.delivery }}%</label>
                 <input v-model.number="progressForm.delivery" type="range" min="0" max="100" step="5" class="w-full" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Installation Progress: {{ progressForm.installation }}%</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.installationProgress') }} {{ progressForm.installation }}%</label>
                 <input v-model.number="progressForm.installation" type="range" min="0" max="100" step="5" class="w-full" />
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="progressForm.notes" rows="2" class="input" placeholder="Add notes about this progress update..."></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
+              <textarea v-model="progressForm.notes" rows="2" class="input" :placeholder="$t('projectInvestment.progress.addNotes')"></textarea>
             </div>
 
             <button @click="saveProgress" :disabled="savingProgress" class="btn-primary">
-              {{ savingProgress ? 'Saving...' : 'Save Progress Update' }}
+              {{ savingProgress ? $t('sales.saving') : $t('projectInvestment.progress.saveUpdate') }}
             </button>
           </div>
 
           <!-- Progress History -->
           <div>
-            <h4 class="font-semibold text-gray-800 mb-3">📜 Progress History</h4>
+            <h4 class="font-semibold text-gray-800 mb-3">{{ $t('ui.progressHistory') }}</h4>
             <div v-if="selectedProject?.progress_logs?.length" class="space-y-2 max-h-64 overflow-y-auto">
               <div v-for="log in selectedProject?.progress_logs" :key="log.id" class="p-3 bg-white rounded border text-sm">
                 <div class="flex justify-between items-start">
                   <div>
-                    <span :class="getLogTypeBadge(log.type)" class="px-2 py-0.5 text-xs rounded mr-2">{{ log.type }}</span>
+                    <span :class="getLogTypeBadge(log.type)" class="px-2 py-0.5 text-xs rounded mr-2">{{ $label(log.type) }}</span>
                     <span class="font-medium">{{ log.field_name }}</span>
                     <span class="text-gray-500">: {{ log.old_value || '-' }} → {{ log.new_value }}</span>
                   </div>
                   <span class="text-xs text-gray-400">{{ formatDateTime(log.created_at) }}</span>
                 </div>
                 <div v-if="log.notes" class="text-gray-600 mt-1 text-xs">{{ log.notes }}</div>
-                <div class="text-xs text-gray-400 mt-1">by {{ log.updated_by?.name }}</div>
+                <div class="text-xs text-gray-400 mt-1">{{ $t('ui.by') }} {{ log.updated_by?.name }}</div>
               </div>
             </div>
-            <p v-else class="text-center py-4 text-gray-500">No progress updates recorded yet.</p>
+            <p v-else class="text-center py-4 text-gray-500">{{ $t('projectInvestment.progress.noHistory') }}</p>
           </div>
         </div>
 
@@ -195,27 +195,27 @@
         <div v-show="activeTab === 'tasks'" class="space-y-4">
           <!-- Task Stats -->
           <div class="grid grid-cols-4 gap-2 text-center text-sm">
-            <div class="p-2 bg-gray-50 rounded"><span class="font-bold text-gray-600">{{ taskStats.todo || 0 }}</span> To Do</div>
-            <div class="p-2 bg-blue-50 rounded"><span class="font-bold text-blue-600">{{ taskStats.in_progress || 0 }}</span> In Progress</div>
-            <div class="p-2 bg-green-50 rounded"><span class="font-bold text-green-600">{{ taskStats.completed || 0 }}</span> Completed</div>
-            <div class="p-2 bg-red-50 rounded"><span class="font-bold text-red-600">{{ taskStats.overdue || 0 }}</span> Overdue</div>
+            <div class="p-2 bg-gray-50 rounded"><span class="font-bold text-gray-600">{{ taskStats.todo || 0 }}</span> {{ $t('labels.todo') }}</div>
+            <div class="p-2 bg-blue-50 rounded"><span class="font-bold text-blue-600">{{ taskStats.in_progress || 0 }}</span> {{ $t('labels.in_progress') }}</div>
+            <div class="p-2 bg-green-50 rounded"><span class="font-bold text-green-600">{{ taskStats.completed || 0 }}</span> {{ $t('labels.completed') }}</div>
+            <div class="p-2 bg-red-50 rounded"><span class="font-bold text-red-600">{{ taskStats.overdue || 0 }}</span> {{ $t('labels.overdue') }}</div>
           </div>
 
           <!-- Add Task -->
           <div class="flex gap-2">
-            <input v-model="newTaskTitle" @keyup.enter="addTask" type="text" placeholder="Add new task..." class="input flex-1" />
+            <input v-model="newTaskTitle" @keyup.enter="addTask" type="text" :placeholder="$t('projectInvestment.tasks.addTask')" class="input flex-1" />
             <select v-model="newTaskPriority" class="input w-32">
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
+              <option value="low">{{ $t('labels.low') }}</option>
+              <option value="medium">{{ $t('labels.medium') }}</option>
+              <option value="high">{{ $t('labels.high') }}</option>
+              <option value="urgent">{{ $t('labels.urgent') }}</option>
             </select>
-            <button @click="addTask" :disabled="!newTaskTitle.trim()" class="btn-primary px-4">+ Add</button>
+            <button @click="addTask" :disabled="!newTaskTitle.trim()" class="btn-primary px-4">{{ $t('ui.add') }}</button>
           </div>
 
           <!-- Tasks List -->
-          <div v-if="loadingTasks" class="text-center py-4 text-gray-500">Loading tasks...</div>
-          <div v-else-if="!tasks.length" class="text-center py-8 text-gray-500">No tasks yet. Add your first task above.</div>
+          <div v-if="loadingTasks" class="text-center py-4 text-gray-500">{{ $t('ui.loadingTasks') }}</div>
+          <div v-else-if="!tasks.length" class="text-center py-8 text-gray-500">{{ $t('projectInvestment.tasks.noTasks') }}</div>
           <div v-else class="space-y-2">
             <div v-for="task in tasks" :key="task.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
               <button @click="toggleTaskStatus(task)" :class="['w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs', 
@@ -227,11 +227,11 @@
                 <div :class="['font-medium', task.status === 'completed' ? 'line-through text-gray-400' : '']">{{ task.title }}</div>
                 <div class="text-xs text-gray-500 flex gap-2">
                   <span :class="getPriorityBadge(task.priority)">{{ task.priority }}</span>
-                  <span v-if="task.due_date" :class="isOverdue(task) ? 'text-red-600' : ''">Due: {{ formatDate(task.due_date) }}</span>
+                  <span v-if="task.due_date" :class="isOverdue(task) ? 'text-red-600' : ''">{{ $t('ui.due') }} {{ formatDate(task.due_date) }}</span>
                   <span v-if="task.assignee">→ {{ task.assignee.name }}</span>
                 </div>
               </div>
-              <button @click="editTask(task)" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+              <button @click="editTask(task)" class="text-blue-600 hover:text-blue-800 text-sm">{{ $t('common.edit') }}</button>
               <button @click="deleteTask(task)" class="text-red-600 hover:text-red-800 text-sm">×</button>
             </div>
           </div>
@@ -240,43 +240,43 @@
     <!-- Edit Task Modal -->
     <div v-if="showTaskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">{{ editingTask ? 'Edit Task' : 'New Task' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ editingTask ? $t('ui.editTask') : $t('ui.newTask') }}</h3>
         <form @submit.prevent="saveTask" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.title') }}</label>
             <input v-model="taskForm.title" required class="input" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.description') }}</label>
             <textarea v-model="taskForm.description" rows="2" class="input"></textarea>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.materials.status') }}</label>
               <select v-model="taskForm.status" class="input">
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="todo">{{ $t('labels.todo') }}</option>
+                <option value="in_progress">{{ $t('labels.in_progress') }}</option>
+                <option value="completed">{{ $t('labels.completed') }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.tasks.priority') }}</label>
               <select v-model="taskForm.priority" class="input">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="low">{{ $t('labels.low') }}</option>
+                <option value="medium">{{ $t('labels.medium') }}</option>
+                <option value="high">{{ $t('labels.high') }}</option>
+                <option value="urgent">{{ $t('labels.urgent') }}</option>
               </select>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.dueDate') }}</label>
             <input v-model="taskForm.due_date" type="date" class="input" />
           </div>
           <div v-if="taskError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ taskError }}</div>
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showTaskModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" :disabled="savingTask" class="btn-primary">{{ savingTask ? 'Saving...' : 'Save' }}</button>
+            <button type="button" @click="showTaskModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="submit" :disabled="savingTask" class="btn-primary">{{ savingTask ? $t('sales.saving') : $t('common.save') }}</button>
           </div>
         </form>
       </div>
@@ -285,6 +285,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../utils/uiText';
+
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../services/api';
@@ -293,8 +295,8 @@ const emit = defineEmits(['refresh']);
 const { t } = useI18n();
 const selectedProject = ref(props.project);
 const operationError = ref('');
-const formatCurrency = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(value || 0));
-const formatDate = value => value ? new Date(value).toLocaleDateString('id-ID') : '-';
+const formatCurrency = value => new Intl.NumberFormat(uiLocale(), { style: 'currency', currency: 'IDR' }).format(Number(value || 0));
+const formatDate = value => value ? new Date(value).toLocaleDateString(uiLocale()) : '-';
 // Task Management
 const activeTab = ref('overview');
 const tasks = ref([]);
@@ -323,7 +325,7 @@ const loadTasks = async () => {
     tasks.value = response.data.tasks || [];
     taskStats.value = response.data.stats || {};
   } catch (err) {
-    operationError.value = err.response?.data?.message || 'Gagal memuat tugas.';
+    operationError.value = err.response?.data?.message || uiText("Gagal memuat tugas.");
   } finally {
     loadingTasks.value = false;
   }
@@ -340,7 +342,7 @@ const addTask = async () => {
     newTaskPriority.value = 'medium';
     loadTasks();
   } catch (err) {
-    alert('Failed to add task');
+    alert(uiText("Gagal menambahkan tugas"));
   }
 };
 
@@ -354,7 +356,7 @@ const toggleTaskStatus = async (task) => {
     await api.post(`/project-tasks/${task.id}/status`, { status: nextStatus[task.status] || 'todo' });
     loadTasks();
   } catch (err) {
-    alert('Failed to update task status');
+    alert(uiText("Gagal memperbarui status tugas"));
   }
 };
 
@@ -384,19 +386,19 @@ const saveTask = async () => {
     editingTask.value = null;
     loadTasks();
   } catch (err) {
-    taskError.value = err.response?.data?.message || 'Failed to save task';
+    taskError.value = err.response?.data?.message || uiText("Gagal menyimpan tugas");
   } finally {
     savingTask.value = false;
   }
 };
 
 const deleteTask = async (task) => {
-  if (!confirm('Delete this task?')) return;
+  if (!confirm(uiText("Hapus tugas ini?"))) return;
   try {
     await api.delete(`/project-tasks/${task.id}`);
     loadTasks();
   } catch (err) {
-    alert('Failed to delete task');
+    alert(uiText("Gagal menghapus tugas"));
   }
 };
 
@@ -434,7 +436,7 @@ const loadMaterials = async () => {
     materials.value = response.data.materials || [];
     materialStats.value = response.data.stats || {};
   } catch (err) {
-    operationError.value = err.response?.data?.message || 'Gagal memuat material.';
+    operationError.value = err.response?.data?.message || uiText("Gagal memuat material.");
   } finally {
     loadingMaterials.value = false;
   }
@@ -452,7 +454,7 @@ const addMaterial = async () => {
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert('Failed to add material');
+    alert(uiText("Gagal menambahkan material"));
   }
 };
 
@@ -465,18 +467,18 @@ const updateMaterialQty = async (material) => {
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert('Failed to update material');
+    alert(uiText("Gagal memperbarui material"));
   }
 };
 
 const deleteMaterial = async (material) => {
-  if (!confirm('Delete this material?')) return;
+  if (!confirm(uiText("Hapus material ini?"))) return;
   try {
     await api.delete(`/project-materials/${material.id}`);
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert('Failed to delete material');
+    alert(uiText("Gagal menghapus material"));
   }
 };
 
@@ -503,7 +505,7 @@ const saveProgress = async () => {
     progressForm.value.notes = '';
     emit('refresh');
   } catch (err) {
-    alert('Failed to save progress');
+    alert(uiText("Gagal menyimpan progres"));
   } finally {
     savingProgress.value = false;
   }
@@ -522,7 +524,7 @@ const getLogTypeBadge = (type) => {
 
 const formatDateTime = (date) => {
   if (!date) return '-';
-  return new Date(date).toLocaleString('id-ID', { 
+  return new Date(date).toLocaleString(uiLocale(), {
     year: 'numeric', month: 'short', day: 'numeric', 
     hour: '2-digit', minute: '2-digit' 
   });

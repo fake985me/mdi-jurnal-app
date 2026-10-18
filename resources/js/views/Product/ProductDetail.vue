@@ -21,7 +21,7 @@
         <!-- Overview -->
         <Transition name="fade-slide-up">
           <div class="w-full mt-8 px-2 sm:px-4">
-            <h2 class="text-lg sm:text-xl text-center font-semibold mb-2">Overview</h2>
+            <h2 class="text-lg sm:text-xl text-center font-semibold mb-2">{{ $t('projectInvestment.tabs.overview') }}</h2>
             <p class="text-gray-800 text-sm sm:text-base text-justify leading-relaxed">
               {{ selectedProduct?.descriptions || product.descriptions }}
             </p>
@@ -34,7 +34,7 @@
           <Transition name="fade-slide-left">
             <div class="flex-1">
               <div v-if="features.length">
-                <h3 class="text-lg sm:text-2xl font-bold mb-4 text-gray-900">Features</h3>
+                <h3 class="text-lg sm:text-2xl font-bold mb-4 text-gray-900">{{ $t('labels.features') }}</h3>
                 <div class="overflow-x-auto">
                   <table class="table-auto w-full text-sm text-gray-700 border-collapse">
                     <tbody>
@@ -47,7 +47,7 @@
               </div>
               <!-- Kalau benar-benar tidak ada fitur -->
               <div v-else class="text-gray-500 text-sm">
-                Tidak ada fitur yang terdaftar untuk produk ini.
+                {{ $t('ui.noFeaturesAreListedForThisProduct') }}
               </div>
             </div>
           </Transition>
@@ -58,7 +58,7 @@
           <!-- Specification -->
           <Transition name="fade-slide-right">
             <div class="flex-1">
-              <h2 class="text-lg sm:text-2xl font-bold mb-4 text-gray-900">Specification</h2>
+              <h2 class="text-lg sm:text-2xl font-bold mb-4 text-gray-900">{{ $t('ui.specification') }}</h2>
               <div class="overflow-x-auto">
                 <table class="table-auto w-full text-sm text-gray-700 border-collapse">
                   <tbody>
@@ -86,7 +86,7 @@
         <div class="w-full mt-10 px-2 sm:px-4">
           <h2 class="text-lg sm:text-xl font-semibold text-center mb-2">
             {{ selectedProduct?.title || product.title }}<br />
-            {{ diagramCategoryLabel }} {{ diagramSubCategoryLabel }} Network Diagram
+            {{ diagramCategoryLabel }} {{ diagramSubCategoryLabel }} {{ $t('ui.networkDiagram') }}
           </h2>
           <!-- Multi-Diagram Tabs -->
           <div v-if="diagramList.length > 1" class="flex justify-center gap-2 mb-4 flex-wrap">
@@ -123,11 +123,11 @@
                 :diagram="activeDiagram" 
               />
               <div v-else class="text-center text-gray-500 mt-4">
-                Diagram belum tersedia untuk produk ini.
+                {{ $t('ui.noDiagramIsAvailableForThisProductYet') }}
               </div>
             </template>
             <div v-else class="text-center text-gray-500 mt-4">
-              Diagram belum tersedia untuk produk ini.
+              {{ $t('ui.noDiagramIsAvailableForThisProductYet') }}
             </div>
           </Transition>
 
@@ -136,7 +136,7 @@
             class="mt-4 bg-white text-sm px-3 py-1 rounded shadow hover:bg-gray-100 border border-gray-300"
             @click.stop="openFullscreenTab"
           >
-            Lihat Penuh ⤢
+            {{ $t('ui.viewFullscreen') }}
           </button>
         </div>
       </div>
@@ -145,6 +145,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import useProducts from '@/composable/useProducts.js'
@@ -373,28 +375,28 @@ const specificationList = computed(() => {
   }
   
   // Flash Memory & SDRAM (for OLT products)
-  addSpec('Flash Memory', p.flashmemory)
-  addSpec('SDRAM Memory', p.sdrammemory)
+  addSpec(uiText("Memori Flash"), p.flashmemory)
+  addSpec(uiText("Memori SDRAM"), p.sdrammemory)
   
   // Switching & Throughput (for Switch products)
-  addSpec('Switching Capacity', p.switching)
+  addSpec(uiText("Kapasitas Switching"), p.switching)
   addSpec('Throughput', p.throughput)
   
   // Wireless specs (for AP products)
-  addSpec('Wireless Standard', p.wirelessStandard)
+  addSpec(uiText("Standar Nirkabel"), p.wirelessStandard)
   const wirelessStreams = collectArray(
     p.wirelessStream, p.wirelessStream1, p.wirelessStream2, 
     p.wirelessStream3, p.wirelessStream4, p.wirelessStream5
   )
   if (wirelessStreams.length > 0) {
-    addSpec('Wireless Stream', wirelessStreams)
+    addSpec(uiText("Aliran Nirkabel"), wirelessStreams)
   }
-  addSpec('Client Capacity', p.capacity)
+  addSpec(uiText("Kapasitas Klien"), p.capacity)
   
   // Controller specs (for AC products)
-  addSpec('Number of Manageable APs', p.manageableAps)
-  addSpec('Maximum Configurable AP Number', p.APnumber)
-  addSpec('Maximum Number Of Clients', p.numberOfClients)
+  addSpec(uiText("Jumlah AP yang Dapat Dikelola"), p.manageableAps)
+  addSpec(uiText("Jumlah Maksimal AP yang Dapat Dikonfigurasi"), p.APnumber)
+  addSpec(uiText("Jumlah Maksimal Klien"), p.numberOfClients)
   
   // Interface fields - try to collect all variants
   const interfaces = collectArray(
@@ -402,13 +404,13 @@ const specificationList = computed(() => {
     p.Interface4, p.Interface5
   )
   if (interfaces.length > 0) {
-    addSpec('Interface', interfaces)
+    addSpec(uiText("Antarmuka"), interfaces)
   }
   
   // Control Unit (for specific switch models)
   const controlUnits = collectArray(p.cu, p.cu1, p.cu2, p.cu3, p.cu4)
   if (controlUnits.length > 0) {
-    addSpec('Control Unit', controlUnits)
+    addSpec(uiText("Unit Kontrol"), controlUnits)
   }
   
   // Additional Interface
@@ -417,38 +419,38 @@ const specificationList = computed(() => {
     p.aditionalinterface3, p.aditionalinterface4
   )
   if (additionalInterfaces.length > 0) {
-    addSpec('Additional Interface', additionalInterfaces)
+    addSpec(uiText("Antarmuka Tambahan"), additionalInterfaces)
   }
   
   // Network specs
-  addSpec('MAC Address', p.macaddress)
-  addSpec('Routing Table', p.routingtable)
+  addSpec(uiText("Alamat MAC"), p.macaddress)
+  addSpec(uiText("Tabel Perutean"), p.routingtable)
   
   // Antenna
-  addSpec('Antena', p.antena)
+  addSpec(uiText("Antena"), p.antena)
   
   // Ratings
-  addSpec('IP Rating', p.iprating)
-  addSpec('Dustproof and Waterproof', p.dustproofwaterproof)
-  addSpec('Noise', p.noise)
+  addSpec(uiText("Tingkat Perlindungan IP"), p.iprating)
+  addSpec(uiText("Ketahanan Debu dan Air"), p.dustproofwaterproof)
+  addSpec(uiText("Kebisingan"), p.noise)
   
   // Temperature & Environment
-  addSpec('Operating Temp', p.operatingtemperature)
-  addSpec('Storage Temp', p.storagetemperature)
-  addSpec('Humidity', p.operatinghumidity)
+  addSpec(uiText("Suhu Operasional"), p.operatingtemperature)
+  addSpec(uiText("Suhu Penyimpanan"), p.storagetemperature)
+  addSpec(uiText("Kelembapan"), p.operatinghumidity)
   
   // Power
   const powerSpecs = collectArray(p.power1, p.power2, p.power3)
   if (powerSpecs.length > 0) {
-    addSpec('Power', powerSpecs)
+    addSpec(uiText("Daya"), powerSpecs)
   }
-  addSpec('Power Consumption', p.powercomsumptions)
+  addSpec(uiText("Konsumsi Daya"), p.powercomsumptions)
   
   // General specs (spec1 to spec20) if available
   for (let i = 1; i <= 20; i++) {
     const val = p[`spec${i}`]
     if (val && val !== 'null' && val !== '-' && typeof val === 'string' && val.trim()) {
-      addSpec(`Spec ${i}`, val.trim())
+      addSpec(`Spesifikasi ${i}`, val.trim())
     }
   }
 

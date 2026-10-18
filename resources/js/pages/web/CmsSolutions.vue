@@ -3,40 +3,40 @@
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold text-gray-900">Solutions Management</h2>
+      <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.CmsSolutions') }}</h2>
       <button
         @click="openAddModal"
         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
-        + Add Solution
+        {{ $t('ui.addSolution') }}
       </button>
     </div>
 
     <!-- Solutions Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading solutions...</p>
+        <p class="text-gray-600">{{ $t('ui.loadingSolutions') }}</p>
       </div>
 
       <div v-else-if="loadError" class="p-8 text-center text-red-600">
-        {{ loadError }}
-        <button @click="loadSolutions" class="ml-2 underline">Retry</button>
+        {{ $ui(loadError) }}
+        <button @click="loadSolutions" class="ml-2 underline">{{ $t('ui.retry') }}</button>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.order') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.heading') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.description') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="item in solutions" :key="item.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.order }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.title }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $ui(item.title) }}</td>
             <td class="px-6 py-4 text-sm text-gray-500">
               {{ item.description.length > 100 ? `${item.description.substring(0, 100)}...` : item.description }}
             </td>
@@ -45,16 +45,16 @@
                 'px-2 py-1 text-xs rounded-full',
                 item.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
               ]">
-                {{ item.is_active ? 'Active' : 'Inactive' }}
+                {{ item.is_active ? $t('labels.active') : $t('labels.inactive') }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-              <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
-              <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900">Delete</button>
+              <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900">{{ $t('common.edit') }}</button>
+              <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
             </td>
           </tr>
           <tr v-if="solutions.length === 0">
-            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">No solutions found.</td>
+            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">{{ $t('ui.noSolutionsFound') }}</td>
           </tr>
         </tbody>
       </table>
@@ -63,11 +63,11 @@
     <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-bold mb-4">{{ editingItem ? 'Edit Solution' : 'Add New Solution' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ editingItem ? $t('ui.editSolution') : $t('ui.addNewSolution') }}</h3>
         
         <form @submit.prevent="saveItem" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.title') }}</label>
             <input
               v-model="form.title"
               required
@@ -76,7 +76,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.description') }}</label>
             <textarea
               v-model="form.description"
               required
@@ -86,7 +86,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.imageUrl') }}</label>
             <input
               v-model="form.image_url"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -94,7 +94,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Upload image</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.uploadImage') }}</label>
             <input
               ref="imageInput"
               type="file"
@@ -102,18 +102,18 @@
               @change="selectImage"
               class="w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
             />
-            <p class="mt-1 text-xs text-gray-500">JPG, PNG, or WebP; maximum 5 MB. An uploaded image replaces the image URL above.</p>
+            <p class="mt-1 text-xs text-gray-500">{{ $t('ui.jpgPngOrWebpMaximum5MbAnUploadedImageReplacesTheImageUrl2') }}</p>
             <img
               v-if="imagePreview"
               :src="imagePreview"
-              alt="Solution image preview"
+              :alt="$t('ui.solutionImagePreview')"
               class="mt-3 h-36 w-auto max-w-full rounded-lg border border-gray-200 object-contain"
             />
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.order') }}</label>
               <input
                 v-model.number="form.order"
                 type="number"
@@ -123,13 +123,13 @@
             <div class="flex items-center">
               <label class="flex items-center cursor-pointer">
                 <input v-model="form.is_active" type="checkbox" class="mr-2" />
-                <span class="text-sm font-medium text-gray-700">Active</span>
+                <span class="text-sm font-medium text-gray-700">{{ $t('labels.active') }}</span>
               </label>
             </div>
           </div>
 
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <div class="flex justify-end space-x-3">
@@ -138,14 +138,14 @@
               @click="closeModal"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="saving"
               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
-              {{ saving ? 'Saving...' : 'Save' }}
+              {{ saving ? $t('sales.saving') : $t('common.save') }}
             </button>
           </div>
         </form>
@@ -155,6 +155,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
 
@@ -184,8 +186,8 @@ const loadSolutions = async () => {
     const response = await api.get('/solutions');
     solutions.value = response.data;
   } catch (err) {
-    console.error('Failed to load solutions:', err);
-    loadError.value = err.response?.data?.message || 'Failed to load solutions';
+    console.error('Gagal memuat solusi:', err);
+    loadError.value = err.response?.data?.message || uiText("Gagal memuat solusi");
   } finally {
     loading.value = false;
   }
@@ -273,20 +275,20 @@ const saveItem = async () => {
     const validationErrors = err.response?.data?.errors;
     error.value = validationErrors
       ? Object.values(validationErrors).flat().join(' ')
-      : err.response?.data?.message || 'Failed to save solution';
+      : err.response?.data?.message || uiText("Gagal menyimpan solusi");
   } finally {
     saving.value = false;
   }
 };
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this solution?')) return;
+  if (!confirm(uiText("Yakin ingin menghapus solusi ini?"))) return;
   
   try {
     await api.delete(`/solutions/${id}`);
     await loadSolutions();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete solution');
+    alert(err.response?.data?.message || uiText("Gagal menghapus solusi"));
   }
 };
 

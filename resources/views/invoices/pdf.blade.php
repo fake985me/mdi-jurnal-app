@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ $sale->invoice_number }}</title>
+    <title>Faktur {{ $sale->invoice_number }}</title>
+    @vite (['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -99,15 +100,15 @@
         <!-- Invoice Header -->
         <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; border-bottom: 1px solid #1c398e;">
             <div>
-              <!-- Your Company Logo (Optional) -->
-              <img src="./public/assets/static/kop/header mdi kiri.png" alt="Company Logo" class="flex items-start justify-between relative w-28 " style="margin-left: 0px; margin-right: 24.5%;">
-              <img src="./public/assets/static/kop/header mdi kanan.png" alt="Company Logo" class="flex items-end justify-between relative w-72" style="margin-bottom: 10px; width: 450px;">
+              <!-- Your Logo Perusahaan (Optional) -->
+              <img src="./public/assets/static/kop/header mdi kiri.png" alt="Logo Perusahaan" class="flex items-start justify-between relative w-28 " style="margin-left: 0px; margin-right: 24.5%;">
+              <img src="./public/assets/static/kop/header mdi kanan.png" alt="Logo Perusahaan" class="flex items-end justify-between relative w-72" style="margin-bottom: 10px; width: 450px;">
             </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 350px; margin-bottom: 24px;">
             <div>
-                <p style="font-weight: bold; font-size: 16px;">To :</p>
+                <p style="font-weight: bold; font-size: 16px;">Kepada:</p>
                 <p style="font-size: 14px; margin-left: 40px; text-decoration-line: underline; font-style: italic;">{{ $sale->customer_name }}</p>
                 <p style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ $sale->customer_address }}</p>
                 <p style="font-size: 12px; color: #666; margin-left: 40px; margin-top: 2px;">{{ $sale->customer_phone }}</p>
@@ -116,12 +117,12 @@
             <div>
                 <div class="space-y-1 text-[12px] p-3.5" style="margim-bottom: 4px; background-color: #f3f4f6; padding-top: 12px;">
                     <div class="flex justify-between" style="margin-bottom: 4px;">
-                        <span class="text-gray-500">Invoice No : </span>
+                        <span class="text-gray-500">Nomor Faktur: </span>
                         <span class="font-medium text-gray-900">{{ $sale->invoice_number }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Date : </span>
-                        <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($sale->sale_date)->format('d F Y') }}</span>
+                        <span class="text-gray-500">Tanggal: </span>
+                        <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($sale->sale_date)->locale('id')->translatedFormat('d F Y') }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">PO Referensi : </span>
@@ -138,21 +139,21 @@
     <div class="invoice-info">
         <table>
             <tr>
-                <td class="label">Invoice Number:</td>
+                <td class="label">Nomor Faktur:</td>
                 <td><strong>{{ $sale->invoice_number }}</strong></td>
-                <td class="label">Date:</td>
-                <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d F Y') }}</td>
+                <td class="label">Tanggal:</td>
+                <td>{{ \Carbon\Carbon::parse($sale->sale_date)->locale('id')->translatedFormat('d F Y') }}</td>
             </tr>
             <tr>
-                <td class="label">Customer Name:</td>
+                <td class="label">Nama Pelanggan:</td>
                 <td>{{ $sale->customer_name }}</td>
                 <td class="label">Status:</td>
-                <td><strong style="text-transform: uppercase;">{{ $sale->status }}</strong></td>
+                <td><strong style="text-transform: uppercase;">{{ ['pending' => 'Menunggu', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'][$sale->status] ?? $sale->status }}</strong></td>
             </tr>
             <tr>
-                <td class="label">Phone:</td>
+                <td class="label">Telepon:</td>
                 <td>{{ $sale->customer_phone ?? '-' }}</td>
-                <td class="label">Sales Person:</td>
+                <td class="label">Staf Penjualan:</td>
                 <td>{{ $sale->salesPerson->name ?? '-' }}</td>
             </tr>
             <tr>
@@ -163,7 +164,7 @@
             </tr>
             @if($sale->customer_address)
             <tr>
-                <td class="label">Address:</td>
+                <td class="label">Alamat:</td>
                 <td colspan="3">{{ $sale->customer_address }}</td>
             </tr>
             @endif
@@ -174,9 +175,9 @@
         <thead>
             <tr>
                 <th style="width: 5%;">#</th>
-                <th style="width: 45%;">Product</th>
-                <th style="width: 15%;" class="text-right">Quantity</th>
-                <th style="width: 17%;" class="text-right">Unit Price</th>
+                <th style="width: 45%;">Produk</th>
+                <th style="width: 15%;" class="text-right">Jumlah</th>
+                <th style="width: 17%;" class="text-right">Harga Satuan</th>
                 <th style="width: 18%;" class="text-right">Subtotal</th>
             </tr>
         </thead>
@@ -199,7 +200,7 @@
         </div>
         @if($sale->discount_amount > 0)
         <div class="total-row" style="color: #dc2626;">
-            Discount: - Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}
+            Diskon: - Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}
         </div>
         @endif
         @if($sale->tax_type)
@@ -209,20 +210,20 @@
         </div>
         @endif
         <div class="total-row grand-total">
-            GRAND TOTAL: Rp {{ number_format($sale->grand_total ?: $sale->total_amount, 0, ',', '.') }}
+            TOTAL KESELURUHAN: Rp {{ number_format($sale->grand_total ?: $sale->total_amount, 0, ',', '.') }}
         </div>
     </div>
 
     @if($sale->notes)
     <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #4F46E5;">
-        <strong>Notes:</strong><br>
+        <strong>Catatan:</strong><br>
         {{ $sale->notes }}
     </div>
     @endif
 
     <div class="footer">
-        <p>Thank you for your business!</p>
-        <p style="margin-top: 10px;">Generated on {{ now()->format('d F Y - H:i') }}</p>
+        <p>Terima kasih atas kepercayaan Anda!</p>
+        <p style="margin-top: 10px;">Dibuat pada {{ now()->locale('id')->translatedFormat('d F Y - H:i') }}</p>
     </div>
 </body>
 </html>

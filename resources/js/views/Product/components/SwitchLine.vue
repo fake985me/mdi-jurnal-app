@@ -3,7 +3,7 @@
     <div class="relative w-full" style="aspect-ratio: 815.1 / 538.2;">
       <!-- Background Diagram -->
       <img v-if="imageDiagramSrc" :src="imageDiagramSrc"
-        class="absolute top-0 left-0 w-full h-auto object-contain pointer-events-none" alt="Network Diagram" />
+        class="absolute top-0 left-0 w-full h-auto object-contain pointer-events-none" :alt="$t('ui.networkDiagram')" />
 
       <!-- Marker + Text -->
 <div
@@ -19,7 +19,7 @@
       <!-- Marker -->
       <img
         :src="m.image"
-        :alt="m.title || 'Marker'"
+        :alt="m.title || $t('ui.marker')"
         class="marker-img cursor-pointer"
       />
     </div>
@@ -209,7 +209,7 @@ const resolvedMarkers = computed(() => {
   points = points || FALLBACK
 
   console.log('=== SwitchLine Debug ===')
-  console.log('Product:', p.title)
+  console.log("Produk:", p.title)
   console.log('subCategory:', sub)
   console.log('Points from ANCHORS:', points)
   console.log('Available ANCHORS keys:', Object.keys(ANCHORS))

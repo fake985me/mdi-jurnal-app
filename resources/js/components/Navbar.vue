@@ -25,14 +25,14 @@
             </RouterLink>
           </div>
           <div class="ml-10 flex items-baseline space-x-4 flex-1">
-            <RouterLink v-if="authStore.isAuthenticated" to="/dashboard" class="text-white hover:bg-gray-700 hover:text-white rounded-md px-4 py-2 text-lg font-medium">Dashboard</RouterLink>
+            <RouterLink v-if="authStore.isAuthenticated" to="/dashboard" class="text-white hover:bg-gray-700 hover:text-white rounded-md px-4 py-2 text-lg font-medium">{{ $t('pageTitles.Dashboard') }}</RouterLink>
             <template v-for="item in navigation">
               <RouterLink v-if="!item.children" :key="item.name" :to="item.href" :class="[
                 isCurrent(item)
                   ? 'text-blue-600'
                   : 'text-white hover:bg-gray-700 hover:text-white',
                 'rounded-md px-4 py-2 text-lg font-medium'
-              ]">{{ item.name }}</RouterLink>
+              ]">{{ $ui(item.name) }}</RouterLink>
 
               <Menu as="div" class="relative" v-else>
                 <MenuButton @click="dropdownOpen = item.name" :class="[
@@ -41,7 +41,7 @@
                     : 'text-white hover:bg-gray-700 hover:text-white',
                   'rounded-md px-3 py-2 text-md font-medium flex items-center gap-1'
                 ]">
-                  {{ item.name }}
+                  {{ $ui(item.name) }}
                   <ChevronDownIcon class="h-2.5 w-2.5 shrink-0"
                     style="width: 10px !important; height: 10px !important; min-width: 10px; min-height: 10px; max-width: 10px; max-height: 10px;" />
                 </MenuButton>
@@ -55,11 +55,11 @@
                       <RouterLink :to="child.href" @click="resetDropdown" :class="[
                         active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                         'block px-4 py-2 text-sm'
-                      ]">{{ child.name }}</RouterLink>
+                      ]">{{ $ui(child.name) }}</RouterLink>
                       </MenuItem>
                       <Menu v-else as="div" class="relative">
                         <MenuButton class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          {{ child.name }}
+                          {{ $ui(child.name) }}
                           <ChevronDownIcon class="h-2.5 w-2.5 shrink-0 inline-block float-right"
                             style="width: 10px !important; height: 10px !important; min-width: 10px; min-height: 10px; max-width: 10px; max-height: 10px;" />
                         </MenuButton>
@@ -73,7 +73,7 @@
                               active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                               'block px-4 py-2 text-sm'
                             ]">
-                              {{ sub.name }}
+                              {{ $ui(sub.name) }}
                             </RouterLink>
                             </MenuItem>
                           </MenuItems>
@@ -94,7 +94,7 @@
   <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-800 z-50 shadow-md">
     <div class="flex justify-around items-center h-14">
       <RouterLink v-if="authStore.isAuthenticated" to="/dashboard" class="flex flex-col items-center text-sm text-gray-400 hover:text-white">
-        <span>Dashboard</span>
+        <span>{{ $t('pageTitles.Dashboard') }}</span>
       </RouterLink>
       <template v-for="item in navigation">
         <RouterLink v-if="!item.children" :key="item.name" :to="item.href" :class="[
@@ -103,7 +103,7 @@
             : 'text-gray-400 hover:text-white',
           'flex flex-col items-center text-sm'
         ]">
-          <span>{{ item.name }}</span>
+          <span>{{ $ui(item.name) }}</span>
         </RouterLink>
 
         <Menu as="div" class="relative" v-else>
@@ -113,7 +113,7 @@
               : 'text-gray-400 hover:text-white',
             'flex flex-col items-center text-sm'
           ]">
-            <span>{{ item.name }}</span>
+            <span>{{ $ui(item.name) }}</span>
             <ChevronDownIcon class="h-2.5 w-2.5 shrink-0"
               style="width: 10px !important; height: 10px !important; min-width: 10px; min-height: 10px; max-width: 10px; max-height: 10px;" />
           </MenuButton>
@@ -128,12 +128,12 @@
                   active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                   'block px-4 py-2 text-sm'
                 ]">
-                  {{ child.name }}
+                  {{ $ui(child.name) }}
                 </RouterLink>
                 </MenuItem>
                 <Menu v-else as="div" class="relative">
                   <MenuButton class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    {{ child.name }}
+                    {{ $ui(child.name) }}
                     <ChevronDownIcon class="h-2.5 w-2.5 shrink-0 inline-block float-right"
                       style="width: 10px !important; height: 10px !important; min-width: 10px; min-height: 10px; max-width: 10px; max-height: 10px;" />
                   </MenuButton>
@@ -147,7 +147,7 @@
                         active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                         'block px-4 py-2 text-sm'
                       ]">
-                        {{ sub.name }}
+                        {{ $ui(sub.name) }}
                       </RouterLink>
                       </MenuItem>
                     </MenuItems>

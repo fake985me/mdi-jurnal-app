@@ -2,10 +2,10 @@
   <div class="space-y-5">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Warranty Management</h2>
-        <p class="mt-1 text-sm text-gray-500">Daftar garansi produk dari transaksi penjualan.</p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.Warranties') }}</h2>
+        <p class="mt-1 text-sm text-gray-500">{{ $t('ui.productWarrantiesFromSalesTransactions') }}</p>
       </div>
-      <p class="text-sm text-gray-500">{{ warranties.total || 0 }} total warranty</p>
+      <p class="text-sm text-gray-500">{{ warranties.total || 0 }} {{ $t('ui.totalWarranty') }}</p>
     </div>
 
     <div class="card p-4">
@@ -14,28 +14,28 @@
           v-model="filters.search"
           @input="debouncedLoad"
           type="search"
-          placeholder="Cari serial number, produk, atau invoice..."
+          :placeholder="$t('ui.cariSerialNumberProdukAtauInvoice')"
           class="input flex-1"
         />
         <select v-model="filters.status" @change="loadWarranties" class="input md:w-48">
-          <option value="">Semua Status</option>
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-          <option value="claimed">Claimed</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="active">{{ $t('labels.active') }}</option>
+          <option value="expired">{{ $t('labels.expired') }}</option>
+          <option value="claimed">{{ $t('labels.claimed') }}</option>
         </select>
       </div>
     </div>
 
     <div class="table-wrapper">
       <div class="card-header flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">Daftar Warranty</h3>
-        <span class="text-sm text-gray-500">{{ activeCount }} aktif pada halaman ini</span>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.daftarWarranty') }}</h3>
+        <span class="text-sm text-gray-500">{{ activeCount }} {{ $t('ui.activeOnThisPage') }}</span>
       </div>
 
-      <div v-if="loading" class="p-10 text-center text-sm text-gray-500">Memuat warranty...</div>
+      <div v-if="loading" class="p-10 text-center text-sm text-gray-500">{{ $t('ui.memuatWarranty') }}</div>
       <div v-else-if="!warranties.data?.length" class="p-10 text-center">
-        <p class="font-medium text-gray-700">Tidak ada warranty ditemukan.</p>
-        <p class="mt-1 text-sm text-gray-500">Warranty dibuat otomatis saat serial number diisi di Delivery.</p>
+        <p class="font-medium text-gray-700">{{ $t('ui.tidakAdaWarrantyDitemukan') }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ $t('ui.warrantyDibuatOtomatisSaatSerialNumberDiisiDiDelivery') }}</p>
       </div>
 
       <div v-else class="overflow-x-auto">
@@ -43,12 +43,12 @@
         <table class="min-w-full">
           <thead class="table-header">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Invoice</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Produk</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Serial Number</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Masa Garansi</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Aksi</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">{{ $t('sales.invoice') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">{{ $t('sales.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">{{ $t('ui.serialNumber') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">{{ $t('ui.warrantyPeriod') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">{{ $t('projectInvestment.materials.status') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">{{ $t('sales.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
@@ -60,7 +60,7 @@
                       <span class="text-sm font-semibold text-indigo-900">{{ group.invoice }}</span>
                       <span v-if="group.customer" class="ml-2 text-xs text-indigo-700">{{ group.customer }}</span>
                     </div>
-                    <span class="text-xs text-indigo-700">{{ group.items.length }} warranty</span>
+                    <span class="text-xs text-indigo-700">{{ group.items.length }} {{ $t('ui.warranty') }}</span>
                   </div>
                 </td>
               </tr>
@@ -73,12 +73,12 @@
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">
                   <p>{{ formatDate(warranty.start_date) }}</p>
-                  <p class="mt-1 text-xs text-gray-400">sampai {{ formatDate(warranty.end_date) }}</p>
+                  <p class="mt-1 text-xs text-gray-400">{{ $t('ui.to') }} {{ formatDate(warranty.end_date) }}</p>
                 </td>
                 <td class="px-6 py-4"><span :class="getStatusBadge(warranty.status)">{{ formatStatus(warranty.status) }}</span></td>
                 <td class="px-6 py-4 text-right text-sm">
-                  <button @click="editWarranty(warranty.id)" class="mr-4 font-medium text-indigo-600 hover:text-indigo-800">Edit</button>
-                  <button @click="deleteWarranty(warranty.id)" class="font-medium text-red-600 hover:text-red-800">Hapus</button>
+                  <button @click="editWarranty(warranty.id)" class="mr-4 font-medium text-indigo-600 hover:text-indigo-800">{{ $t('common.edit') }}</button>
+                  <button @click="deleteWarranty(warranty.id)" class="font-medium text-red-600 hover:text-red-800">{{ $t('common.delete') }}</button>
                 </td>
               </tr>
             </template>
@@ -87,10 +87,10 @@
       </div>
 
       <div v-if="warranties.data?.length" class="flex items-center justify-between bg-gray-50 px-6 py-4">
-        <p class="text-sm text-gray-600">Menampilkan {{ warranties.from }}–{{ warranties.to }} dari {{ warranties.total }}</p>
+        <p class="text-sm text-gray-600">{{ $t('sales.showing') }} {{ warranties.from }}–{{ warranties.to }} {{ $t('sales.of') }} {{ warranties.total }}</p>
         <div class="flex gap-2">
-          <button @click="loadWarranties(warranties.current_page - 1)" :disabled="!warranties.prev_page_url" class="btn-secondary disabled:opacity-50">Sebelumnya</button>
-          <button @click="loadWarranties(warranties.current_page + 1)" :disabled="!warranties.next_page_url" class="btn-secondary disabled:opacity-50">Berikutnya</button>
+          <button @click="loadWarranties(warranties.current_page - 1)" :disabled="!warranties.prev_page_url" class="btn-secondary disabled:opacity-50">{{ $t('sales.previous') }}</button>
+          <button @click="loadWarranties(warranties.current_page + 1)" :disabled="!warranties.next_page_url" class="btn-secondary disabled:opacity-50">{{ $t('sales.next') }}</button>
         </div>
       </div>
     </div>
@@ -98,6 +98,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../services/api';
@@ -120,7 +122,7 @@ const groupedWarranties = computed(() => {
     if (!groups.has(key)) {
       groups.set(key, {
         key,
-        invoice: warranty.sale?.invoice_number || 'Tanpa Invoice',
+        invoice: warranty.sale?.invoice_number || uiText("Tanpa Faktur"),
         customer: warranty.sale?.customer_name || '',
         items: [],
       });
@@ -130,7 +132,7 @@ const groupedWarranties = computed(() => {
 
   return [...groups.values()];
 });
-const formatDate = (date) => date ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+const formatDate = (date) => date ? new Date(date).toLocaleDateString(uiLocale(), { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 const formatStatus = (status) => (status || '').toUpperCase();
 const getStatusBadge = (status) => ({
   active: 'badge-success',
@@ -146,7 +148,7 @@ const loadWarranties = async (page = 1) => {
     });
     warranties.value = response.data;
   } catch (err) {
-    console.error('Failed to load warranties:', err);
+    console.error('Gagal memuat garansi:', err);
   } finally {
     loading.value = false;
   }
@@ -160,14 +162,14 @@ const debouncedLoad = () => {
 const editWarranty = (id) => router.push({ name: 'WarrantyEdit', params: { id } });
 
 const deleteWarranty = async (id) => {
-  if (!confirm('Hapus warranty ini?')) return;
+  if (!confirm(uiText("Hapus garansi ini?"))) return;
   try {
     await api.delete(`/warranties/${id}`);
     await loadWarranties(warranties.value.data.length === 1 && warranties.value.current_page > 1
       ? warranties.value.current_page - 1
       : warranties.value.current_page);
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal menghapus warranty.');
+    alert(err.response?.data?.message || uiText("Gagal menghapus garansi."));
   }
 };
 

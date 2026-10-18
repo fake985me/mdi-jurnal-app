@@ -5,16 +5,16 @@
       class="flex flex-col sm:flex-row items-center justify-between border-b border-black pb-4 pt-4 bg-linear-to-r from-slate-200 to-slate-400 fixed left-0 w-full z-10 px-4">
       <button @click="goBack"
         class="text-base sm:text-lg text-sky-800 tracking-tight hover:underline self-start sm:self-auto">
-        ← Back
+        {{ $t('ui.back') }}
       </button>
       <h2 class="text-3xl lg:mr-[860px] sm:mr-0 font-bold tracking-tight text-gray-900 sm:justify-between">
-        Product Detail
+        {{ $t('ui.productDetail') }}
       </h2>
     </div>
     <component :is="detailComponent" v-if="detailComponent && product" :product="product" :category="route.query.category" :sub="route.query.sub" />
     <!-- Related Products -->
     <section class="mt-16 w-full max-w-7xl px-4" v-if="relatedProducts.length">
-      <h2 class="text-2xl font-bold mb-6 text-gray-900 text-center">Related Products</h2>
+      <h2 class="text-2xl font-bold mb-6 text-gray-900 text-center">{{ $t('ui.relatedProducts') }}</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div v-for="product in relatedProducts" :key="product.id"
           class="w-full bg-white border border-slate-900 shadow-md rounded-xl hover:scale-105 duration-300 hover:shadow-xl">
@@ -48,7 +48,7 @@
       </div>
     </section>
     <div v-else class="p-8 text-center text-gray-500">
-      Produk tidak ditemukan atau tipe tidak dikenali.
+      {{ $t('ui.productNotFoundOrTypeNotRecognized') }}
     </div>
   </section>
 </template>

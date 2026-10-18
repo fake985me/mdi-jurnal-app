@@ -2,15 +2,15 @@
   <section class="py-12 px-4 sm:px-6" id="Product">
     <!-- Title -->
     <div class="text-center mb-10">
-      <h2 class="text-4xl font-bold text-gray-800">Our Service & Solutions</h2>
-      <p class="text-gray-500 text-lg mt-2">Make it easier</p>
+      <h2 class="text-4xl font-bold text-gray-800">{{ $t('ui.ourServiceSolutions') }}</h2>
+      <p class="text-gray-500 text-lg mt-2">{{ $t('ui.makeItEasier') }}</p>
     </div>
 
     <!-- Tabs -->
     <div class="flex justify-center">
       <div class="w-full max-w-6xl">
-        <p v-if="loading" class="text-center text-gray-500">Loading solutions...</p>
-        <p v-else-if="error" class="text-center text-red-600">{{ error }}</p>
+        <p v-if="loading" class="text-center text-gray-500">{{ $t('ui.loadingSolutions') }}</p>
+        <p v-else-if="error" class="text-center text-red-600">{{ $ui(error) }}</p>
         <ul class="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 mb-6 sm:mb-8">
           <li
             v-for="feature in features"
@@ -24,7 +24,7 @@
             ]"
             @click.prevent="isOpen = feature.id"
           >
-            {{ feature.title }}
+            {{ $ui(feature.title) }}
           </li>
         </ul>
 

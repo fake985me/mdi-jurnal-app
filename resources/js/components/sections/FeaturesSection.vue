@@ -32,12 +32,12 @@
 
           <!-- Title -->
           <h3 v-if="feature.title" class="text-xl font-semibold mb-3">
-            {{ feature.title }}
+            {{ $ui(feature.title) }}
           </h3>
 
           <!-- Description -->
           <p v-if="feature.description" class="text-gray-600">
-            {{ feature.description }}
+            {{ $ui(feature.description) }}
           </p>
         </div>
       </div>

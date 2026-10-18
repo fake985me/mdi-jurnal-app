@@ -3,8 +3,8 @@
     <!-- Left Sidebar - Section Library -->
     <div class="col-span-3 bg-white border-r border-gray-200 overflow-y-auto">
       <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-        <h3 class="font-semibold text-lg">Section Library</h3>
-        <p class="text-sm text-gray-600">Drag sections to canvas</p>
+        <h3 class="font-semibold text-lg">{{ $t('ui.sectionLibrary') }}</h3>
+        <p class="text-sm text-gray-600">{{ $t('ui.dragSectionsToCanvas') }}</p>
       </div>
 
       <!-- Category Tabs -->
@@ -21,7 +21,7 @@
                 : 'hover:bg-gray-100 text-gray-700'
             ]"
           >
-            {{ category }}
+            {{ $label(category) }}
           </button>
         </div>
 
@@ -37,8 +37,8 @@
             <div class="flex items-center gap-3">
               <span class="text-3xl">{{ template.thumbnail }}</span>
               <div class="flex-1">
-                <div class="font-medium text-sm">{{ template.name }}</div>
-                <div class="text-xs text-gray-500 capitalize">{{ template.category }}</div>
+                <div class="font-medium text-sm">{{ $ui(template.name) }}</div>
+                <div class="text-xs text-gray-500 capitalize">{{ $label(template.category) }}</div>
               </div>
             </div>
           </div>
@@ -52,8 +52,8 @@
         <div class="bg-white rounded-lg shadow-lg min-h-screen">
           <!-- Page Header Info -->
           <div class="p-6 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-2xl font-bold text-gray-800">{{ pageTitle || 'Untitled Page' }}</h2>
-            <p class="text-sm text-gray-600 mt-1">{{ sections.length }} section(s)</p>
+            <h2 class="text-2xl font-bold text-gray-800">{{ pageTitle || $t('ui.untitledPage') }}</h2>
+            <p class="text-sm text-gray-600 mt-1">{{ sections.length }} {{ $t('ui.sectionS') }}</p>
           </div>
 
           <!-- Drop Zone -->
@@ -68,8 +68,8 @@
             <div v-if="sections.length === 0" class="flex items-center justify-center h-96 text-center">
               <div>
                 <div class="text-6xl mb-4">📄</div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">Start Building Your Page</h3>
-                <p class="text-gray-500">Drag sections from the library to get started</p>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">{{ $t('ui.startBuildingYourPage') }}</h3>
+                <p class="text-gray-500">{{ $t('ui.dragSectionsFromTheLibraryToGetStarted') }}</p>
               </div>
             </div>
 
@@ -94,28 +94,28 @@
                   <div class="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       class="drag-handle p-2 bg-white rounded shadow hover:bg-gray-100 cursor-move"
-                      title="Drag to reorder"
+                      :title="$t('ui.dragToReorder')"
                     >
                       ⬍
                     </button>
                     <button
                       @click.stop="duplicateSection(index)"
                       class="p-2 bg-white rounded shadow hover:bg-gray-100"
-                      title="Duplicate"
+                      :title="$t('ui.duplicate')"
                     >
                       📋
                     </button>
                     <button
                       @click.stop="toggleSectionVisibility(index)"
                       class="p-2 bg-white rounded shadow hover:bg-gray-100"
-                      :title="element.is_visible ? 'Hide' : 'Show'"
+                      :title="element.is_visible ? $t('ui.hide') : $t('ui.show')"
                     >
                       {{ element.is_visible ? '👁️' : '👁️‍🗨️' }}
                     </button>
                     <button
                       @click.stop="deleteSection(index)"
                       class="p-2 bg-red-100 text-red-600 rounded shadow hover:bg-red-200"
-                      title="Delete"
+                      :title="$t('common.delete')"
                     >
                       🗑️
                     </button>
@@ -124,7 +124,7 @@
                   <!-- Section Badge -->
                   <div class="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span class="px-2 py-1 bg-gray-900 text-white text-xs rounded">
-                      {{ element.section_type }}
+                      {{ $label(element.section_type) }}
                     </span>
                   </div>
 
@@ -133,7 +133,7 @@
 
                   <!-- Invisible visibility overlay -->
                   <div v-if="!element.is_visible" class="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-                    <span class="text-white font-semibold text-lg">Hidden Section</span>
+                    <span class="text-white font-semibold text-lg">{{ $t('ui.hiddenSection') }}</span>
                   </div>
                 </div>
               </template>
@@ -146,12 +146,12 @@
     <!-- Right Sidebar - Properties Editor -->
     <div class="col-span-3 bg-white border-l border-gray-200 overflow-y-auto">
       <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-        <h3 class="font-semibold text-lg">Properties</h3>
+        <h3 class="font-semibold text-lg">{{ $t('ui.properties') }}</h3>
       </div>
 
       <div v-if="selectedSection" class="p-4 space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Section Type</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.sectionType') }}</label>
           <input
             v-model="selectedSection.section_type"
             disabled
@@ -161,7 +161,7 @@
 
         <!-- Heading -->
         <div v-if="selectedSection.content.heading !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.heading') }}</label>
           <input
             v-model="selectedSection.content.heading"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -170,7 +170,7 @@
 
         <!-- Subheading -->
         <div v-if="selectedSection.content.subheading !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Subheading</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.subheading') }}</label>
           <input
             v-model="selectedSection.content.subheading"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -179,7 +179,7 @@
 
         <!-- Text -->
         <div v-if="selectedSection.content.text !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.content') }}</label>
           <textarea
             v-model="selectedSection.content.text"
             rows="4"
@@ -189,14 +189,14 @@
 
         <!-- Button Text & URL -->
         <div v-if="selectedSection.content.button_text !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.buttonText') }}</label>
           <input
             v-model="selectedSection.content.button_text"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div v-if="selectedSection.content.button_url !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Button URL</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.buttonUrl') }}</label>
           <input
             v-model="selectedSection.content.button_url"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -205,7 +205,7 @@
 
         <!-- Image URL -->
         <div v-if="selectedSection.content.image_url !== undefined">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.imageUrl') }}</label>
           <input
             v-model="selectedSection.content.image_url"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -221,13 +221,13 @@
               type="checkbox"
               class="mr-2 rounded"
             />
-            <span class="text-sm font-medium text-gray-700">Visible on Page</span>
+            <span class="text-sm font-medium text-gray-700">{{ $t('ui.visibleOnPage') }}</span>
           </label>
         </div>
 
         <!-- JSON Editor for Advanced Users -->
         <details class="mt-6">
-          <summary class="cursor-pointer text-sm font-medium text-gray-700 mb-2">Advanced (JSON)</summary>
+          <summary class="cursor-pointer text-sm font-medium text-gray-700 mb-2">{{ $t('ui.advancedJson') }}</summary>
           <textarea
             :value="JSON.stringify(selectedSection, null, 2)"
             @input="updateSectionFromJSON($event.target.value)"
@@ -239,13 +239,15 @@
 
       <div v-else class="p-8 text-center text-gray-500">
         <div class="text-4xl mb-2">👆</div>
-        <p>Select a section to edit its properties</p>
+        <p>{{ $t('ui.selectASectionToEditItsProperties') }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, computed, watch } from 'vue';
 import draggable from 'vuedraggable';
 import { sectionTemplates, getCategoryNames } from './SectionTemplates';
@@ -298,6 +300,15 @@ const handleDragStart = (event, template) => {
   event.dataTransfer.effectAllowed = 'copy';
 };
 
+const localizeTemplate = (value) => {
+  if (typeof value === 'string') return uiText(value);
+  if (Array.isArray(value)) return value.map(localizeTemplate);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, localizeTemplate(item)]));
+  }
+  return value;
+};
+
 const handleDragOver = (event) => {
   event.preventDefault();
   event.dataTransfer.dropEffect = 'copy';
@@ -309,7 +320,7 @@ const handleDrop = (event) => {
 
   if (draggedTemplate) {
     const newSection = {
-      ...JSON.parse(JSON.stringify(draggedTemplate.template)),
+      ...localizeTemplate(JSON.parse(JSON.stringify(draggedTemplate.template))),
       uid: Date.now() + Math.random(), // Unique ID for draggable
       order: sections.value.length,
     };
@@ -323,7 +334,7 @@ const selectSection = (index) => {
 };
 
 const deleteSection = (index) => {
-  if (confirm('Delete this section?')) {
+  if (confirm(uiText("Hapus bagian ini?"))) {
     sections.value.splice(index, 1);
     if (selectedSectionIndex.value === index) {
       selectedSectionIndex.value = null;
@@ -348,7 +359,7 @@ const updateSectionFromJSON = (jsonString) => {
       sections.value[selectedSectionIndex.value] = { ...parsed, uid: sections.value[selectedSectionIndex.value].uid };
     }
   } catch (e) {
-    console.error('Invalid JSON');
+    console.error('JSON tidak valid');
   }
 };
 </script>

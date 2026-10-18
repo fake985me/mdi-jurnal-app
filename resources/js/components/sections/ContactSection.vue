@@ -16,7 +16,7 @@
               <span class="text-2xl">📧</span>
             </div>
             <div>
-              <h3 class="font-semibold mb-1">Email</h3>
+              <h3 class="font-semibold mb-1">{{ $t('labels.email') }}</h3>
               <a :href="`mailto:${content.email}`" class="text-indigo-600 hover:underline">
                 {{ content.email }}
               </a>
@@ -28,7 +28,7 @@
               <span class="text-2xl">📞</span>
             </div>
             <div>
-              <h3 class="font-semibold mb-1">Phone</h3>
+              <h3 class="font-semibold mb-1">{{ $t('labels.phone') }}</h3>
               <a :href="`tel:${content.phone}`" class="text-indigo-600 hover:underline">
                 {{ content.phone }}
               </a>
@@ -40,7 +40,7 @@
               <span class="text-2xl">📍</span>
             </div>
             <div>
-              <h3 class="font-semibold mb-1">Address</h3>
+              <h3 class="font-semibold mb-1">{{ $t('labels.address') }}</h3>
               <p class="text-gray-600">{{ content.address }}</p>
             </div>
           </div>
@@ -48,10 +48,10 @@
 
         <!-- Contact Form (placeholder) -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-xl font-semibold mb-4">Send us a message</h3>
+          <h3 class="text-xl font-semibold mb-4">{{ $t('ui.sendUsAMessage') }}</h3>
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Name</label>
+              <label class="block text-sm font-medium mb-1">{{ $t('ui.name') }}</label>
               <input 
                 v-model="form.name"
                 type="text" 
@@ -60,7 +60,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Email</label>
+              <label class="block text-sm font-medium mb-1">{{ $t('labels.email') }}</label>
               <input 
                 v-model="form.email"
                 type="email" 
@@ -69,7 +69,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Message</label>
+              <label class="block text-sm font-medium mb-1">{{ $t('ui.message') }}</label>
               <textarea 
                 v-model="form.message"
                 rows="4" 
@@ -81,7 +81,7 @@
               type="submit"
               class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors"
             >
-              Send Message
+              {{ $t('ui.sendMessage') }}
             </button>
           </form>
         </div>
@@ -91,6 +91,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -118,7 +120,7 @@ const form = ref({
 const handleSubmit = () => {
   // Future: implement form submission
   console.log('Form submitted:', form.value)
-  alert('Thank you for your message! (This is a demo)')
+  alert(uiText("Terima kasih atas pesan Anda! (Ini adalah demo)"))
   form.value = { name: '', email: '', message: '' }
 }
 </script>

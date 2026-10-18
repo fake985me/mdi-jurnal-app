@@ -3,35 +3,34 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">RMA
-          Management</h2>
-        <p class="text-sm text-gray-600 mt-1">Manage product returns and warranty claims</p>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">{{ $t('pageTitles.RMAs') }}</h2>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageProductReturnsAndWarrantyClaims') }}</p>
       </div>
       <button @click="showModal = true; resetForm()"
         class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-        + New RMA
+        {{ $t('ui.newRma') }}
       </button>
     </div>
 
     <!-- Filters -->
     <div class="card p-4">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <input v-model="filters.search" @input="loadRMAs" type="text" placeholder="Search by code, customer, or SN..."
+        <input v-model="filters.search" @input="loadRMAs" type="text" :placeholder="$t('ui.searchByCodeCustomerOrSn')"
           class="input" />
         <select v-model="filters.status" @change="loadRMAs" class="input">
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="received">Received</option>
-          <option value="processed">Processed</option>
-          <option value="completed">Completed</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="pending">{{ $t('labels.pending') }}</option>
+          <option value="approved">{{ $t('labels.approved') }}</option>
+          <option value="rejected">{{ $t('labels.rejected') }}</option>
+          <option value="received">{{ $t('labels.received') }}</option>
+          <option value="processed">{{ $t('labels.processed') }}</option>
+          <option value="completed">{{ $t('labels.completed') }}</option>
         </select>
         <select v-model="filters.reason" @change="loadRMAs" class="input">
-          <option value="">All Reasons</option>
-          <option value="warranty_claim">Warranty Claim</option>
-          <option value="damaged_shipment">Damaged Shipment</option>
-          <option value="defective">Defective</option>
+          <option value="">{{ $t('ui.allReasons') }}</option>
+          <option value="warranty_claim">{{ $t('labels.warranty_claim') }}</option>
+          <option value="damaged_shipment">{{ $t('labels.damaged_shipment') }}</option>
+          <option value="defective">{{ $t('labels.defective') }}</option>
           <option value="dead_on_arrival">DOA</option>
         </select>
       </div>
@@ -40,26 +39,26 @@
     <!-- RMAs Table -->
     <div class="table-wrapper">
       <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">RMA Records</h3>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('ui.rmaRecords') }}</h3>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">Loading...</p>
+        <p class="text-gray-600">{{ $t('common.loading') }}</p>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="table-header">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RMA Code</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.rmaCode') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SN</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Evidence</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.customer') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.reason') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.condition') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.evidence') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -73,11 +72,11 @@
             </td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ rma.quantity }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">
-              <span class="capitalize">{{ formatReason(rma.reason) }}</span>
+              <span class="capitalize">{{ $label(rma.reason) }}</span>
             </td>
             <td class="px-6 py-4 text-sm">
               <span v-if="rma.condition" :class="getConditionBadge(rma.condition)" class="capitalize">{{
-                rma.condition.replace('_', ' ') }}</span>
+                $label(rma.condition) }}</span>
               <span v-else class="text-gray-400">-</span>
             </td>
             <td class="px-6 py-4 text-sm">
@@ -88,11 +87,11 @@
               <span v-else class="text-gray-400">-</span>
             </td>
             <td class="px-6 py-4">
-              <span :class="getStatusBadge(rma.status)">{{ rma.status }}</span>
+              <span :class="getStatusBadge(rma.status)">{{ $label(rma.status) }}</span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <router-link v-if="rma.status !== 'rejected'" :to="{ name: 'RMAInspection', params: { id: rma.id } }" target="_blank" rel="noopener" class="text-green-600 hover:text-green-900">Aksi</router-link>
-              <button @click="deleteRMA(rma.id)" class="text-red-600 hover:text-red-900">Delete</button>
+              <router-link v-if="rma.status !== 'rejected'" :to="{ name: 'RMAInspection', params: { id: rma.id } }" target="_blank" rel="noopener" class="text-green-600 hover:text-green-900">{{ $t('sales.actions') }}</router-link>
+              <button @click="deleteRMA(rma.id)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -100,12 +99,12 @@
 
       <!-- Pagination -->
       <div v-if="rmas.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between">
-        <p class="text-sm text-gray-700">Showing {{ rmas.from }} to {{ rmas.to }} of {{ rmas.total }}</p>
+        <p class="text-sm text-gray-700">{{ $t('sales.showing') }} {{ rmas.from }} {{ $t('ui.to') }} {{ rmas.to }} {{ $t('sales.of') }} {{ rmas.total }}</p>
         <div class="flex space-x-2">
           <button @click="loadRMAs(rmas.current_page - 1)" :disabled="!rmas.prev_page_url"
-            class="btn-secondary disabled:opacity-50">Previous</button>
+            class="btn-secondary disabled:opacity-50">{{ $t('sales.previous') }}</button>
           <button @click="loadRMAs(rmas.current_page + 1)" :disabled="!rmas.next_page_url"
-            class="btn-secondary disabled:opacity-50">Next</button>
+            class="btn-secondary disabled:opacity-50">{{ $t('sales.next') }}</button>
         </div>
       </div>
     </div>
@@ -113,29 +112,29 @@
     <!-- Create Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-2xl font-bold mb-6">New RMA</h3>
+        <h3 class="text-2xl font-bold mb-6">{{ $t('ui.newRma2') }}</h3>
 
         <form @submit.prevent="saveRMA" class="space-y-4">
           <!-- Step 1: Select Sale -->
           <div class="p-4 bg-blue-50 rounded-lg">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Sale with Warranty/MSA *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.selectSaleWithWarrantyMsa') }}</label>
             <select v-model="form.sale_id" @change="onSaleSelect" required class="input">
-              <option value="">-- Select a Sale --</option>
+              <option value="">{{ $t('ui.selectASale') }}</option>
               <option v-for="sale in sales" :key="sale.id" :value="sale.id">
                 {{ sale.invoice_number }} - {{ sale.customer_name }} ({{ formatDate(sale.sale_date) }})
               </option>
             </select>
-            <p class="text-xs text-gray-500 mt-1">Only sales with active warranty or MSA are shown</p>
+            <p class="text-xs text-gray-500 mt-1">{{ $t('ui.onlySalesWithActiveWarrantyOrMsaAreShown') }}</p>
           </div>
 
           <!-- Step 2: Select Products (multi-select with checkboxes) -->
           <div v-if="form.sale_id && saleItems.length" class="p-4 bg-gray-50 rounded-lg">
             <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-medium text-gray-700">Select Products * <span
-                  class="text-gray-400 font-normal">(bisa pilih satu atau banyak)</span></label>
+              <label class="block text-sm font-medium text-gray-700">{{ $t('ui.selectProducts') }} <span
+                  class="text-gray-400 font-normal">{{ $t('ui.selectOneOrMore') }}</span></label>
               <button v-if="saleItems.length > 1" type="button" @click="toggleSelectAll"
                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                {{ allSelected ? 'Batal Semua' : 'Pilih Semua' }}
+                {{ allSelected ? $t('ui.cancelAll') : $t('ui.selectAll') }}
               </button>
             </div>
             <div class="space-y-2">
@@ -146,7 +145,7 @@
                   class="mr-3 h-4 w-4 text-blue-600 rounded" />
                 <div class="flex-1">
                   <span class="font-medium">{{ item.product?.title }}</span>
-                  <span class="text-sm text-gray-500 ml-2">(Qty: {{ item.quantity }})</span>
+                  <span class="text-sm text-gray-500 ml-2">{{ $t('ui.qty') }} {{ item.quantity }})</span>
                 </div>
                 <!-- Inline eligibility indicator -->
                 <span v-if="getProductEligibility(item.product_id)?.checked" class="ml-2">
@@ -167,27 +166,27 @@
                   <!-- Eligibility badge -->
                   <span v-if="sp.eligibility?.checked" class="text-xs px-2 py-0.5 rounded-full"
                     :class="sp.eligibility?.valid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-                    {{ sp.eligibility?.valid ? '✓ Eligible' : '✗ Not eligible' }}
+                    {{ sp.eligibility?.valid ? $t('ui.eligible') : $t('ui.notEligible') }}
                   </span>
-                  <span v-else class="text-xs text-gray-400">Checking...</span>
+                  <span v-else class="text-xs text-gray-400">{{ $t('ui.checking') }}</span>
                 </div>
               </div>
 
               <!-- Eligibility reason -->
               <p v-if="sp.eligibility?.reason" class="text-xs mb-3"
                 :class="sp.eligibility?.valid ? 'text-green-600' : 'text-red-600'">
-                {{ sp.eligibility.reason }}
+                {{ $label(sp.eligibility.reason) }}
               </p>
 
               <!-- Quantity -->
               <div class="mb-3">
-                <label class="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('sales.quantity') }}</label>
                 <input v-model.number="sp.quantity" type="number" :min="1" :max="sp.available_qty || 999" required
                   class="input text-sm" @input="updateSerialNumbersArray(sp)" />
                 <p v-if="sp.available_qty !== null" class="text-xs text-gray-500 mt-0.5">
-                  Max: {{ sp.available_qty }}
+                  {{ $t('ui.max') }} {{ sp.available_qty }}
                   <span v-if="sp.existing_rma_qty > 0" class="text-orange-600">
-                    (sudah diklaim: {{ sp.existing_rma_qty }})
+                    {{ $t('ui.alreadyClaimed') }} {{ sp.existing_rma_qty }})
                   </span>
                 </p>
               </div>
@@ -195,8 +194,8 @@
               <!-- Serial Numbers (multiple inputs based on quantity) -->
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">
-                  Serial Number (SN) 
-                  <span v-if="sp.quantity > 1" class="text-gray-500 font-normal">({{ sp.quantity }} unit)</span>
+                  {{ $t('ui.serialNumberSn') }}
+                  <span v-if="sp.quantity > 1" class="text-gray-500 font-normal">({{ sp.quantity }} {{ $t('ui.units') }}</span>
                 </label>
                 <div class="space-y-2">
                   <div v-for="(sn, snIdx) in sp.serial_numbers" :key="snIdx" class="relative">
@@ -215,11 +214,11 @@
                     </div>
                     <p v-if="sp.warranty_sns && sp.warranty_sns.length > 0 && sp.quantity === 1 && sp.serial_numbers[snIdx]" class="text-xs mt-0.5"
                       :class="getSnStatusByIndex(sp, snIdx) === 'match' ? 'text-green-600' : 'text-red-600'">
-                      <span v-if="getSnStatusByIndex(sp, snIdx) === 'match'">✓ SN cocok</span>
-                      <span v-else>✗ SN tidak cocok dengan warranty terdaftar</span>
+                      <span v-if="getSnStatusByIndex(sp, snIdx) === 'match'">{{ $t('ui.serialNumberMatches') }}</span>
+                      <span v-else>{{ $t('ui.snTidakCocokDenganWarrantyTerdaftar') }}</span>
                     </p>
                     <p v-else-if="sp.warranty_sns && sp.warranty_sns.length > 0 && !sp.serial_numbers[snIdx]" class="text-xs mt-0.5 text-gray-500">
-                      Valid SNs: {{ sp.warranty_sns.join(', ') }}
+                      {{ $t('ui.validSns') }} {{ sp.warranty_sns.join(', ') }}
                     </p>
                   </div>
                 </div>
@@ -230,30 +229,30 @@
           <!-- Shared form fields -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.customerName') }}</label>
               <input v-model="form.customer_name" required class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Customer Contact</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.customerContact') }}</label>
               <input v-model="form.customer_contact" class="input" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.reason2') }}</label>
               <select v-model="form.reason" required class="input">
-                <option value="">Select Reason</option>
-                <option value="warranty_claim">Warranty Claim</option>
-                <option value="damaged_shipment">Damaged Shipment</option>
-                <option value="defective">Defective</option>
-                <option value="dead_on_arrival">Dead on Arrival (DOA)</option>
+                <option value="">{{ $t('ui.selectReason') }}</option>
+                <option value="warranty_claim">{{ $t('labels.warranty_claim') }}</option>
+                <option value="damaged_shipment">{{ $t('labels.damaged_shipment') }}</option>
+                <option value="defective">{{ $t('labels.defective') }}</option>
+                <option value="dead_on_arrival">{{ $t('labels.dead_on_arrival') }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.reportedDate') }}</label>
               <input v-model="form.issue_date" type="date" required class="input" />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
             <textarea v-model="form.notes" rows="3" class="input"></textarea>
           </div>
 
@@ -261,17 +260,16 @@
             <label class="flex items-center space-x-3 cursor-pointer">
               <input type="checkbox" v-model="form.replacement_requested" class="w-5 h-5 text-blue-600 rounded" />
               <div>
-                <p class="font-medium text-gray-900">Request Product Replacement</p>
-                <p class="text-sm text-gray-600">Check this if customer requests product replacement</p>
+                <p class="font-medium text-gray-900">{{ $t('ui.requestProductReplacement') }}</p>
+                <p class="text-sm text-gray-600">{{ $t('ui.checkThisIfCustomerRequestsProductReplacement') }}</p>
               </div>
             </label>
           </div>
 
           <!-- Evidence Upload -->
           <div class="p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <label class="block text-sm font-medium text-gray-700 mb-2">📎 Evidence / Bukti (Opsional)</label>
-            <p class="text-xs text-gray-500 mb-3">Upload foto atau dokumen sebagai bukti (max 5 file, masing-masing max
-              5MB). Format: JPG, PNG, WebP, PDF</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.evidenceBuktiOpsional') }}</label>
+            <p class="text-xs text-gray-500 mb-3">{{ $t('ui.uploadFotoAtauDokumenSebagaiBuktiMax5FileMasingMasingMax5mbFormat') }}</p>
 
             <div @click="$refs.evidenceInput.click()" @dragover.prevent="dragOver = true" @dragleave="dragOver = false"
               @drop.prevent="handleFileDrop"
@@ -282,8 +280,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p class="text-sm">Klik atau drag & drop file di sini</p>
-                <p class="text-xs text-gray-400 mt-1">{{ evidenceFiles.length }}/5 file</p>
+                <p class="text-sm">{{ $t('ui.klikAtauDragDropFileDiSini') }}</p>
+                <p class="text-xs text-gray-400 mt-1">{{ evidenceFiles.length }}{{ $t('ui.text5Files') }}</p>
               </div>
             </div>
             <input ref="evidenceInput" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf"
@@ -297,7 +295,7 @@
                   <img v-if="file.preview && file.type.startsWith('image/')" :src="file.preview"
                     class="w-10 h-10 object-cover rounded flex-shrink-0" />
                   <div v-else class="w-10 h-10 bg-red-100 rounded flex items-center justify-center flex-shrink-0">
-                    <span class="text-red-600 text-xs font-bold">PDF</span>
+                    <span class="text-red-600 text-xs font-bold">{{ $t('sales.pdf') }}</span>
                   </div>
                   <div class="min-w-0">
                     <p class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</p>
@@ -312,17 +310,17 @@
             </div>
           </div>
 
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ error }}</div>
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{{ $ui(error) }}</div>
 
           <!-- Submit info -->
           <div v-if="selectedProducts.length" class="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm">
-            📋 {{ selectedProducts.length }} produk dipilih — akan dibuat {{ selectedProducts.length }} RMA
+            📋 {{ selectedProducts.length }} {{ $t('ui.productsSelectedWillCreate') }} {{ selectedProducts.length }} {{ $t('labels.rma') }}
           </div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving || !canSubmit" class="btn-primary disabled:opacity-50">
-              {{ saving ? 'Saving...' : `Create ${selectedProducts.length || ''} RMA` }}
+              {{ saving ? $t('sales.saving') : `Create ${selectedProducts.length || ''} RMA` }}
             </button>
           </div>
         </form>
@@ -333,16 +331,16 @@
     <div v-if="showConditionModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">Select Item Condition</h3>
-        <p class="text-sm text-gray-600 mb-4">RMA: {{ selectedRMA?.rma_code }}</p>
+        <h3 class="text-xl font-bold mb-4">{{ $t('ui.selectItemCondition') }}</h3>
+        <p class="text-sm text-gray-600 mb-4">{{ $t('ui.rma') }} {{ selectedRMA?.rma_code }}</p>
 
         <div class="space-y-3">
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
             :class="conditionForm.condition_level === 'working' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
             <input v-model="conditionForm.condition_level" type="radio" value="working" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">✅ Working / Functional</p>
-              <p class="text-sm text-gray-500">Return to normal stock - ready for resale</p>
+              <p class="font-medium text-gray-900">{{ $t('ui.workingFunctional') }}</p>
+              <p class="text-sm text-gray-500">{{ $t('ui.returnToNormalStockReadyForResale') }}</p>
             </div>
           </label>
 
@@ -350,8 +348,8 @@
             :class="conditionForm.condition_level === 'repairable' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'">
             <input v-model="conditionForm.condition_level" type="radio" value="repairable" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">🔧 Repairable</p>
-              <p class="text-sm text-gray-500">Can be fixed - move to RMA warehouse</p>
+              <p class="font-medium text-gray-900">{{ $t('ui.repairable') }}</p>
+              <p class="text-sm text-gray-500">{{ $t('ui.canBeFixedMoveToRmaWarehouse') }}</p>
             </div>
           </label>
 
@@ -359,8 +357,8 @@
             :class="conditionForm.condition_level === 'damaged_total' ? 'border-red-500 bg-red-50' : 'border-gray-200'">
             <input v-model="conditionForm.condition_level" type="radio" value="damaged_total" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">❌ Damaged Total</p>
-              <p class="text-sm text-gray-500">Cannot be repaired - total loss</p>
+              <p class="font-medium text-gray-900">{{ $t('ui.damagedTotal') }}</p>
+              <p class="text-sm text-gray-500">{{ $t('ui.cannotBeRepairedTotalLoss') }}</p>
             </div>
           </label>
 
@@ -368,22 +366,22 @@
             :class="conditionForm.condition_level === 'parts_only' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'">
             <input v-model="conditionForm.condition_level" type="radio" value="parts_only" class="mr-3" />
             <div>
-              <p class="font-medium text-gray-900">🔩 Parts Only</p>
-              <p class="text-sm text-gray-500">For spare parts extraction</p>
+              <p class="font-medium text-gray-900">{{ $t('ui.partsOnly') }}</p>
+              <p class="text-sm text-gray-500">{{ $t('ui.forSparePartsExtraction') }}</p>
             </div>
           </label>
 
           <div v-if="conditionForm.condition_level" class="mt-3">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes (Optional)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.additionalNotesOptional') }}</label>
             <textarea v-model="conditionForm.condition" rows="2" class="input w-full"
-              placeholder="e.g., Screen cracked, battery swollen, etc."></textarea>
+              :placeholder="$t('ui.eGScreenCrackedBatterySwollenEtc')"></textarea>
           </div>
         </div>
 
         <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-          <button type="button" @click="showConditionModal = false" class="btn-secondary">Cancel</button>
+          <button type="button" @click="showConditionModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
           <button @click="confirmReceived" :disabled="!canConfirmReceived || saving" class="btn-primary">
-            {{ saving ? 'Processing...' : 'Confirm Received' }}
+            {{ saving ? $t('ui.processing') : $t('ui.confirmReceipt') }}
           </button>
         </div>
       </div>
@@ -394,11 +392,11 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold">Evidence / Bukti — {{ evidenceRMA?.rma_code }}</h3>
+          <h3 class="text-xl font-bold">{{ $t('ui.evidenceBukti') }} {{ evidenceRMA?.rma_code }}</h3>
           <button @click="showEvidenceModal = false" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
 
-        <div v-if="evidenceLoading" class="p-8 text-center text-gray-500">Loading evidence...</div>
+        <div v-if="evidenceLoading" class="p-8 text-center text-gray-500">{{ $t('ui.loadingEvidence') }}</div>
 
         <div v-else-if="evidenceItems.length" class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div v-for="(file, index) in evidenceItems" :key="index" class="border rounded-lg overflow-hidden">
@@ -412,7 +410,7 @@
               @click="openFileInNewTab(file.url)">
               <div class="text-center">
                 <div class="text-4xl mb-2">📄</div>
-                <p class="text-sm text-red-700 font-medium">PDF</p>
+                <p class="text-sm text-red-700 font-medium">{{ $t('sales.pdf') }}</p>
               </div>
             </div>
             <div class="p-2">
@@ -422,13 +420,15 @@
           </div>
         </div>
 
-        <div v-else class="p-8 text-center text-gray-500">Tidak ada evidence</div>
+        <div v-else class="p-8 text-center text-gray-500">{{ $t('ui.tidakAdaEvidence') }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../services/api';
@@ -532,7 +532,7 @@ const getSnPlaceholder = (sp, index) => {
     if (sp.quantity === 1 && sp.warranty_sns.length === 1) {
       return 'SN: ' + sp.warranty_sns[0];
     }
-    return 'Masukkan salah satu SN yang valid';
+    return uiText("Masukkan salah satu SN yang valid");
   }
   return 'Masukkan SN unit #' + (index + 1);
 };
@@ -598,7 +598,7 @@ const canSubmit = computed(() => {
 
 const formatDate = (date) => {
   if (!date) return '-';
-  return new Date(date).toLocaleDateString('id-ID');
+  return new Date(date).toLocaleDateString(uiLocale());
 };
 
 const formatReason = (reason) => {
@@ -657,7 +657,7 @@ const loadSalesWithWarranty = async () => {
     const response = await api.get('/rmas/sales-with-warranty');
     sales.value = response.data || [];
   } catch (err) {
-    console.error('Failed to load sales:', err);
+    console.error('Gagal memuat penjualan:', err);
   }
 };
 
@@ -687,7 +687,7 @@ const toggleProduct = async (item) => {
     // Select — add new entry and check eligibility
     const newProduct = {
       product_id: item.product_id,
-      product_title: item.product?.title || `Product #${item.product_id}`,
+      product_title: item.product?.title || `Produk #${item.product_id}`,
       serial_number: '',
       serial_numbers: [''],
       quantity: 1,
@@ -696,7 +696,7 @@ const toggleProduct = async (item) => {
       available_qty: item.quantity,
       existing_rma_qty: 0,
       sale_item_qty: item.quantity,
-      eligibility: { checked: false, valid: false, reason: 'Checking...' },
+      eligibility: { checked: false, valid: false, reason: uiText("Memeriksa...") },
     };
     selectedProducts.value.push(newProduct);
 
@@ -740,7 +740,7 @@ const checkProductEligibility = async (sp) => {
       sp.quantity = Math.min(1, response.data.available_quantity);
     }
   } catch (err) {
-    sp.eligibility = { checked: true, valid: false, reason: 'Failed to check eligibility' };
+    sp.eligibility = { checked: true, valid: false, reason: uiText("Gagal memeriksa kelayakan") };
   }
 };
 
@@ -779,15 +779,15 @@ const addFiles = (files) => {
 
   for (const file of files) {
     if (evidenceFiles.value.length >= 5) {
-      alert('Maksimal 5 file');
+      alert(uiText("Maksimal 5 file"));
       break;
     }
     if (!allowedTypes.includes(file.type)) {
-      alert(`File "${file.name}" tidak didukung. Gunakan JPG, PNG, WebP, atau PDF.`);
+      alert(uiText('ui.unsupportedFile', { p0: file.name }));
       continue;
     }
     if (file.size > maxSize) {
-      alert(`File "${file.name}" terlalu besar (max 5MB).`);
+      alert(uiText('ui.fileTooLarge', { p0: file.name }));
       continue;
     }
 
@@ -856,19 +856,19 @@ const saveRMA = async () => {
       alert(response.data.message);
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to save RMA';
+    error.value = err.response?.data?.message || uiText("Gagal menyimpan RMA");
   } finally {
     saving.value = false;
   }
 };
 
 const approveRMA = async (rma) => {
-  if (!confirm('Approve this RMA?')) return;
+  if (!confirm(uiText("Setujui RMA ini?"))) return;
   try {
     await api.put(`/rmas/${rma.id}`, { status: 'approved' });
     loadRMAs();
   } catch (err) {
-    alert('Failed to approve RMA');
+    alert(uiText("Gagal menyetujui RMA"));
   }
 };
 
@@ -893,7 +893,7 @@ const confirmReceived = async () => {
     const firstValidationError = validationErrors
       ? Object.values(validationErrors).flat()[0]
       : null;
-    alert(firstValidationError || err.response?.data?.message || 'Failed to mark as received');
+    alert(firstValidationError || err.response?.data?.message || uiText("Gagal menandai sebagai diterima"));
   } finally {
     saving.value = false;
   }
@@ -909,7 +909,7 @@ const viewEvidence = async (rma) => {
     const response = await api.get(`/rmas/${rma.id}/evidence`);
     evidenceItems.value = response.data;
   } catch (err) {
-    console.error('Failed to load evidence:', err);
+    console.error('Gagal memuat bukti:', err);
   } finally {
     evidenceLoading.value = false;
   }
@@ -920,12 +920,12 @@ const openFileInNewTab = (url) => {
 };
 
 const deleteRMA = async (id) => {
-  if (!confirm('Delete this RMA?')) return;
+  if (!confirm(uiText("Hapus RMA ini?"))) return;
   try {
     await api.delete(`/rmas/${id}`);
     loadRMAs();
   } catch (err) {
-    alert('Failed to delete');
+    alert(uiText("Gagal menghapus"));
   }
 };
 

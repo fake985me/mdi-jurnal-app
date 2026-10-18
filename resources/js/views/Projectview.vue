@@ -3,12 +3,12 @@
   <section id="ispcustomer" class="bg-white">
     <div class="max-w-5xl mx-auto px-2 py-20 space-y-12">
       <h1 class="text-center text-3xl font-bold tracking-tight sm:text-4xl text-gray-900">
-        ISP Customer
+        {{ $t('ui.ispCustomer') }}
       </h1>
 
-      <p v-if="projectsLoading" class="text-center text-gray-500">Loading projects...</p>
+      <p v-if="projectsLoading" class="text-center text-gray-500">{{ $t('ui.loadingProjects') }}</p>
       <p v-else-if="projectsError" class="text-center text-red-600">{{ projectsError }}</p>
-      <p v-else-if="ispProjects.length === 0" class="text-center text-gray-500">No ISP customer projects are available.</p>
+      <p v-else-if="ispProjects.length === 0" class="text-center text-gray-500">{{ $t('ui.noIspCustomerProjectsAreAvailable') }}</p>
       <div v-else class="space-y-12">
         <article v-for="(item, index) in ispProjects" :key="item.id" class="flex flex-col sm:flex-row gap-6 items-start pb-6"
           :class="index < ispProjects.length - 1 ? 'border-b border-gray-200' : ''">
@@ -20,9 +20,9 @@
           <!-- Text -->
           <div class="flex-1">
             <a :href="item.url || '#'" class="text-blue-600 hover:underline">
-              <h3 class="text-xl font-bold uppercase mb-2">{{ item.title }}</h3>
+              <h3 class="text-xl font-bold uppercase mb-2">{{ $ui(item.title) }}</h3>
             </a>
-            <p class="text-gray-700">{{ item.description }}</p>
+            <p class="text-gray-700">{{ $ui(item.description) }}</p>
           </div>
         </article>
       </div>
@@ -32,12 +32,12 @@
   <section id="managedservices" class="bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-16">
       <h1 class="text-center text-3xl font-bold tracking-tight sm:text-4xl text-gray-900">
-        Managed Services Project
+        {{ $t('ui.managedServicesProject') }}
       </h1>
 
-      <p v-if="projectsLoading" class="text-center text-gray-500">Loading projects...</p>
+      <p v-if="projectsLoading" class="text-center text-gray-500">{{ $t('ui.loadingProjects') }}</p>
       <p v-else-if="projectsError" class="text-center text-red-600">{{ projectsError }}</p>
-      <p v-else-if="managedProjects.length === 0" class="text-center text-gray-500">No managed services projects are available.</p>
+      <p v-else-if="managedProjects.length === 0" class="text-center text-gray-500">{{ $t('ui.noManagedServicesProjectsAreAvailable') }}</p>
       <template v-else>
         <div v-for="(project, index) in managedProjects" :key="project.id"
           class="flex flex-col lg:flex-row items-center justify-between gap-10 pb-12" :class="[
@@ -45,7 +45,7 @@
             index < managedProjects.length - 1 ? 'border-b border-gray-300' : '',
           ]">
           <div class="w-full lg:w-1/2 max-w-xl space-y-4 text-center lg:text-left">
-            <p class="text-2xl font-bold tracking-tight text-sky-900 italic">Managed Services Project</p>
+            <p class="text-2xl font-bold tracking-tight text-sky-900 italic">{{ $t('ui.managedServicesProject') }}</p>
             <h2 class="text-2xl font-bold tracking-tight text-gray-800 underline underline-offset-auto">{{ project.title }}</h2>
             <p class="text-base text-gray-700">{{ project.description }}</p>
           </div>
@@ -61,12 +61,12 @@
   <section id="fttxproject" class="bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-16">
       <h1 class="text-center text-3xl font-bold tracking-tight sm:text-4xl text-gray-900">
-        FTTx Project
+        {{ $t('ui.fttxProject') }}
       </h1>
 
-      <p v-if="projectsLoading" class="text-center text-gray-500">Loading projects...</p>
+      <p v-if="projectsLoading" class="text-center text-gray-500">{{ $t('ui.loadingProjects') }}</p>
       <p v-else-if="projectsError" class="text-center text-red-600">{{ projectsError }}</p>
-      <p v-else-if="fttxProjects.length === 0" class="text-center text-gray-500">No FTTx projects are available.</p>
+      <p v-else-if="fttxProjects.length === 0" class="text-center text-gray-500">{{ $t('ui.noFttxProjectsAreAvailable') }}</p>
       <template v-else>
         <div v-for="(fttx, index) in fttxProjects" :key="fttx.id"
           class="flex flex-col lg:flex-row items-center justify-between gap-10 pb-12" :class="[
@@ -74,7 +74,7 @@
             index < fttxProjects.length - 1 ? 'border-b border-gray-300' : '',
           ]">
           <div class="w-full lg:w-1/2 max-w-xl space-y-4 text-center lg:text-left">
-            <p class="text-2xl font-bold tracking-tight text-sky-900 italic">FTTx Project</p>
+            <p class="text-2xl font-bold tracking-tight text-sky-900 italic">{{ $t('ui.fttxProject') }}</p>
             <h2 class="text-2xl font-bold tracking-tight text-gray-800 underline underline-offset-auto">{{ fttx.title }}</h2>
             <p class="text-base text-gray-700">{{ fttx.description }}</p>
           </div>
@@ -88,6 +88,8 @@
   </section>
 </template>
 <script setup>
+import { uiText } from '../utils/uiText';
+
 import { onMounted, watch, nextTick, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../services/api'
@@ -110,8 +112,8 @@ const loadProjects = async () => {
     const response = await api.get('/guest/projects')
     projects.value = response.data
   } catch (error) {
-    console.error('Failed to load projects:', error)
-    projectsError.value = error.response?.data?.message || 'Failed to load projects'
+    console.error('Gagal memuat proyek:', error)
+    projectsError.value = error.response?.data?.message || uiText("Gagal memuat proyek")
   } finally {
     projectsLoading.value = false
   }

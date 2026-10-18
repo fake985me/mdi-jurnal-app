@@ -4,12 +4,12 @@
     <div class="flex justify-between items-center">
       <div>
         <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Bank Accounts
+          {{ $t('pageTitles.BankAccounts') }}
         </h2>
-        <p class="text-sm text-gray-600 mt-1">Manage bank accounts and track balances</p>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageBankAccountsAndTrackBalances') }}</p>
       </div>
       <button @click="openCreateModal" class="btn-primary flex items-center space-x-2">
-        <span>+ Add Bank Account</span>
+        <span>{{ $t('ui.addBankAccount') }}</span>
       </button>
     </div>
 
@@ -18,7 +18,7 @@
       <div class="card p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-emerald-600 font-medium">Total Balance</p>
+            <p class="text-sm text-emerald-600 font-medium">{{ $t('ui.totalBalance') }}</p>
             <p class="text-2xl font-bold text-emerald-800 mt-1">{{ formatCurrency(totals.total_balance) }}</p>
           </div>
           <div class="w-12 h-12 bg-emerald-200 rounded-xl flex items-center justify-center">
@@ -31,7 +31,7 @@
       <div class="card p-5 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-blue-600 font-medium">Total Incoming</p>
+            <p class="text-sm text-blue-600 font-medium">{{ $t('ui.totalIncoming') }}</p>
             <p class="text-2xl font-bold text-blue-800 mt-1">{{ formatCurrency(totals.total_incoming) }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-200 rounded-xl flex items-center justify-center">
@@ -44,7 +44,7 @@
       <div class="card p-5 bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-red-600 font-medium">Total Outgoing</p>
+            <p class="text-sm text-red-600 font-medium">{{ $t('ui.totalOutgoing') }}</p>
             <p class="text-2xl font-bold text-red-800 mt-1">{{ formatCurrency(totals.total_outgoing) }}</p>
           </div>
           <div class="w-12 h-12 bg-red-200 rounded-xl flex items-center justify-center">
@@ -58,7 +58,7 @@
 
     <!-- Bank Accounts Grid -->
     <div v-if="loading" class="card p-8 text-center">
-      <p class="text-gray-600">Loading bank accounts...</p>
+      <p class="text-gray-600">{{ $t('ui.loadingBankAccounts') }}</p>
     </div>
 
     <div v-else-if="!accounts.length" class="card p-12 text-center">
@@ -67,9 +67,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>
       </div>
-      <p class="text-gray-500 text-lg font-medium">No bank accounts added yet</p>
-      <p class="text-gray-400 text-sm mt-1">Add your first bank account to start tracking finances</p>
-      <button @click="openCreateModal" class="btn-primary mt-4">+ Add Bank Account</button>
+      <p class="text-gray-500 text-lg font-medium">{{ $t('ui.noBankAccountsAddedYet') }}</p>
+      <p class="text-gray-400 text-sm mt-1">{{ $t('ui.addYourFirstBankAccountToStartTrackingFinances') }}</p>
+      <button @click="openCreateModal" class="btn-primary mt-4">{{ $t('ui.addBankAccount') }}</button>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -81,18 +81,18 @@
           <div>
             <div class="flex items-center space-x-2">
               <h3 class="font-bold text-gray-900">{{ account.bank_name }}</h3>
-              <span v-if="account.is_default" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">Default</span>
-              <span v-if="!account.is_active" class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">Inactive</span>
+              <span v-if="account.is_default" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ $t('ui.default') }}</span>
+              <span v-if="!account.is_active" class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">{{ $t('labels.inactive') }}</span>
             </div>
             <p class="text-sm text-gray-500 mt-0.5">{{ account.account_name }}</p>
           </div>
           <div class="flex space-x-1">
-            <button @click="editAccount(account)" class="text-blue-500 hover:text-blue-700 p-1" title="Edit">
+            <button @click="editAccount(account)" class="text-blue-500 hover:text-blue-700 p-1" :title="$t('common.edit')">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button @click="deleteAccount(account)" class="text-red-500 hover:text-red-700 p-1" title="Delete">
+            <button @click="deleteAccount(account)" class="text-red-500 hover:text-red-700 p-1" :title="$t('common.delete')">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -101,20 +101,20 @@
         </div>
 
         <div class="bg-gray-50 rounded-lg p-3 mb-3">
-          <p class="text-xs text-gray-500 font-medium">Account Number</p>
+          <p class="text-xs text-gray-500 font-medium">{{ $t('ui.accountNumber') }}</p>
           <p class="text-sm font-mono font-bold text-gray-800">{{ account.account_number }}</p>
           <p v-if="account.branch" class="text-xs text-gray-400 mt-1">{{ account.branch }}</p>
         </div>
 
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs text-gray-500">Current Balance</p>
+            <p class="text-xs text-gray-500">{{ $t('ui.currentBalance') }}</p>
             <p class="text-lg font-bold" :class="(account.current_balance || 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">
               {{ formatCurrency(account.current_balance) }}
             </p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-gray-500">Transactions</p>
+            <p class="text-xs text-gray-500">{{ $t('ui.transactions2') }}</p>
             <p class="text-sm font-semibold text-gray-700">{{ account.total_transactions || 0 }}</p>
           </div>
         </div>
@@ -122,11 +122,11 @@
         <div class="flex items-center mt-3 pt-3 border-t border-gray-100 space-x-2">
           <button v-if="!account.is_default" @click="setDefault(account)"
             class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-            Set as Default
+            {{ $t('ui.setAsDefault') }}
           </button>
           <button @click="viewTransactions(account)"
             class="text-xs text-indigo-600 hover:text-indigo-800 font-medium ml-auto">
-            View Transactions →
+            {{ $t('ui.viewTransactions') }}
           </button>
         </div>
       </div>
@@ -137,78 +137,78 @@
       <div class="bg-white rounded-xl p-6 w-full max-w-3xl shadow-2xl max-h-[80vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-xl font-bold text-gray-900">{{ transAccount?.bank_name }} Transactions</h3>
+            <h3 class="text-xl font-bold text-gray-900">{{ transAccount?.bank_name }} {{ $t('ui.transactions2') }}</h3>
             <p class="text-sm text-gray-500">{{ transAccount?.account_number }}</p>
           </div>
           <button @click="showTransModal = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
         </div>
 
         <div v-if="transLoading" class="p-8 text-center">
-          <p class="text-gray-600">Loading transactions...</p>
+          <p class="text-gray-600">{{ $t('ui.loadingTransactions') }}</p>
         </div>
 
         <table v-else-if="transactions.data?.length" class="min-w-full">
           <thead class="table-header">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.date') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.reference') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.type') }}</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('ui.amount') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="t in transactions.data" :key="t.id" class="hover:bg-gray-50">
               <td class="px-4 py-3 text-sm text-gray-700">{{ formatDate(t.payment_date) }}</td>
               <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ t.reference_number || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700 capitalize">{{ t.payment_type?.replace('_', ' ') }}</td>
+              <td class="px-4 py-3 text-sm text-gray-700 capitalize">{{ $label(t.payment_type) }}</td>
               <td class="px-4 py-3 text-sm font-bold text-right" :class="t.payable_type?.includes('Purchase') ? 'text-red-600' : 'text-emerald-600'">
                 {{ t.payable_type?.includes('Purchase') ? '-' : '+' }}{{ formatCurrency(t.amount) }}
               </td>
               <td class="px-4 py-3">
-                <span :class="getStatusBadge(t.status)" class="text-xs font-medium px-2 py-1 rounded-full">{{ t.status }}</span>
+                <span :class="getStatusBadge(t.status)" class="text-xs font-medium px-2 py-1 rounded-full">{{ $label(t.status) }}</span>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div v-else class="p-8 text-center text-gray-500">No transactions for this bank account</div>
+        <div v-else class="p-8 text-center text-gray-500">{{ $t('ui.noTransactionsForThisBankAccount') }}</div>
       </div>
     </div>
 
     <!-- Create/Edit Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
       <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 text-gray-900">{{ editingId ? 'Edit' : 'Add' }} Bank Account</h3>
+        <h3 class="text-xl font-bold mb-4 text-gray-900">{{ editingId ? $t('common.edit') : $t('common.add') }} {{ $t('pageTitles.BankAccounts') }}</h3>
 
         <form @submit.prevent="saveAccount" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.bankName') }}</label>
               <input v-model="form.bank_name" type="text" required class="input" placeholder="BCA, Mandiri, BNI..." />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Account Name *</label>
-              <input v-model="form.account_name" type="text" required class="input" placeholder="PT Company Name" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.accountName') }}</label>
+              <input v-model="form.account_name" type="text" required class="input" :placeholder="$t('ui.ptCompanyName')" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Account Number *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.accountNumber2') }}</label>
               <input v-model="form.account_number" type="text" required class="input" placeholder="1234567890" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.branch') }}</label>
               <input v-model="form.branch" type="text" class="input" placeholder="Jakarta Pusat" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.currency') }}</label>
               <select v-model="form.currency" class="input">
-                <option value="IDR">IDR - Indonesian Rupiah</option>
-                <option value="USD">USD - US Dollar</option>
-                <option value="SGD">SGD - Singapore Dollar</option>
+                <option value="IDR">{{ $t('ui.idrIndonesianRupiah') }}</option>
+                <option value="USD">{{ $t('ui.usdUsDollar') }}</option>
+                <option value="SGD">{{ $t('ui.sgdSingaporeDollar') }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Initial Balance</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.initialBalance') }}</label>
               <input v-model.number="form.initial_balance" type="number" min="0" step="0.01" class="input" />
             </div>
           </div>
@@ -216,25 +216,25 @@
           <div class="flex items-center space-x-6">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input v-model="form.is_active" type="checkbox" class="w-4 h-4 text-blue-600 rounded" />
-              <span class="text-sm text-gray-700">Active</span>
+              <span class="text-sm text-gray-700">{{ $t('labels.active') }}</span>
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
               <input v-model="form.is_default" type="checkbox" class="w-4 h-4 text-blue-600 rounded" />
-              <span class="text-sm text-gray-700">Set as Default</span>
+              <span class="text-sm text-gray-700">{{ $t('ui.setAsDefault') }}</span>
             </label>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="form.notes" rows="2" class="input" placeholder="Additional notes..."></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
+            <textarea v-model="form.notes" rows="2" class="input" :placeholder="$t('ui.additionalNotes')"></textarea>
           </div>
 
-          <div v-if="formError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ formError }}</div>
+          <div v-if="formError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ $ui(formError) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Account') }}
+              {{ saving ? $t('sales.saving') : (editingId ? $t('ui.saveChanges') : $t('ui.createAccount')) }}
             </button>
           </div>
         </form>
@@ -244,6 +244,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -271,8 +273,8 @@ const form = ref({
   notes: '',
 });
 
-const formatCurrency = (value) => 'Rp ' + Number(value || 0).toLocaleString('id-ID');
-const formatDate = (date) => date ? new Date(date).toLocaleDateString('id-ID') : '—';
+const formatCurrency = (value) => 'Rp ' + Number(value || 0).toLocaleString(uiLocale());
+const formatDate = (date) => date ? new Date(date).toLocaleDateString(uiLocale()) : '—';
 
 const getStatusBadge = (status) => ({
   unpaid: 'bg-red-100 text-red-700',
@@ -290,7 +292,7 @@ const loadAccounts = async () => {
     accounts.value = accountsRes.data;
     totals.value = summaryRes.data.totals;
   } catch (err) {
-    console.error('Failed to load bank accounts:', err);
+    console.error('Gagal memuat rekening bank:', err);
   } finally {
     loading.value = false;
   }
@@ -326,19 +328,19 @@ const saveAccount = async () => {
     showModal.value = false;
     loadAccounts();
   } catch (err) {
-    formError.value = err.response?.data?.message || 'Failed to save bank account';
+    formError.value = err.response?.data?.message || uiText("Gagal menyimpan rekening bank");
   } finally {
     saving.value = false;
   }
 };
 
 const deleteAccount = async (account) => {
-  if (!confirm(`Delete bank account "${account.bank_name} - ${account.account_number}"?`)) return;
+  if (!confirm(uiText('ui.deleteBankAccountNamed', { p0: account.bank_name, p1: account.account_number }))) return;
   try {
     await api.delete(`/bank-accounts/${account.id}`);
     loadAccounts();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete bank account');
+    alert(err.response?.data?.message || uiText("Gagal menghapus rekening bank"));
   }
 };
 
@@ -347,7 +349,7 @@ const setDefault = async (account) => {
     await api.post(`/bank-accounts/${account.id}/set-default`);
     loadAccounts();
   } catch (err) {
-    alert('Failed to set default');
+    alert(uiText("Gagal menetapkan pilihan utama"));
   }
 };
 
@@ -359,7 +361,7 @@ const viewTransactions = async (account) => {
     const res = await api.get(`/bank-accounts/${account.id}/transactions`, { params: { per_page: 50 } });
     transactions.value = res.data;
   } catch (err) {
-    console.error('Failed to load transactions:', err);
+    console.error('Gagal memuat transaksi:', err);
   } finally {
     transLoading.value = false;
   }

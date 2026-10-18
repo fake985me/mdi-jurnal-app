@@ -57,6 +57,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../utils/uiText';
+
 import { ref, onMounted, onUnmounted, markRaw } from 'vue'
 import LineAnimationSVG from '@/components/icons/LineAnimationSVG.vue'
 
@@ -74,14 +76,14 @@ const defaultSlides = [
     centerImg: '/assets/static/carousel/mdi.png',
     centerImgWidth: 500,
     centerImgHeight: 250,
-    text: 'Trusted distributor and Experienced technical support for DASAN equipment in Indonesia',
+    text: uiText("Distributor tepercaya dan dukungan teknis berpengalaman untuk perangkat DASAN di Indonesia"),
   },
   {
     bg: '/assets/static/carousel/2.jpg',
     centerImg: '/assets/static/carousel/dasan.png',
     centerImgWidth: 500,
     centerImgHeight: 250,
-    text: 'Provide conectivity solutions to your network',
+    text: uiText("Solusi konektivitas untuk jaringan Anda"),
   },
   {
     bg: '/assets/static/carousel/3.jpg',
@@ -89,7 +91,7 @@ const defaultSlides = [
     midLeft: '/assets/static/carousel/hero_2.png',
     midRight: '/assets/static/carousel/hero_3.png',
     imgRight: '/assets/static/carousel/hero_4.png',
-    text: 'Offers something that is beyond your reach',
+    text: uiText("Solusi yang melampaui harapan Anda"),
   },
 ]
 

@@ -4,7 +4,7 @@
     <div class="max-w-7xl mx-auto py-8 px-4 lg:py-4 lg:px-6">
       <!-- Header -->
       <div class="flex items-baseline justify-between border-b pb-2 pt-8 flex-wrap">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Products</h1>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ $t('sales.product') }}</h1>
         <div class="flex lg:space-x-2 sm:space-x-0 gap-1 mt-4 sm:mt-0">
           <button v-for="(tab, index) in tabs" :key="index" @click="switchTab(tab.title)" :class="[
             'px-4 py-2 rounded text-sm font-medium',
@@ -12,7 +12,7 @@
               ? 'bg-blue-900 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-400',
           ]">
-            {{ tab.title }}
+            {{ $ui(tab.title) }}
           </button>
         </div>
       </div>
@@ -28,7 +28,7 @@
                   ? 'bg-indigo-100 text-indigo-600'
                   : 'hover:bg-gray-100',
               ]" @click="switchSubCategory(null)">
-                All
+                {{ $t('labels.all') }}
               </li>
               <li v-for="(sub, index) in currentSubCategories" :key="index" @click="switchSubCategory(sub)" :class="[
                 'cursor-pointer rounded px-3 py-2',
@@ -71,7 +71,7 @@
                       params: { slug: product.slug },
                       query: getDetailQuery(product)
                     }" class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                      Lihat Detail →
+                      {{ $t('ui.viewDetails') }}
                     </RouterLink>
                   </div>
                 </div>

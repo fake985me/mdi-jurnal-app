@@ -82,6 +82,6 @@ const sectionStyle = computed(() => {
 
 const openLightbox = (index) => {
   // Future: implement lightbox functionality
-  console.log('Open image', index)
+  console.log('Buka gambar', index)
 }
 </script>

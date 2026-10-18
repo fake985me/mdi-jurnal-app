@@ -34,7 +34,7 @@
               type="email"
               required
               class="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-              placeholder="admin@warehouse.com"
+              :placeholder="$t('login.emailPlaceholder')"
             />
           </div>
 
@@ -45,12 +45,12 @@
               type="password"
               required
               class="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-              placeholder="••••••••"
+              :placeholder="$t('login.passwordPlaceholder')"
             />
           </div>
 
           <div v-if="error" class="bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 p-4 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <button
@@ -93,6 +93,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
@@ -122,7 +124,7 @@ const handleLogin = async () => {
       router.push('/dashboard');
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed. Please check your credentials.';
+    error.value = err.response?.data?.message || uiText("Gagal masuk. Periksa email dan kata sandi Anda.");
   } finally {
     loading.value = false;
   }

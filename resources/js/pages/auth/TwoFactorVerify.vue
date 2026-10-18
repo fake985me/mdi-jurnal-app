@@ -15,8 +15,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-white mb-2">Verifikasi Dua Faktor</h1>
-        <p class="text-gray-300">Masukkan kode 6 digit yang dikirim ke</p>
+        <h1 class="text-3xl font-bold text-white mb-2">{{ $t('ui.twoFactorVerification') }}</h1>
+        <p class="text-gray-300">{{ $t('ui.enterThe6DigitCodeSentTo') }}</p>
         <p class="text-cyan-400 font-medium">{{ maskedEmail }}</p>
       </div>
 
@@ -25,7 +25,7 @@
         <form @submit.prevent="handleVerify" class="space-y-6">
           <!-- Code Input -->
           <div>
-            <label class="block text-sm font-medium text-white mb-4 text-center">Kode Verifikasi</label>
+            <label class="block text-sm font-medium text-white mb-4 text-center">{{ $t('ui.verificationCode') }}</label>
             <div class="flex justify-center gap-2">
               <input
                 v-for="(digit, index) in codeDigits"
@@ -47,21 +47,21 @@
           <!-- Timer -->
           <div class="text-center">
             <p v-if="countdown > 0" class="text-gray-300 text-sm">
-              Kode berlaku dalam <span class="text-cyan-400 font-bold">{{ formatTime(countdown) }}</span>
+              {{ $t('ui.codeExpiresIn') }} <span class="text-cyan-400 font-bold">{{ formatTime(countdown) }}</span>
             </p>
             <p v-else class="text-red-400 text-sm">
-              Kode sudah kadaluarsa
+              {{ $t('ui.kodeSudahKadaluarsa') }}
             </p>
           </div>
 
           <!-- Error Message -->
           <div v-if="error" class="bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 p-4 rounded-lg text-sm">
-            {{ error }}
+            {{ $ui(error) }}
           </div>
 
           <!-- Success Message -->
           <div v-if="successMessage" class="bg-green-500/20 backdrop-blur-sm border border-green-500/30 text-green-200 p-4 rounded-lg text-sm">
-            {{ successMessage }}
+            {{ $ui(successMessage) }}
           </div>
 
           <!-- Verify Button -->
@@ -70,7 +70,7 @@
             :disabled="loading || !isCodeComplete"
             class="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ loading ? 'Memverifikasi...' : 'Verifikasi' }}
+            {{ loading ? $t('ui.verifying') : $t('ui.verify') }}
           </button>
 
           <!-- Resend Code -->
@@ -81,9 +81,9 @@
               @click="handleResend"
               class="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <template v-if="resending">Mengirim ulang...</template>
-              <template v-else-if="resendCooldown > 0">Kirim ulang kode ({{ resendCooldown }}s)</template>
-              <template v-else>Kirim ulang kode</template>
+              <template v-if="resending">{{ $t('ui.resending') }}</template>
+              <template v-else-if="resendCooldown > 0">{{ $t('ui.resendCode2') }}{{ resendCooldown }}{{ $t('ui.s') }}</template>
+              <template v-else>{{ $t('ui.resendCode') }}</template>
             </button>
           </div>
         </form>
@@ -92,7 +92,7 @@
       <!-- Back to Login -->
       <div class="text-center mt-6">
         <router-link to="/login" class="text-gray-300 hover:text-white transition-colors">
-          ← Kembali ke Login
+          {{ $t('ui.kembaliKeLogin') }}
         </router-link>
       </div>
     </div>
@@ -100,6 +100,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
@@ -214,7 +216,7 @@ const handleResend = async () => {
     codeDigits.value = ['', '', '', '', '', ''];
     codeInputs.value[0]?.focus();
   } catch (err) {
-    error.value = err.response?.data?.message || 'Gagal mengirim ulang kode.';
+    error.value = err.response?.data?.message || uiText("Gagal mengirim ulang kode.");
   } finally {
     resending.value = false;
   }

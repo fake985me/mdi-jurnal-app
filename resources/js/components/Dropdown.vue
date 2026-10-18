@@ -10,7 +10,7 @@
         :class="isItemActive ? 'text-blue-600 font-semibold' : 'text-gray-800 hover:text-blue-600'"
       >
         <router-link :to="item.link" class="flex-1">
-          {{ item.label }}
+          {{ $ui(item.label) }}
         </router-link>
         <svg
           class="ml-2 h-4 w-4 transition-transform duration-200"
@@ -58,7 +58,7 @@
         class="block py-2 font-medium"
         :class="isItemActive ? 'text-blue-600 font-semibold' : 'text-gray-800 hover:text-blue-600'"
       >
-        {{ item.label }}
+        {{ $ui(item.label) }}
       </router-link>
     </div>
   </div>

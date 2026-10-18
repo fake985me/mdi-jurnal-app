@@ -4,7 +4,7 @@
             <!-- Header -->
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-900">
-                    Product Image
+                    {{ $t('ui.productImage') }}
                 </h3>
                 <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +25,7 @@
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         ]">
-                            Upload File
+                            {{ $t('ui.uploadFile') }}
                         </button>
                         <button @click="activeTab = 'url'" :class="[
                             'py-2 px-1 border-b-2 font-medium text-sm',
@@ -33,7 +33,7 @@
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         ]">
-                            Image URL
+                            {{ $t('ui.imageUrl') }}
                         </button>
                     </nav>
                 </div>
@@ -48,20 +48,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            Choose Image File
+                            {{ $t('ui.chooseImageFile') }}
                         </button>
-                        <p class="mt-2 text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        <p class="mt-2 text-sm text-gray-500">{{ $t('ui.pngJpgGifUpTo10mb') }}</p>
                     </div>
 
                     <div v-if="uploadedFile" class="text-sm text-gray-600">
-                        Selected: {{ uploadedFile.name }}
+                        {{ $t('ui.selected') }} {{ uploadedFile.name }}
                     </div>
                 </div>
 
                 <!-- URL Tab -->
                 <div v-if="activeTab === 'url'" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.imageUrl') }}</label>
                         <input v-model="imageUrl" type="url" placeholder="https://example.com/image.jpg"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
@@ -69,9 +69,9 @@
 
                 <!-- Image Preview -->
                 <div v-if="previewUrl" class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('ui.preview') }}</label>
                     <div class="border rounded-lg p-4 bg-gray-50">
-                        <img :src="previewUrl" alt="Preview" class="max-w-full h-auto max-h-64 mx-auto rounded" />
+                        <img :src="previewUrl" :alt="$t('ui.preview')" class="max-w-full h-auto max-h-64 mx-auto rounded" />
                     </div>
                 </div>
             </div>
@@ -80,11 +80,11 @@
             <div class="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
                 <button @click="$emit('close')"
                     class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    Cancel
+                    {{ $t('common.cancel') }}
                 </button>
                 <button @click="save" :disabled="!canSave"
                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Save Image
+                    {{ $t('ui.saveImage') }}
                 </button>
             </div>
         </div>

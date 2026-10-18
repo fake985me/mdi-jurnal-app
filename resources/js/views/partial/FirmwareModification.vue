@@ -1,57 +1,57 @@
 <template>
   <div class="flex flex-col">
-    <h2 class="text-3xl font-bold text-center">Modify Firmware</h2>
-    <p class="text-gray-800 mb-3 text-center">Modify Firmware Based on Requirement</p>
+    <h2 class="text-3xl font-bold text-center">{{ $t('ui.modifyFirmware') }}</h2>
+    <p class="text-gray-800 mb-3 text-center">{{ $t('ui.modifyFirmwareBasedOnRequirement') }}</p>
       <p class="text-center">
-        We can modify our GPON Firmware based on customer requirements
+        {{ $t('ui.weCanModifyOurGponFirmwareBasedOnCustomerRequirements') }}
       </p>
 
     <main>
       <section class="cards text-gray-300 p-2">
         <article class="card h-[280px] bg-gray-900 transform transition duration-500 hover:scale-125 hidden-none z-10">
-          <h2>Original Firmware</h2>
-          <p>No dedicated TR-069 status page on ONT Web GUI</p>
+          <h2>{{ $t('ui.originalFirmware') }}</h2>
+          <p>{{ $t('ui.noDedicatedTr069StatusPageOnOntWebGui') }}</p>
           <img :src="firmwareOriImg" alt=""/>
         </article>
 
         <article class="card h-[280px] bg-gray-900 transform transition duration-500 hover:scale-125 hidden-none z-5">
-          <h2>Modified Firmware</h2>
-          <p>Added page to view TR-069 status page on ONT Web GUI</p>
+          <h2>{{ $t('ui.modifiedFirmware') }}</h2>
+          <p>{{ $t('ui.addedPageToViewTr069StatusPageOnOntWebGui') }}</p>
           <img :src="firmwareCustomImg" alt=""/>
         </article>
       </section>
 
       <section class="compare">
-        <h3>Quick Compare</h3>
+        <h3>{{ $t('ui.quickCompare') }}</h3>
         <div class="table-wrap">
           <table class="compare-table">
             <thead>
               <tr>
-                <th>Feature</th>
-                <th>Original</th>
-                <th>Modified</th>
+                <th>{{ $t('labels.features') }}</th>
+                <th>{{ $t('ui.original') }}</th>
+                <th>{{ $t('ui.modified') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Added page to view TR-069 Status</td>
-                <td><span class="chip danger">Not Available</span></td>
-                <td><span class="chip success">Available</span></td>
+                <td>{{ $t('ui.addedPageToViewTr069Status') }}</td>
+                <td><span class="chip danger">{{ $t('ui.notAvailable') }}</span></td>
+                <td><span class="chip success">{{ $t('dashboard.inStock') }}</span></td>
               </tr>
               <tr>
-                <td>Function to view Connection Status of TR-069</td>
-                <td><span class="chip danger">Not Available</span></td>
-                <td><span class="chip success">Available</span></td>
+                <td>{{ $t('ui.functionToViewConnectionStatusOfTr069') }}</td>
+                <td><span class="chip danger">{{ $t('ui.notAvailable') }}</span></td>
+                <td><span class="chip success">{{ $t('dashboard.inStock') }}</span></td>
               </tr>
               <tr>
-                <td>Function to view IP Address of TR-069 Interface</td>
-                <td><span class="chip danger">Not Available</span></td>
-                <td><span class="chip success">Available</span></td>
+                <td>{{ $t('ui.functionToViewIpAddressOfTr069Interface') }}</td>
+                <td><span class="chip danger">{{ $t('ui.notAvailable') }}</span></td>
+                <td><span class="chip success">{{ $t('dashboard.inStock') }}</span></td>
               </tr>
               <tr>
-                <td>Function to Refresh Connection Status of TR-069 and IP Address of TR-069 Interface</td>
-                <td><span class="chip danger">Not Available</span></td>
-                <td><span class="chip success">Available</span></td>
+                <td>{{ $t('ui.functionToRefreshConnectionStatusOfTr069AndIpAddressOfTr069') }}</td>
+                <td><span class="chip danger">{{ $t('ui.notAvailable') }}</span></td>
+                <td><span class="chip success">{{ $t('dashboard.inStock') }}</span></td>
               </tr>
             </tbody>
           </table>

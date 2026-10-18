@@ -4,34 +4,34 @@
     <div class="flex justify-between items-center">
       <div>
         <h2 class="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-          Supplier Management
+          {{ $t('pageTitles.Suppliers') }}
         </h2>
-        <p class="text-sm text-gray-600 mt-1">Manage supplier contacts and purchase relationships</p>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageSupplierContactsAndPurchaseRelationships') }}</p>
       </div>
       <button
         @click="openCreateModal"
         class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
       >
-        + Add Supplier
+        {{ $t('ui.addSupplier') }}
       </button>
     </div>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="card p-4 bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
-        <p class="text-sm text-amber-600 font-medium">Total Suppliers</p>
+        <p class="text-sm text-amber-600 font-medium">{{ $t('ui.totalSuppliers') }}</p>
         <p class="text-2xl font-bold text-amber-800">{{ summary.total_suppliers }}</p>
       </div>
       <div class="card p-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-        <p class="text-sm text-green-600 font-medium">Active</p>
+        <p class="text-sm text-green-600 font-medium">{{ $t('labels.active') }}</p>
         <p class="text-2xl font-bold text-green-800">{{ summary.active_suppliers }}</p>
       </div>
       <div class="card p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-        <p class="text-sm text-blue-600 font-medium">Companies</p>
+        <p class="text-sm text-blue-600 font-medium">{{ $t('labels.company') }}</p>
         <p class="text-2xl font-bold text-blue-800">{{ summary.companies }}</p>
       </div>
       <div class="card p-4 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
-        <p class="text-sm text-purple-600 font-medium">Individuals</p>
+        <p class="text-sm text-purple-600 font-medium">{{ $t('labels.individual') }}</p>
         <p class="text-2xl font-bold text-purple-800">{{ summary.individuals }}</p>
       </div>
     </div>
@@ -43,18 +43,18 @@
           v-model="filters.search"
           @input="debouncedLoad"
           type="text"
-          placeholder="Search name, company, phone, code..."
+          :placeholder="$t('ui.searchNameCompanyPhoneCode')"
           class="input col-span-2"
         />
         <select v-model="filters.type" @change="loadSuppliers" class="input">
-          <option value="">All Types</option>
-          <option value="company">Company</option>
-          <option value="individual">Individual</option>
+          <option value="">{{ $t('ui.allTypes') }}</option>
+          <option value="company">{{ $t('labels.company') }}</option>
+          <option value="individual">{{ $t('labels.individual') }}</option>
         </select>
         <select v-model="filters.is_active" @change="loadSuppliers" class="input">
-          <option value="">All Status</option>
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
+          <option value="">{{ $t('sales.allStatus') }}</option>
+          <option value="1">{{ $t('labels.active') }}</option>
+          <option value="0">{{ $t('labels.inactive') }}</option>
         </select>
       </div>
     </div>
@@ -62,7 +62,7 @@
     <!-- Suppliers Table -->
     <div class="table-wrapper">
       <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">Suppliers</h3>
+        <h3 class="text-lg font-semibold text-gray-900">{{ $t('nav.suppliers') }}</h3>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
@@ -71,22 +71,22 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
           </svg>
-          <span>Loading suppliers...</span>
+          <span>{{ $t('ui.loadingSuppliers') }}</span>
         </div>
       </div>
 
       <table v-else class="min-w-full">
         <thead class="table-header">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name / Company</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.code') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.nameCompany') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('labels.contact') }}</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NPWP</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Purchases</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.type') }}</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ $t('labels.purchase') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -113,7 +113,7 @@
                 :class="supplier.type === 'company' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'"
                 class="text-xs font-medium px-2 py-1 rounded-full capitalize"
               >
-                {{ supplier.type }}
+                {{ $label(supplier.type) }}
               </span>
             </td>
             <td class="px-6 py-4 text-center text-sm font-semibold text-gray-700">{{ supplier.purchases_count || 0 }}</td>
@@ -122,13 +122,13 @@
                 :class="supplier.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'"
                 class="text-xs font-medium px-2 py-1 rounded-full"
               >
-                {{ supplier.is_active ? 'Active' : 'Inactive' }}
+                {{ supplier.is_active ? $t('labels.active') : $t('labels.inactive') }}
               </span>
             </td>
             <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button @click="viewSupplier(supplier)" class="text-amber-600 hover:text-amber-900 font-medium">View</button>
-              <button @click="editSupplier(supplier)" class="text-blue-600 hover:text-blue-900 font-medium">Edit</button>
-              <button @click="deleteSupplier(supplier)" class="text-red-600 hover:text-red-900 font-medium">Delete</button>
+              <button @click="viewSupplier(supplier)" class="text-amber-600 hover:text-amber-900 font-medium">{{ $t('projectInvestment.actions.view') }}</button>
+              <button @click="editSupplier(supplier)" class="text-blue-600 hover:text-blue-900 font-medium">{{ $t('common.edit') }}</button>
+              <button @click="deleteSupplier(supplier)" class="text-red-600 hover:text-red-900 font-medium">{{ $t('common.delete') }}</button>
             </td>
           </tr>
           <tr v-if="!suppliers.data?.length && !loading">
@@ -137,8 +137,8 @@
                 <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
-                <p class="font-medium">No suppliers found</p>
-                <p class="text-sm">Create your first supplier to get started</p>
+                <p class="font-medium">{{ $t('ui.noSuppliersFound') }}</p>
+                <p class="text-sm">{{ $t('ui.createYourFirstSupplierToGetStarted') }}</p>
               </div>
             </td>
           </tr>
@@ -147,18 +147,18 @@
 
       <!-- Pagination -->
       <div v-if="suppliers.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
-        <p class="text-sm text-gray-700">Showing {{ suppliers.from }} to {{ suppliers.to }} of {{ suppliers.total }} suppliers</p>
+        <p class="text-sm text-gray-700">{{ $t('sales.showing') }} {{ suppliers.from }} {{ $t('ui.to') }} {{ suppliers.to }} {{ $t('sales.of') }} {{ suppliers.total }} {{ $t('ui.suppliers') }}</p>
         <div class="flex space-x-2">
           <button
             @click="loadSuppliers(suppliers.current_page - 1)"
             :disabled="!suppliers.prev_page_url"
             class="btn-secondary disabled:opacity-50"
-          >Previous</button>
+          >{{ $t('sales.previous') }}</button>
           <button
             @click="loadSuppliers(suppliers.current_page + 1)"
             :disabled="!suppliers.next_page_url"
             class="btn-secondary disabled:opacity-50"
-          >Next</button>
+          >{{ $t('sales.next') }}</button>
         </div>
       </div>
     </div>
@@ -167,86 +167,86 @@
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
       <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-          {{ isEditing ? 'Edit Supplier' : 'Add New Supplier' }}
+          {{ isEditing ? $t('ui.editSupplier') : $t('ui.addNewSupplier') }}
         </h3>
 
         <form @submit.prevent="saveSupplier" class="space-y-6">
           <!-- Basic Information -->
           <div class="p-4 bg-amber-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">Basic Information</h4>
+            <h4 class="font-semibold text-gray-900 mb-3">{{ $t('ui.basicInformation') }}</h4>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
-                <input v-model="form.name" required class="input" placeholder="Contact person name" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.contactName') }}</label>
+                <input v-model="form.name" required class="input" :placeholder="$t('ui.contactPersonName')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <input v-model="form.company" class="input" placeholder="Company name" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.company') }}</label>
+                <input v-model="form.company" class="input" :placeholder="$t('ui.companyName')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.type') }}</label>
                 <select v-model="form.type" class="input">
-                  <option value="company">Company</option>
-                  <option value="individual">Individual</option>
+                  <option value="company">{{ $t('labels.company') }}</option>
+                  <option value="individual">{{ $t('labels.individual') }}</option>
                 </select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NPWP</label>
-                <input v-model="form.npwp" class="input" placeholder="Tax number (NPWP)" />
+                <input v-model="form.npwp" class="input" :placeholder="$t('ui.taxNumberNpwp')" />
               </div>
             </div>
           </div>
 
           <!-- Contact Information -->
           <div class="p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">Contact Information</h4>
+            <h4 class="font-semibold text-gray-900 mb-3">{{ $t('pageTitles.CmsContact') }}</h4>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input v-model="form.phone" class="input" placeholder="Primary phone" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
+                <input v-model="form.phone" class="input" :placeholder="$t('ui.primaryPhone')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Alt. Phone</label>
-                <input v-model="form.phone_alt" class="input" placeholder="Alternative phone" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.altPhone') }}</label>
+                <input v-model="form.phone_alt" class="input" :placeholder="$t('ui.alternativePhone')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.email') }}</label>
                 <input v-model="form.email" type="email" class="input" placeholder="email@company.com" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input v-model="form.city" class="input" placeholder="City" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.city') }}</label>
+                <input v-model="form.city" class="input" :placeholder="$t('ui.city')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Province</label>
-                <input v-model="form.province" class="input" placeholder="Province" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.province') }}</label>
+                <input v-model="form.province" class="input" :placeholder="$t('ui.province')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-                <input v-model="form.postal_code" class="input" placeholder="Postal code" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.postalCode') }}</label>
+                <input v-model="form.postal_code" class="input" :placeholder="$t('ui.postalCode2')" />
               </div>
               <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea v-model="form.address" rows="2" class="input" placeholder="Full address"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
+                <textarea v-model="form.address" rows="2" class="input" :placeholder="$t('ui.fullAddress')"></textarea>
               </div>
             </div>
           </div>
 
           <!-- Bank Information -->
           <div class="p-4 bg-indigo-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">Bank Information</h4>
+            <h4 class="font-semibold text-gray-900 mb-3">{{ $t('ui.bankInformation') }}</h4>
             <div class="grid grid-cols-3 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-                <input v-model="form.bank_name" class="input" placeholder="BCA, Mandiri, etc." />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.bankName2') }}</label>
+                <input v-model="form.bank_name" class="input" :placeholder="$t('ui.bcaMandiriEtc')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-                <input v-model="form.bank_account_number" class="input" placeholder="Account number" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.accountNumber') }}</label>
+                <input v-model="form.bank_account_number" class="input" :placeholder="$t('ui.accountNumber3')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-                <input v-model="form.bank_account_name" class="input" placeholder="Account holder name" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.accountName2') }}</label>
+                <input v-model="form.bank_account_name" class="input" :placeholder="$t('ui.accountHolderName')" />
               </div>
             </div>
           </div>
@@ -254,23 +254,23 @@
           <!-- Notes & Status -->
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="form.notes" rows="2" class="input" placeholder="Additional notes..."></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
+              <textarea v-model="form.notes" rows="2" class="input" :placeholder="$t('ui.additionalNotes')"></textarea>
             </div>
             <div v-if="isEditing">
               <label class="flex items-center space-x-2 pt-2">
                 <input v-model="form.is_active" type="checkbox" class="w-5 h-5 text-amber-600 rounded border-gray-300" />
-                <span class="text-sm font-medium text-gray-700">Active</span>
+                <span class="text-sm font-medium text-gray-700">{{ $t('labels.active') }}</span>
               </label>
             </div>
           </div>
 
-          <div v-if="formError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ formError }}</div>
+          <div v-if="formError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ $ui(formError) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving" class="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all duration-200 shadow-md font-medium disabled:opacity-50">
-              {{ saving ? 'Saving...' : (isEditing ? 'Update Supplier' : 'Add Supplier') }}
+              {{ saving ? $t('sales.saving') : (isEditing ? $t('ui.updateSupplier') : $t('ui.addSupplier2')) }}
             </button>
           </div>
         </form>
@@ -294,15 +294,15 @@
 
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="p-3 bg-gray-50 rounded-lg">
-            <p class="text-xs text-gray-500 font-medium">Contact Name</p>
+            <p class="text-xs text-gray-500 font-medium">{{ $t('ui.contactName2') }}</p>
             <p class="text-sm font-semibold text-gray-900">{{ selectedSupplier?.name || '—' }}</p>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg">
-            <p class="text-xs text-gray-500 font-medium">Phone</p>
+            <p class="text-xs text-gray-500 font-medium">{{ $t('labels.phone') }}</p>
             <p class="text-sm font-semibold text-gray-900">{{ selectedSupplier?.phone || '—' }}</p>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg">
-            <p class="text-xs text-gray-500 font-medium">Email</p>
+            <p class="text-xs text-gray-500 font-medium">{{ $t('labels.email') }}</p>
             <p class="text-sm font-semibold text-gray-900">{{ selectedSupplier?.email || '—' }}</p>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg">
@@ -310,21 +310,21 @@
             <p class="text-sm font-semibold text-gray-900">{{ selectedSupplier?.npwp || '—' }}</p>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg col-span-2">
-            <p class="text-xs text-gray-500 font-medium">Address</p>
+            <p class="text-xs text-gray-500 font-medium">{{ $t('labels.address') }}</p>
             <p class="text-sm font-semibold text-gray-900">
               {{ [selectedSupplier?.address, selectedSupplier?.city, selectedSupplier?.province, selectedSupplier?.postal_code].filter(Boolean).join(', ') || '—' }}
             </p>
           </div>
           <div v-if="selectedSupplier?.bank_name" class="p-3 bg-indigo-50 rounded-lg col-span-2">
-            <p class="text-xs text-indigo-600 font-medium">Bank Information</p>
+            <p class="text-xs text-indigo-600 font-medium">{{ $t('ui.bankInformation') }}</p>
             <p class="text-sm font-semibold text-gray-900">{{ selectedSupplier?.bank_name }} — {{ selectedSupplier?.bank_account_number }}</p>
-            <p class="text-xs text-gray-600">a/n {{ selectedSupplier?.bank_account_name }}</p>
+            <p class="text-xs text-gray-600">{{ $t('ui.accountHolder') }} {{ selectedSupplier?.bank_account_name }}</p>
           </div>
         </div>
 
         <!-- Recent Purchases -->
         <div v-if="selectedSupplier?.recent_purchases?.length">
-          <h4 class="text-sm font-semibold text-gray-700 mb-3">Recent Purchases</h4>
+          <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $t('ui.recentPurchases') }}</h4>
           <div class="space-y-2">
             <div v-for="purchase in selectedSupplier.recent_purchases" :key="purchase.id"
               class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -335,16 +335,16 @@
               <div class="text-right">
                 <span class="text-sm font-bold text-gray-900">{{ formatCurrency(purchase.total_amount) }}</span>
                 <span :class="getStatusBadge(purchase.status)" class="text-xs font-medium px-2 py-0.5 rounded-full ml-2">
-                  {{ purchase.status }}
+                  {{ $label(purchase.status) }}
                 </span>
               </div>
             </div>
           </div>
         </div>
-        <div v-else class="text-center text-gray-400 text-sm py-4">No purchase history</div>
+        <div v-else class="text-center text-gray-400 text-sm py-4">{{ $t('ui.noPurchaseHistory') }}</div>
 
         <div v-if="selectedSupplier?.notes" class="mt-4 p-3 bg-yellow-50 rounded-lg">
-          <p class="text-xs text-yellow-600 font-medium">Notes</p>
+          <p class="text-xs text-yellow-600 font-medium">{{ $t('projectInvestment.progress.notes') }}</p>
           <p class="text-sm text-gray-700">{{ selectedSupplier.notes }}</p>
         </div>
       </div>
@@ -353,6 +353,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 
@@ -400,8 +402,8 @@ const debouncedLoad = () => {
   debounceTimer = setTimeout(() => loadSuppliers(), 300);
 };
 
-const formatCurrency = (value) => 'Rp ' + Number(value || 0).toLocaleString('id-ID');
-const formatDate = (date) => date ? new Date(date).toLocaleDateString('id-ID') : '—';
+const formatCurrency = (value) => 'Rp ' + Number(value || 0).toLocaleString(uiLocale());
+const formatDate = (date) => date ? new Date(date).toLocaleDateString(uiLocale()) : '—';
 
 const getStatusBadge = (status) => {
   const badges = {
@@ -420,7 +422,7 @@ const loadSuppliers = async (page = 1) => {
     const response = await api.get('/suppliers', { params });
     suppliers.value = response.data;
   } catch (err) {
-    console.error('Failed to load suppliers:', err);
+    console.error('Gagal memuat pemasok:', err);
   } finally {
     loading.value = false;
   }
@@ -431,7 +433,7 @@ const loadSummary = async () => {
     const response = await api.get('/suppliers/summary');
     summary.value = response.data;
   } catch (err) {
-    console.error('Failed to load summary:', err);
+    console.error('Gagal memuat ringkasan:', err);
   }
 };
 
@@ -474,7 +476,7 @@ const viewSupplier = async (supplier) => {
     selectedSupplier.value = response.data;
     showDetailModal.value = true;
   } catch (err) {
-    console.error('Failed to load supplier details:', err);
+    console.error('Gagal memuat detail pemasok:', err);
   }
 };
 
@@ -491,20 +493,20 @@ const saveSupplier = async () => {
     loadSuppliers(suppliers.value.current_page || 1);
     loadSummary();
   } catch (err) {
-    formError.value = err.response?.data?.message || 'Failed to save supplier';
+    formError.value = err.response?.data?.message || uiText("Gagal menyimpan pemasok");
   } finally {
     saving.value = false;
   }
 };
 
 const deleteSupplier = async (supplier) => {
-  if (!confirm(`Delete supplier "${supplier.company || supplier.name}"? This cannot be undone.`)) return;
+  if (!confirm(uiText('ui.deleteSupplierNamed', { p0: supplier.company || supplier.name }))) return;
   try {
     await api.delete(`/suppliers/${supplier.id}`);
     loadSuppliers(suppliers.value.current_page || 1);
     loadSummary();
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to delete supplier');
+    alert(err.response?.data?.message || uiText("Gagal menghapus pemasok"));
   }
 };
 

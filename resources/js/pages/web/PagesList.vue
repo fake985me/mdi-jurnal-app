@@ -3,26 +3,26 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Pages</h1>
-        <p class="text-gray-600 mt-1">Manage your dynamic pages</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $t('nav.pages') }}</h1>
+        <p class="text-gray-600 mt-1">{{ $t('ui.manageYourDynamicPages') }}</p>
       </div>
       <router-link 
         to="/dashboard/pages/create"
         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
-        + Create Page
+        {{ $t('ui.createPage') }}
       </router-link>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-      <p class="text-gray-600 mt-4">Loading pages...</p>
+      <p class="text-gray-600 mt-4">{{ $t('ui.loadingPage') }}</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-      {{ error }}
+      {{ $ui(error) }}
     </div>
 
     <!-- Pages Table -->
@@ -30,13 +30,13 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.heading') }}</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sections</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Nav</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.sections') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('projectInvestment.materials.status') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('ui.inNav') }}</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('dashboard.updated') }}</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('sales.actions') }}</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -50,7 +50,7 @@
               </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ page.sections?.length || 0 }} sections
+              {{ page.sections?.length || 0 }} {{ $t('ui.sectionS') }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
@@ -61,7 +61,7 @@
                     : 'bg-gray-100 text-gray-800'
                 ]"
               >
-                {{ page.is_published ? 'Published' : 'Draft' }}
+                {{ page.is_published ? $t('labels.published') : $t('labels.draft') }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -74,9 +74,9 @@
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 ]"
                 :disabled="!page.is_published"
-                :title="!page.is_published ? 'Page must be published first' : ''"
+                :title="!page.is_published ? $t('ui.pageMustBePublishedFirst') : ''"
               >
-                {{ page.show_in_nav ? '✓ In Nav' : '○ Hidden' }}
+                {{ page.show_in_nav ? $t('ui.inNavigation') : $t('ui.hidden2') }}
               </button>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -88,25 +88,25 @@
                   :to="`/dashboard/pages/${page.id}/edit`"
                   class="text-indigo-600 hover:text-indigo-900"
                 >
-                  Edit
+                  {{ $t('common.edit') }}
                 </router-link>
                 <button 
                   @click="togglePublish(page)"
                   class="text-blue-600 hover:text-blue-900"
                 >
-                  {{ page.is_published ? 'Unpublish' : 'Publish' }}
+                  {{ page.is_published ? $t('ui.unpublish') : $t('ui.publish') }}
                 </button>
                 <button 
                   @click="duplicatePage(page.id)"
                   class="text-green-600 hover:text-green-900"
                 >
-                  Duplicate
+                  {{ $t('ui.duplicate') }}
                 </button>
                 <button 
                   @click="deletePage(page.id)"
                   class="text-red-600 hover:text-red-900"
                 >
-                  Delete
+                  {{ $t('common.delete') }}
                 </button>
               </div>
             </td>
@@ -116,12 +116,12 @@
 
       <!-- Empty State -->
       <div v-if="pages.length === 0" class="text-center py-12">
-        <p class="text-gray-500 mb-4">No pages created yet</p>
+        <p class="text-gray-500 mb-4">{{ $t('ui.noPagesCreatedYet') }}</p>
         <router-link 
           to="/dashboard/pages/create"
           class="text-indigo-600 hover:underline"
         >
-          Create your first page
+          {{ $t('ui.createYourFirstPage') }}
         </router-link>
       </div>
     </div>
@@ -129,6 +129,8 @@
 </template>
 
 <script setup>
+import { uiText, uiLocale } from '../../utils/uiText';
+
 import { ref, onMounted } from 'vue'
 import api from '../../services/api'
 import { useNavigationStore } from '../../stores/navigation'
@@ -147,8 +149,8 @@ const loadPages = async () => {
     const response = await api.get('/pages')
     pages.value = response.data.data || response.data
   } catch (err) {
-    console.error('Failed to load pages:', err)
-    error.value = 'Failed to load pages. Please try again.'
+    console.error('Gagal memuat halaman:', err)
+    error.value = uiText("Gagal memuat halaman. Silakan coba lagi.")
   } finally {
     loading.value = false
   }
@@ -163,13 +165,13 @@ const togglePublish = async (page) => {
     await navigationStore.refreshNavigation()
   } catch (err) {
     console.error('Failed to toggle publish status:', err)
-    alert('Failed to update page status')
+    alert(uiText("Gagal memperbarui status halaman"))
   }
 }
 
 const toggleNav = async (page) => {
   if (!page.is_published) {
-    alert('Page must be published first to appear in navigation')
+    alert(uiText("Halaman harus diterbitkan terlebih dahulu agar muncul di navigasi"))
     return
   }
 
@@ -182,36 +184,36 @@ const toggleNav = async (page) => {
     await navigationStore.refreshNavigation()
   } catch (err) {
     console.error('Failed to toggle nav status:', err)
-    alert('Failed to toggle navigation status')
+    alert(uiText("Gagal mengubah status navigasi"))
   }
 }
 
 const duplicatePage = async (id) => {
-  if (!confirm('Duplicate this page?')) return
+  if (!confirm(uiText("Duplikat halaman ini?"))) return
 
   try {
     await api.post(`/pages/${id}/duplicate`)
     await loadPages()
   } catch (err) {
-    console.error('Failed to duplicate page:', err)
-    alert('Failed to duplicate page')
+    console.error('Gagal menduplikat halaman:', err)
+    alert(uiText("Gagal menduplikat halaman"))
   }
 }
 
 const deletePage = async (id) => {
-  if (!confirm('Are you sure you want to delete this page? This action cannot be undone.')) return
+  if (!confirm(uiText("Yakin ingin menghapus halaman ini? Tindakan ini tidak dapat dibatalkan."))) return
 
   try {
     await api.delete(`/pages/${id}`)
     await loadPages()
   } catch (err) {
-    console.error('Failed to delete page:', err)
-    alert('Failed to delete page')
+    console.error('Gagal menghapus halaman:', err)
+    alert(uiText("Gagal menghapus halaman"))
   }
 }
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString(uiLocale(), {
     year: 'numeric',
     month: 'short',
     day: 'numeric'

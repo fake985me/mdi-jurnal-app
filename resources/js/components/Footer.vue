@@ -22,11 +22,10 @@
                 d="m138.75 25.67-.63.46c-1.03.76-2.49.54-3.25-.5l-6.48-8.82-3.87-5.26-1.86-2.53c-.42-.57-1.27-.56-1.69.01l-1.88 2.59-3.76 5.19-6.41 8.86a2.333 2.333 0 0 1-3.25.52l-.63-.46a2.333 2.333 0 0 1-.52-3.25l4.13-5.7 7.47-10.32 3.33-4.59h.01c.41-.63 1.13-1.05 1.95-1.05h.79c.83 0 1.56.44 1.97 1.09l3.35 4.55 5.41 7.36 6.32 8.6c.76 1.03.54 2.49-.5 3.25M27.69 4.76a12.64 12.64 0 0 0-8.96-3.71H3.19C1.43 1.05 0 2.48 0 4.24v18.97c0 1.76 1.43 3.19 3.19 3.19h15.54c7 0 12.67-5.67 12.67-12.67 0-3.5-1.42-6.67-3.71-8.97M17.68 22.02H5.42V5.43h12.26c2.3 0 4.37.93 5.87 2.43s2.43 3.58 2.43 5.87c0 4.58-3.71 8.29-8.3 8.29" />
             </g>
           </svg>
-          <span class="text-xl font-semibold">Networks</span>
+          <span class="text-xl font-semibold">{{ $t('ui.networks') }}</span>
         </a>
         <p class="mt-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          Provide your network connectivity solutions. Trusted distributor and experienced technical
-          support for DASAN equipment in Indonesia. Offers something that is beyond your reach.
+          {{ $t('ui.provideYourNetworkConnectivitySolutionsTrustedDistributorAndExperiencedTechnicalSupportForDasanEquipment') }}
         </p>
       </div>
 
@@ -35,11 +34,11 @@
         <div v-for="section in linkSections" :key="section.title">
           <h3
             class="text-gray-900 dark:text-gray-100 font-semibold uppercase tracking-tight mb-2 border-b-2 border-gray-300 dark:border-gray-700 pb-2">
-            {{ section.title }}
+            {{ $ui(section.title) }}
           </h3>
           <ul v-if="section.links" class="space-y-1">
             <li v-for="link in section.links" :key="link.name">
-              <a :href="link.url" class="hover:underline">{{ link.name }}</a>
+              <a :href="link.url" class="hover:underline">{{ $ui(link.name) }}</a>
             </li>
           </ul>
         </div>
@@ -47,12 +46,12 @@
         <!-- Contact Us Section (Dynamic) -->
         <div>
           <h3 class="text-gray-900 dark:text-gray-100 font-semibold uppercase tracking-tight mb-2 border-b-2 border-gray-300 dark:border-gray-700 pb-2">
-            Contact Us
+            {{ $t('ui.contactUs') }}
           </h3>
           <ul class="space-y-2 text-xs text-gray-700 dark:text-gray-400 text-nowrap">
             <!-- Address -->
             <li v-if="contactsByType.address?.length">
-              <strong>Address:</strong><br>
+              <strong>{{ $t('ui.address') }}</strong><br>
               <span v-for="(line, index) in contactsByType.address[0].value.split('\n')" :key="index">
                 {{ line }}<br>
               </span>
@@ -60,7 +59,7 @@
 
             <!-- Phone -->
             <li v-if="contactsByType.phone?.length">
-              <strong>Phone:</strong><br>
+              <strong>{{ $t('ui.phone') }}</strong><br>
               <span v-for="phone in contactsByType.phone" :key="phone.id">
                 {{ phone.value }}<br>
               </span>
@@ -68,7 +67,7 @@
 
             <!-- Email -->
             <li v-if="contactsByType.email?.length">
-              <strong>Email:</strong><br>
+              <strong>{{ $t('ui.email2') }}</strong><br>
               <a v-for="email in contactsByType.email" :key="email.id"
                  :href="`mailto:${email.value}`"
                  class="hover:underline block">
@@ -84,7 +83,7 @@
     <div
       class="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-300 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4 text-sm px-4">
       <p class="text-gray-600 dark:text-gray-400 text-center md:text-left">
-        &copy; {{ new Date().getFullYear() }} Moimstone Dasan Indonesia. All rights reserved.
+        &copy; {{ new Date().getFullYear() }} {{ $t('ui.moimstoneDasanIndonesiaAllRightsReserved') }}
       </p>
       <div class="flex space-x-4">
         <a v-for="social in socials" :key="social.name" :href="social.url" :aria-label="social.name"
@@ -98,6 +97,8 @@
 
 
 <script setup>
+import { uiText } from '../utils/uiText';
+
 import { h } from 'vue'
 import useContact from '@/composable/useContact.js'
 
@@ -130,15 +131,15 @@ const linkSections = [
   {
     title: 'LINKS',
     links: [
-      { name: 'Home', url: '/' },
-      { name: 'Products', url: '/product' },
-      { name: 'Service & Solutions', url: '/solutions' },
-      { name: 'Projects', url: '/project' },
-      { name: 'Contact Us', url: '/contact' },
+      { name: "Beranda", url: '/' },
+      { name: "Produk", url: '/product' },
+      { name: "Layanan dan Solusi", url: '/solutions' },
+      { name: "Proyek", url: '/project' },
+      { name: "Hubungi Kami", url: '/contact' },
     ],
   },
   {
-    title: 'Product',
+    title: uiText("Produk"),
     links: [
       { name: 'OLT', url: '/product' },
       { name: 'ONU', url: '/product' },
@@ -150,20 +151,20 @@ const linkSections = [
     ],
   },
   {
-    title: 'Service & Solutions',
+    title: uiText("Layanan dan Solusi"),
     links: [
-      { name: 'Managed Services', url: '/solutions' },
-      { name: 'Maintenance and Support', url: '/solutions' },
-      { name: 'Design and Build', url: '/solutions' },
+      { name: 'Layanan Terkelola', url: '/solutions' },
+      { name: 'Pemeliharaan dan Dukungan', url: '/solutions' },
+      { name: 'Desain dan Konstruksi', url: '/solutions' },
       { name: 'Training Dasan Product', url: '/solutions' },
     ],
   },
   {
-    title: 'Our Projects',
+    title: uiText("Proyek Kami"),
     links: [
-      { name: 'ISP Partner', url: '/project?id=ispcustomer' },
-      { name: 'Managed Service', url: '/project?id=managedservices' },
-      { name: 'FTTx Project', url: '/project?id=fttxproject' },
+      { name: 'Mitra ISP', url: '/project?id=ispcustomer' },
+      { name: 'Layanan Terkelola', url: '/project?id=managedservices' },
+      { name: 'Proyek FTTx', url: '/project?id=fttxproject' },
     ],
   },
 ]

@@ -17,7 +17,7 @@
       </span>
       
       <!-- Label -->
-      <span v-if="!collapsed" class="menu-label">{{ item.name }}</span>
+      <span v-if="!collapsed" class="menu-label">{{ $ui(item.name) }}</span>
       
       <!-- Chevron for expandable items -->
       <span v-if="item.children && !collapsed" class="menu-chevron">

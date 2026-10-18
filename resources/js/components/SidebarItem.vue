@@ -5,14 +5,14 @@
       <router-link v-if="!item.children" :to="item.to" class="flex items-center p-2 rounded-lg hover:bg-gray-100"
         :class="isActive && 'bg-gray-200 font-semibold'">
         <span>{{ item.icon }}</span>
-        <span v-if="!collapsed" class="ml-3">{{ item.name }}</span>
+        <span v-if="!collapsed" class="ml-3">{{ $ui(item.name) }}</span>
       </router-link>
 
       <DisclosureButton v-else class="flex items-center w-full p-2 rounded-lg hover:bg-gray-100"
         :class="isActive && 'bg-gray-200 font-semibold'">
         <span>{{ item.icon }}</span>
         <span v-if="!collapsed" class="ml-3 flex-1 text-left">
-          {{ item.name }}
+          {{ $ui(item.name) }}
         </span>
         <span v-if="!collapsed">▾</span>
       </DisclosureButton>
@@ -26,7 +26,7 @@
             <router-link v-for="child in filteredChildren" :key="child.name" :to="child.to"
               class="block p-2 rounded text-sm hover:bg-gray-100"
               :class="isChildActive(child) && 'bg-gray-200 font-semibold'">
-              {{ child.name }}
+              {{ $ui(child.name) }}
             </router-link>
           </DisclosurePanel>
         </TransitionChild>

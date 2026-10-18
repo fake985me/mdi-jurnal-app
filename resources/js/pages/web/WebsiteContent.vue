@@ -3,14 +3,14 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Website Content</h1>
-        <p class="text-sm text-gray-500 mt-1">Kelola semua konten halaman publik dari satu tempat</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $t('nav.websiteContent') }}</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ $t('ui.manageAllPublicPageContentInOnePlace') }}</p>
       </div>
     </div>
 
     <!-- Tabs Navigation -->
     <div class="border-b border-gray-200 mb-6">
-      <nav class="flex space-x-0" aria-label="Tabs">
+      <nav class="flex space-x-0" :aria-label="$t('ui.tabs')">
         <button
           v-for="tab in tabList"
           :key="tab.key"
@@ -23,7 +23,7 @@
           ]"
         >
           <span>{{ tab.icon }}</span>
-          {{ tab.label }}
+          {{ $ui(tab.label) }}
         </button>
       </nav>
     </div>
@@ -51,6 +51,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref } from 'vue'
 import PublicProducts from './PublicProducts.vue'
 import CmsCarousel from './CmsCarousel.vue'
@@ -60,9 +62,9 @@ import PagesTab from './PagesTab.vue'
 const activeTab = ref('pages')
 
 const tabList = [
-  { key: 'pages', label: 'Pages', icon: '📄' },
-  { key: 'products', label: 'Products', icon: '📦' },
-  { key: 'carousel', label: 'Carousel', icon: '🖼️' },
-  { key: 'contact', label: 'Contact Info', icon: '📞' },
+  { key: 'pages', label: uiText("Halaman"), icon: '📄' },
+  { key: 'products', label: uiText("Produk"), icon: '📦' },
+  { key: 'carousel', label: uiText("Carousel"), icon: '🖼️' },
+  { key: 'contact', label: uiText("Informasi Kontak"), icon: '📞' },
 ]
 </script>

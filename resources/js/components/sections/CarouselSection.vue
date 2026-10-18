@@ -88,6 +88,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../../utils/uiText';
+
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
@@ -115,9 +117,9 @@ let intervalId = null
 // Default slides if none provided
 const defaultSlides = [
   {
-    title: 'Welcome to Our Platform',
-    subtitle: 'Build amazing things with our solutions',
-    ctaText: 'Get Started',
+    title: uiText("Selamat Datang di Platform Kami"),
+    subtitle: uiText("Wujudkan ide Anda dengan solusi kami"),
+    ctaText: uiText("Mulai"),
     ctaLink: '/product',
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   }

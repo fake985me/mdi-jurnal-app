@@ -4,10 +4,10 @@
       <div class="mb-4">
         <div class="mb-6 max-w-3xl text-center sm:text-center md:mx-auto md:mb-12">
           <p class="text-base font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-200">
-            Contact Us
+            {{ $t('ui.contactUs') }}
           </p>
           <h2 class="font-heading mb-4 font-bold tracking-tight text-gray-900 dark:text-white text-3xl sm:text-5xl">
-            Get in Touch
+            {{ $t('ui.contactUs') }}
           </h2>
           <!-- <p class="mx-auto mt-4 max-w-3xl text-xl text-gray-600 dark:text-slate-400">In hac habitasse platea
             dictumst
@@ -59,7 +59,7 @@
                   </svg>
                 </div>
                 <div class="ml-4 mb-4">
-                  <h3 class="mb-2 text-lg font-medium leading-6 text-gray-900 dark:text-white">Contact</h3>
+                  <h3 class="mb-2 text-lg font-medium leading-6 text-gray-900 dark:text-white">{{ $t('labels.contact') }}</h3>
 
                   <!-- Phone Numbers -->
                   <ul v-if="contactsByType.phone?.length" class="space-y-2 space-x-10 text-sm text-gray-700 dark:text-gray-400">
@@ -93,7 +93,7 @@
                 </div>
                 <div class="ml-4 mb-4">
                   <h3 class="mb-2 text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                    {{ contactsByType.sales[0].label || 'Sales and Marketing' }}
+                    {{ contactsByType.sales[0].label || $t('ui.salesMarketing') }}
                   </h3>
                   <p v-for="sales in contactsByType.sales" :key="sales.id"
                      class="text-gray-600 dark:text-slate-400">
@@ -104,32 +104,32 @@
             </ul>
           </div>
           <div class="card h-fit max-w-6xl p-5 md:p-12" id="form">
-            <h2 class="mb-4 text-2xl font-bold dark:text-white">Ready to Get Started?</h2>
+            <h2 class="mb-4 text-2xl font-bold dark:text-white">{{ $t('ui.readyToGetStarted') }}</h2>
             <form id="contactForm" @submit.prevent="handleSubmit">
               <!-- Name -->
               <div class="mb-4">
-                <label for="name" class="block text-sm dark:text-gray-100 font-medium">Name</label>
-                <input id="name" v-model="form.name" required placeholder="Your name"
+                <label for="name" class="block text-sm dark:text-gray-100 font-medium">{{ $t('ui.name') }}</label>
+                <input id="name" v-model="form.name" required :placeholder="$t('ui.yourName2')"
                   class="w-full mt-1 border rounded-md p-2" />
               </div>
 
               <!-- Email -->
               <div class="mb-4">
-                <label for="email" class="block text-sm dark:text-gray-100  font-medium">Email</label>
-                <input id="email" v-model="form.email" type="email" required placeholder="Your email address"
+                <label for="email" class="block text-sm dark:text-gray-100  font-medium">{{ $t('labels.email') }}</label>
+                <input id="email" v-model="form.email" type="email" required :placeholder="$t('ui.yourEmailAddress')"
                   class="w-full mt-1 border rounded-md p-2" />
               </div>
 
               <!-- Message -->
               <div class="mb-4">
-                <label for="message" class="block text-sm dark:text-gray-100  font-medium">Message</label>
-                <textarea id="message" v-model="form.message" required placeholder="Your message..." rows="5"
+                <label for="message" class="block text-sm dark:text-gray-100  font-medium">{{ $t('ui.message') }}</label>
+                <textarea id="message" v-model="form.message" required :placeholder="$t('ui.yourMessage2')" rows="5"
                   class="w-full mt-1 border rounded-md p-2"></textarea>
               </div>
 
               <!-- Button -->
               <button type="submit" class="w-full bg-blue-700 text-white p-3 rounded-md hover:bg-blue-800">
-                Send Message
+                {{ $t('ui.sendMessage') }}
               </button>
             </form>
           </div>
@@ -140,6 +140,8 @@
 </template>
 
 <script setup>
+import { uiText } from '../utils/uiText';
+
 import { ref, computed } from 'vue'
 import useContact from '@/composable/useContact.js'
 
@@ -158,8 +160,8 @@ const recipientEmail = computed(() => {
 
 const handleSubmit = () => {
   const { name, email, message } = form.value
-  const subject = encodeURIComponent(`Message from ${name}`)
-  const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`)
+  const subject = encodeURIComponent(uiText('ui.messageFrom', { p0: name }))
+  const body = encodeURIComponent(uiText('ui.contactMessageBody', { p0: name, p1: email, p2: message }))
   const recipient = recipientEmail.value
 
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`
