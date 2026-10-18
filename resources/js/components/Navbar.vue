@@ -1,6 +1,6 @@
 <template>
   <!-- Mobile Top Nav - Logo Only -->
-  <div class="md:hidden sticky top-0 z-40 bg-gray-800 px-8 py-10 flex items-center h-6 drop-shadow-xl">
+  <div class="md:hidden sticky top-0 z-40 bg-gray-900 px-8 py-10 flex items-center h-6 drop-shadow-xl">
     <RouterLink to="/">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" aria-hidden="true" class="w-24 h-20" viewBox="0 0.2 2 2">
         <path fill="#3636e0"
@@ -11,8 +11,8 @@
 
 
   <!-- Desktop Navbar -->
-  <Disclosure as="nav" class="bg-gray-800 hidden md:block sticky top-0 z-50" v-slot="{ open }">
-    <div class="mx-2 max-w-7xl px-4 sm:px-6 lg:px-8">
+  <Disclosure as="nav" class="bg-gray-900 hidden md:block sticky top-0 z-50" v-slot="{ open }">
+    <div class="mx-2 px-4 sm:px-6 lg:px-8">
       <div class="flex h-18 items-center justify-between">
         <div class="flex items-center ">
           <div class="ml-2 drop-shadow-xl pb-2">
@@ -85,6 +85,10 @@
               </Menu>
             </template>
           </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Language Switcher -->
+          <LanguageSwitcher />
         </div>
       </div>
     </div>
@@ -170,6 +174,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 import { useNavigationStore } from '../stores/navigation'
 import { useAuthStore } from '../stores/auth'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const route = useRoute()
 const navigationStore = useNavigationStore()
