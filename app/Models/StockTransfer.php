@@ -21,10 +21,12 @@ class StockTransfer extends Model
         'received_by',
         'transferred_at',
         'received_at',
+        'project_investment_item_id', 'returned_item_id', 'project_action', 'serial_numbers',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
+        'serial_numbers' => 'array',
         'transferred_at' => 'datetime',
         'received_at' => 'datetime',
     ];
@@ -48,6 +50,8 @@ class StockTransfer extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function projectItem() { return $this->belongsTo(ProjectInvestmentItem::class, 'project_investment_item_id'); }
 
     public function transferredBy()
     {

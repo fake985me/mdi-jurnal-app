@@ -17,9 +17,11 @@ class ProjectProgressLog extends Model
         'new_value',
         'notes',
         'updated_by',
+        'details',
     ];
 
     const TYPE_DELIVERY = 'delivery';
+    protected $casts = ['details' => 'array'];
     const TYPE_INSTALLATION = 'installation';
     const TYPE_STATUS = 'status';
     const TYPE_MATERIAL = 'material';
@@ -35,7 +37,7 @@ class ProjectProgressLog extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public static function logChange($projectId, $type, $fieldName, $oldValue, $newValue, $notes = null)
+    public static function logChange($projectId, $type, $fieldName, $oldValue, $newValue, $notes = null, array $details = [])
     {
         return static::create([
             'project_investment_id' => $projectId,
@@ -45,6 +47,7 @@ class ProjectProgressLog extends Model
             'new_value' => $newValue,
             'notes' => $notes,
             'updated_by' => auth()->id(),
+            ...($details ? ['details' => $details] : []),
         ]);
     }
 }

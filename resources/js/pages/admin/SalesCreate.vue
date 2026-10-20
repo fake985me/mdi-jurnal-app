@@ -22,6 +22,7 @@
         </select>
         <!-- Export & Delivery buttons shown only when editing -->
         <template v-if="isEditing && viewingSale">
+          <button v-if="viewingSale.delivery" type="button" @click="printShippingNote" :disabled="printingNote" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium disabled:opacity-50">{{ $t(printingNote ? 'deliveryNote.loading' : 'deliveryNote.print') }}</button>
           <button type="button" @click="exportExcel(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 text-sm font-medium transition-colors">{{ $t('sales.excel') }}
           </button>
           <button type="button" @click="downloadPdf(viewingSale.id, viewingSale.invoice_number,)" class="px-4 py-2 bg-linear-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-sm transition-all">{{ $t('sales.pdf') }}
@@ -41,9 +42,9 @@
     </div>
 
     <!-- Wrapper container to center it on screens, but remove styling when printing -->
-    <div v-if="isViewing && viewingSale" class="bg-gray-100 min-h-screen py-8 print:bg-white print:py-0">
+    <div v-if="viewingSale && (isViewing || printing)" :style="isViewing ? undefined : { position: 'fixed', left: '-10000px', top: 0 }" class="bg-gray-100 min-h-screen py-8 print:bg-white print:py-0">
       <!-- The Letter Page -->
-      <div class="mx-auto bg-white shadow-lg w-204 h-264 p-24 print:w-204 print:h-264 print:p-24 print:shadow-none print:mx-0">
+      <div ref="invoicePreview" class="mx-auto bg-white shadow-lg w-204 min-h-264 p-24 print:w-204 print:min-h-264 print:p-24 print:shadow-none print:mx-0">
         <!-- Page Content Goes Here -->
         <!-- Invoice Header -->
         <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; margin-top: -12%;">
@@ -835,7 +836,9 @@
 <script setup>
 import { uiText, uiLocale } from '../../utils/uiText';
 
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
+import { printVueDocument } from "../../utils/printDocument";
+import { printDeliveryNote } from "../../utils/printDeliveryNote";
 import { useRouter, useRoute } from "vue-router";
 import api from "../../services/api";
 
@@ -845,6 +848,14 @@ const route = useRoute();
 const isEditing = computed(() => !!route.params.id);
 const isViewing = computed(() => route.name === "SalesView");
 const printing = ref(false);
+const invoicePreview = ref(null);
+const printingNote = ref(false);
+const printShippingNote = async () => {
+  printingNote.value = true;
+  try { await printDeliveryNote(`sale-${viewingSale.value.id}`); }
+  catch (error) { alert(error.message); }
+  finally { printingNote.value = false; }
+};
 
 // Data lists
 const products = ref([]);
@@ -1222,62 +1233,17 @@ const printPdf = async (saleId, invoiceNumber) => {
   printWindow.document.title = uiText('ui.invoiceNumber', { p0: invoiceNumber });
   printWindow.document.body.textContent = uiText("Memuat tampilan cetak faktur...");
   try {
-    const response = await api.get(`/sales/${saleId}/print`, {
-      responseType: "text",
-      headers: { Accept: "text/html" },
-    });
+    await nextTick();
     if (printWindow.closed) return;
-    const doc = printWindow.document;
-    doc.open();
-    doc.write(response.data);
-    doc.close();
-    doc.title = uiText('ui.invoiceNumber', { p0: invoiceNumber });
-    const style = doc.createElement("style");
-    style.textContent =
-      "@page { size: A4; margin: 12mm; } img { max-width: 100%; height: auto; } @media print { .invoice-print-toolbar { display: none !important; } body { margin: 0; background: white !important; } }";
-    doc.head.appendChild(style);
-    // Print the displayed values instead of editable inputs in the invoice template.
-    doc.querySelectorAll("input, textarea, select").forEach((input) => {
-      const text = doc.createElement("span");
-      text.textContent =
-        input.tagName === "SELECT"
-          ? input.selectedOptions[0]?.textContent || ""
-          : input.value;
-      text.className = input.className;
-      input.replaceWith(text);
+    const preview = invoicePreview.value;
+    if (!preview) throw new Error('Invoice preview is unavailable');
+    await printVueDocument(preview, {
+      printWindow,
+      title: uiText('ui.invoiceNumber', { p0: invoiceNumber }),
+      pageSize: 'Letter',
+      margin: '0',
+      buttonLabel: uiText('Cetak Faktur'),
     });
-    const toolbar = doc.createElement("div");
-    toolbar.className = "invoice-print-toolbar";
-    toolbar.style.cssText =
-      "padding:12px;margin-bottom:16px;background:#f3f4f6;text-align:right";
-    const button = doc.createElement("button");
-    button.type = "button";
-    button.textContent = uiText("Cetak Faktur");
-    button.onclick = () => {
-      printWindow.focus();
-      printWindow.print();
-    };
-    toolbar.appendChild(button);
-    doc.body.prepend(toolbar);
-    await Promise.all(
-      Array.from(doc.images).map((image) =>
-        image.complete
-          ? Promise.resolve()
-          : new Promise((resolve) => {
-            image.addEventListener("load", resolve, {
-              once: true,
-            });
-            image.addEventListener("error", resolve, {
-              once: true,
-            });
-          }),
-      ),
-    );
-    if (doc.fonts) await doc.fonts.ready;
-    if (!printWindow.closed) {
-      printWindow.focus();
-      printWindow.print();
-    }
   } catch (err) {
     printWindow.close();
     alert(

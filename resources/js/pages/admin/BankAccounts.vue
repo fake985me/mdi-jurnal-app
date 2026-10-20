@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <h2 class="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           {{ $t('pageTitles.BankAccounts') }}
         </h2>
         <p class="text-sm text-gray-600 mt-1">{{ $t('ui.manageBankAccountsAndTrackBalances') }}</p>
@@ -15,7 +15,7 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4" v-if="totals">
-      <div class="card p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
+      <div class="card p-5 bg-linear-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-emerald-600 font-medium">{{ $t('ui.totalBalance') }}</p>
@@ -28,7 +28,7 @@
           </div>
         </div>
       </div>
-      <div class="card p-5 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+      <div class="card p-5 bg-linear-to-br from-blue-50 to-blue-100 border border-blue-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-blue-600 font-medium">{{ $t('ui.totalIncoming') }}</p>
@@ -41,7 +41,7 @@
           </div>
         </div>
       </div>
-      <div class="card p-5 bg-gradient-to-br from-red-50 to-red-100 border border-red-200">
+      <div class="card p-5 bg-linear-to-br from-red-50 to-red-100 border border-red-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-red-600 font-medium">{{ $t('ui.totalOutgoing') }}</p>
@@ -162,8 +162,8 @@
               <td class="px-4 py-3 text-sm text-gray-700">{{ formatDate(t.payment_date) }}</td>
               <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ t.reference_number || '—' }}</td>
               <td class="px-4 py-3 text-sm text-gray-700 capitalize">{{ $label(t.payment_type) }}</td>
-              <td class="px-4 py-3 text-sm font-bold text-right" :class="t.payable_type?.includes('Purchase') ? 'text-red-600' : 'text-emerald-600'">
-                {{ t.payable_type?.includes('Purchase') ? '-' : '+' }}{{ formatCurrency(t.amount) }}
+              <td class="px-4 py-3 text-sm font-bold text-right" :class="/(?:Purchase|Expense)$/.test(t.payable_type || '') ? 'text-red-600' : 'text-emerald-600'">
+                {{ /(?:Purchase|Expense)$/.test(t.payable_type || '') ? '-' : '+' }}{{ formatCurrency(t.amount) }}
               </td>
               <td class="px-4 py-3">
                 <span :class="getStatusBadge(t.status)" class="text-xs font-medium px-2 py-1 rounded-full">{{ $label(t.status) }}</span>

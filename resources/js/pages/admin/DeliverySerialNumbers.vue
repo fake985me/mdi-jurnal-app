@@ -6,14 +6,25 @@
         <h2 class="text-2xl font-bold text-gray-900">{{ $t('ui.serialNumber') }}</h2>
         <p class="mt-1 text-sm text-gray-500">{{ $t('ui.kelolaSerialNumberUntukSatuPengiriman') }}</p>
       </div>
-      <span v-if="delivery" :class="getDeliveryBadge(delivery.status)">{{ formatStatus(delivery.status) }}</span>
+      <div v-if="delivery" class="flex flex-wrap items-center gap-3">
+        <span :class="getDeliveryBadge(delivery.status)">{{ formatStatus(delivery.status) }}</span>
+        <button v-if="isTransfer || isRma || delivery.sale_id" @click="printNote" :disabled="printingNote || uploading" class="btn-primary disabled:opacity-50">
+          {{ $t(printingNote ? 'deliveryNote.loading' : 'deliveryNote.print') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="card p-10 text-center text-sm text-gray-500">{{ $t('ui.loadingDeliveryData') }}</div>
     <template v-else-if="delivery">
       <div class="grid gap-4 md:grid-cols-3">
-        <div class="card p-4"><p class="text-xs font-medium uppercase text-gray-500">{{ $t('sales.invoice') }}</p><p class="mt-1 font-semibold text-gray-900">{{ delivery.sale?.invoice_number || '-' }}</p></div>
-        <div class="card p-4"><p class="text-xs font-medium uppercase text-gray-500">{{ $t('sales.customer') }}</p><p class="mt-1 font-semibold text-gray-900">{{ delivery.sale?.customer_name || '-' }}</p></div>
+        <div class="card p-4">
+          <p class="text-xs font-medium uppercase text-gray-500">{{ $t(isTransfer ? 'ui.transactionDocument' : 'sales.invoice') }}</p>
+          <p class="mt-1 font-semibold text-gray-900">{{ delivery.sale?.invoice_number || '-' }}</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs font-medium uppercase text-gray-500">{{ $t(isTransfer ? 'ui.recipientDestination' : 'sales.customer') }}</p>
+          <p class="mt-1 font-semibold text-gray-900">{{ delivery.sale?.customer_name || '-' }}</p>
+        </div>
         <div class="card p-4"><p class="text-xs font-medium uppercase text-gray-500">{{ $t('deliveries.trackingNumber') }}</p><p class="mt-1 font-mono text-sm font-semibold text-gray-900">{{ delivery.tracking_number || '-' }}</p></div>
       </div>
 
@@ -21,9 +32,9 @@
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="font-semibold text-gray-900">{{ $t('ui.daftarSerialNumber') }}</h3>
-            <p class="mt-1 text-sm text-gray-500">{{ isRma ? $t('ui.importReplacementSerialNumbersToUpdateTheOriginalShipmentAndWarranty') : $t('ui.importSerialNumbersFromExcelToUpdateRecordsAndCreateWarrantiesAutomatically') }}</p>
+            <p class="mt-1 text-sm text-gray-500">{{ isTransfer ? $t('transferSerials.instructions') : isRma ? $t('ui.importReplacementSerialNumbersToUpdateTheOriginalShipmentAndWarranty') : $t('ui.importSerialNumbersFromExcelToUpdateRecordsAndCreateWarrantiesAutomatically') }}</p>
           </div>
-          <div class="flex gap-2">
+          <div v-if="!isTransfer" class="flex gap-2">
             <button @click="downloadTemplate" class="btn-secondary">{{ $t('ui.downloadTemplate') }}</button>
             <label class="btn-primary cursor-pointer">
               {{ uploading ? $t('ui.uploading') : $t('ui.importExcel') }}
@@ -32,6 +43,13 @@
           </div>
         </div>
 
+        <form v-if="isTransfer" @submit.prevent="saveTransferSerials" class="mb-5 space-y-3">
+          <label for="transfer-serials" class="block text-sm font-medium">{{ $t('ui.serialNumber') }}</label>
+          <textarea id="transfer-serials" v-model="serialText" rows="10" :disabled="!canEditTransfer || uploading" :placeholder="$t('ui.oneSerialNumberPerLine')" class="input font-mono"></textarea>
+          <p class="text-sm text-gray-500">{{ $t('transferSerials.count', { count: transferSerials.length, quantity: delivery.quantity }) }}</p>
+          <p v-if="!canEditTransfer" class="text-sm text-amber-700">{{ $t('transferSerials.locked') }}</p>
+          <button v-if="canEditTransfer" :disabled="uploading || transferSerials.length !== delivery.quantity" class="btn-primary disabled:opacity-50">{{ $t(uploading ? 'sales.saving' : 'common.save') }}</button>
+        </form>
         <p v-if="uploadMessage" class="mb-4 rounded-lg p-3 text-sm" :class="uploadError ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">{{ uploadMessage }}</p>
         <div v-if="uploadErrors.length" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <p class="font-medium">{{ $t('ui.catatanImport') }}</p>
@@ -58,15 +76,30 @@
 <script setup>
 import { uiText } from '../../utils/uiText';
 
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../../services/api';
+import { printDeliveryNote } from '../../utils/printDeliveryNote';
+
+const printingNote = ref(false);
+const printNote = async () => {
+  printingNote.value = true;
+  try { await printDeliveryNote(isRma || isTransfer ? String(route.params.id) : `sale-${delivery.value.sale_id}`); }
+  catch (error) { alert(error.message); }
+  finally { printingNote.value = false; }
+};
 
 const route = useRoute();
 const router = useRouter();
 const isRma = String(route.params.id).startsWith('rma-');
-const apiPath = isRma ? `/rma-shipments/${String(route.params.id).slice(4)}` : `/deliveries/${route.params.id}`;
-const normalizeDelivery = (data) => isRma ? {
+const isTransfer = String(route.params.id).startsWith('transfer-');
+const apiPath = isTransfer ? `/stock-transfers/${String(route.params.id).slice(9)}` : isRma ? `/rma-shipments/${String(route.params.id).slice(4)}` : `/deliveries/${route.params.id}`;
+const normalizeDelivery = (data) => isTransfer ? {
+  ...data,
+  status: ({ pending: 'preparing', completed: 'delivered' })[data.status] || data.status,
+  sale: { invoice_number: data.transfer_code, customer_name: data.to_warehouse?.name },
+  items: data.serial_numbers?.length ? data.serial_numbers.map((sn,index)=>({id:index,product:data.product,quantity:1,serial_number:sn})) : [{id:0,product:data.product,quantity:data.quantity}],
+} : isRma ? {
   ...data,
   sale: data.rma?.sale,
   items: (data.serial_numbers?.length ? data.serial_numbers : [null]).map((sn, index) => ({
@@ -74,6 +107,21 @@ const normalizeDelivery = (data) => isRma ? {
   })),
 } : data;
 const delivery = ref(null);
+const serialText = ref('');
+const transferSerials = computed(() => serialText.value.split(/[\n,]+/).map(sn => sn.trim()).filter(Boolean));
+const canEditTransfer = computed(() => delivery.value?.status === 'preparing' || (delivery.value?.status === 'in_transit' && !delivery.value?.serial_numbers?.length));
+const saveTransferSerials = async () => {
+  uploading.value = true; uploadMessage.value = ''; uploadError.value = false;
+  try {
+    const response = await api.post(`${apiPath}/serials`, { serial_numbers: transferSerials.value });
+    delivery.value = normalizeDelivery(response.data);
+    serialText.value = (response.data.serial_numbers || []).join('\n');
+    uploadMessage.value = uiText('transferSerials.saved');
+  } catch (err) {
+    uploadError.value = true;
+    uploadMessage.value = Object.values(err.response?.data?.errors || {}).flat()[0] || err.response?.data?.message || uiText('transferSerials.failed');
+  } finally { uploading.value = false; }
+};
 const loading = ref(true);
 const uploading = ref(false);
 const uploadMessage = ref('');
@@ -90,6 +138,7 @@ const loadDelivery = async () => {
   try {
     const response = await api.get(apiPath);
     delivery.value = normalizeDelivery(response.data);
+    if (isTransfer) serialText.value = (response.data.serial_numbers || []).join('\n');
   } catch (err) {
     console.error('Gagal memuat pengiriman:', err);
   } finally {

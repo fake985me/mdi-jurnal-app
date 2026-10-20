@@ -74,7 +74,7 @@ const loading = ref(true);
 const error = ref('');
 const defaults = () => ({ search: '', payable_type: '', status: '', start_date: '', end_date: '', per_page: 15 });
 const filters = ref(defaults());
-const typeLabels = { sale: uiText("Penjualan"), purchase: uiText("Pembelian"), project_contract: uiText("Kontrak Proyek"), msa_contract: uiText("Kontrak MSA") };
+const typeLabels = { expense: uiText('expenses.title'), sale: uiText("Penjualan"), purchase: uiText("Pembelian"), project_contract: uiText("Kontrak Proyek"), msa_contract: uiText("Kontrak MSA") };
 const statusLabels = { paid: uiText("Lunas"), unpaid: uiText("Belum Dibayar"), cancelled: uiText("Dibatalkan") };
 const paymentLabels = { dp: uiText("Uang Muka"), full: uiText("Pembayaran Penuh"), termin: uiText("Termin"), sharing_profit: uiText("Bagi Hasil") };
 const currency = value => new Intl.NumberFormat(uiLocale(), { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value || 0));

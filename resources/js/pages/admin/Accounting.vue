@@ -50,6 +50,7 @@
         <select v-model="filters.payable_type" @change="loadPayments" class="input">
           <option value="">{{ $t('ui.allTypes') }}</option>
           <option value="purchase">{{ $t('labels.purchase') }}</option>
+          <option value="expense">{{ $t('expenses.title') }}</option>
           <option value="sale">{{ $t('labels.sale') }}</option>
           <option value="project_contract">{{ $t('ui.projectContract') }}</option>
           <option value="msa_contract">{{ $t('ui.msaContract') }}</option>
@@ -126,23 +127,10 @@
             </td>
             <td class="px-3 py-3 text-right text-sm whitespace-nowrap sticky right-0 bg-white space-x-1">
               <button
-                v-if="payment.status === 'unpaid'"
-                @click="markPaid(payment)"
-                class="text-green-600 hover:text-green-900 font-medium"
-              >{{ $t('ui.pay') }}</button>
-              <button
-                @click="editPayment(payment)"
+                v-if="payment.payable_type_label !== 'expense'" @click="editPayment(payment)"
                 class="text-blue-600 hover:text-blue-900 font-medium"
-              >{{ $t('common.edit') }}</button>
-              <button
-                v-if="payment.status !== 'cancelled'"
-                @click="cancelPayment(payment)"
-                class="text-orange-600 hover:text-orange-900 font-medium"
-              >{{ $t('projectInvestment.actions.cancel') }}</button>
-              <button
-                @click="deletePayment(payment)"
-                class="text-red-600 hover:text-red-900 font-medium"
-              >{{ $t('common.delete') }}</button>
+              >{{ $t('sales.actions') }}</button>
+              <router-link v-else :to="{ name: 'Expenses', query: { expense: payment.payable_id } }" class="text-blue-600">{{ $t('expenses.manage') }}</router-link>
             </td>
           </tr>
           <tr v-if="!payments.data?.length && !loading">
@@ -267,6 +255,7 @@ import { uiText, uiLocale } from '../../utils/uiText';
 
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
+import { Dialog, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 
 const payments = ref({ data: [] });
 const summary = ref({
@@ -314,6 +303,7 @@ const formatDate = (date) => date ? new Date(date).toLocaleDateString(uiLocale()
 
 const formatTypeName = (type) => {
   const names = {
+    expense: uiText('expenses.title'),
     purchase: uiText("Pembelian"),
     sale: uiText("Penjualan"),
     project_contract: uiText("Proyek"),

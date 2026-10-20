@@ -3,14 +3,14 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">{{ $t('projectInvestment.po.title') }}</h2>
-        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.createAndManagePurchaseOrders') }}</p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ $t('pageTitles.Purchases') }}</h2>
+        <p class="text-sm text-gray-600 mt-1">{{ $t('purchasePage.subtitle') }}</p>
       </div>
       <button
-        @click="$router.push({ name: 'PurchaseCreate' })"
-        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+        @click="$router.push({ name: 'Purchases' })"
+        class="px-6 py-3 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
       >
-        {{ $t('ui.createPurchaseOrder') }}
+        {{ $t('sales.previous') }}
       </button>
     </div>
 
@@ -18,17 +18,22 @@
     
 
     <!-- Create Purchase Modal -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t('ui.createPurchaseOrder2') }}</h3>
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div class="p-4 sm:p-6">
+        <h3 class="text-2xl font-bold mb-6 bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t(purchaseTypes.find(type => type.value === form.transaction_type).label) }}</h3>
         
         <form @submit.prevent="savePurchase" class="space-y-6">
+          <label class="block text-sm font-medium text-gray-700">{{ $t('purchasePage.type') }}
+            <select v-model="form.transaction_type" @change="form.po_number = purchaseTypes.find(type => type.value === form.transaction_type).prefix + '-' + Date.now()" class="input mt-1">
+              <option v-for="type in purchaseTypes" :key="type.value" :value="type.value">{{ $t(type.label) }}</option>
+            </select>
+          </label>
           <!-- Supplier Information -->
           <div class="p-4 bg-blue-50 rounded-lg">
             <h4 class="font-semibold text-gray-900 mb-3">{{ $t('ui.supplierInformation') }}</h4>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.poNumber') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('purchasePage.number') }}</label>
                 <input v-model="form.po_number" required class="input" placeholder="PO-001" />
               </div>
               <div>
@@ -138,7 +143,8 @@
             </div>
           </div>
 
-          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">
+          <div v-if="['request', 'quotation'].includes(form.transaction_type)" class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">{{ $t('purchasePage.preliminaryNote') }}</div>
+          <div v-else class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">
             <strong>{{ $t('ui.note') }}</strong> {{ $t('ui.purchaseAkanDibuatDenganStatus') }} <strong>{{ $t('labels.unpaid') }}</strong>{{ $t('ui.paymentsAreMadeOnThe') }} <strong>{{ $t('pageTitles.Accounting') }}</strong>{{ $t('ui.stockAkanDitambahkanOtomatisSetelahPembayaranDiConfirm') }}
           </div>
 
@@ -149,9 +155,9 @@
           <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ $ui(error) }}</div>
 
           <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="button" @click="router.push({ name: 'Purchases' })" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? $t('sales.saving') : $t('ui.createPurchaseOrder2') }}
+              {{ saving ? $t('sales.saving') : $t('purchasePage.save') }}
             </button>
           </div>
         </form>
@@ -198,7 +204,7 @@
     <!-- Quick Add Supplier Modal -->
     <div v-if="showSupplierModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{{ $t('ui.quickAddSupplier') }}</h3>
+        <h3 class="text-xl font-bold mb-4 bg-linear-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{{ $t('ui.quickAddSupplier') }}</h3>
         
         <form @submit.prevent="saveNewSupplier" class="space-y-3">
           <div>
@@ -228,7 +234,7 @@
 
           <div class="flex justify-end space-x-2 pt-3">
             <button type="button" @click="showSupplierModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
-            <button type="submit" :disabled="savingSupplier" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all text-sm font-medium disabled:opacity-50">
+            <button type="submit" :disabled="savingSupplier" class="px-4 py-2 bg-linear-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all text-sm font-medium disabled:opacity-50">
               {{ savingSupplier ? $t('sales.saving') : $t('ui.addSupplier2') }}
             </button>
           </div>
@@ -243,6 +249,11 @@ import { uiText, uiLocale } from '../../utils/uiText';
 
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
+import { useRoute, useRouter } from 'vue-router';
+import { purchaseTypes } from '../../utils/purchaseTypes';
+const route = useRoute();
+const router = useRouter();
+const initialType = purchaseTypes.some(type => type.value === route.query.type) ? route.query.type : 'order';
 
 const purchases = ref({ data: [] });
 const products = ref([]);
@@ -261,15 +272,9 @@ const productSearch = ref('');
 const supplierList = ref([]);
 const selectedSupplierInfo = ref(null);
 
-const filters = ref({
-  search: '',
-  status: '',
-  start_date: '',
-  end_date: '',
-});
-
 const form = ref({
-  po_number: '',
+  transaction_type: initialType,
+  po_number: `${purchaseTypes.find(type => type.value === initialType).prefix}-${Date.now()}`,
   supplier_id: '',
   supplier_name: '',
   supplier_address: '',
@@ -310,29 +315,6 @@ const filteredProducts = computed(() => {
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat(uiLocale()).format(price || 0);
-};
-
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    unpaid: 'bg-red-100 text-red-700',
-    paid: 'bg-green-100 text-green-700',
-    partial: 'bg-yellow-100 text-yellow-700',
-    cancelled: 'bg-gray-100 text-gray-500',
-  };
-  return classes[status] || 'bg-gray-100 text-gray-700';
-};
-
-const loadPurchases = async (page = 1) => {
-  loading.value = true;
-  try {
-    const params = { page, ...filters.value };
-    const response = await api.get('/purchases', { params });
-    purchases.value = response.data;
-  } catch (err) {
-    console.error('Gagal memuat pembelian:', err);
-  } finally {
-    loading.value = false;
-  }
 };
 
 const loadProducts = async () => {
@@ -391,32 +373,13 @@ const calculateTotal = () => {
   return form.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
 };
 
-const resetForm = () => {
-  form.value = {
-    po_number: 'PO-' + Date.now(),
-    supplier_id: '',
-    supplier_name: '',
-    supplier_address: '',
-    supplier_phone: '',
-    warehouse_id: '',
-    order_date: new Date().toISOString().split('T')[0],
-    is_for_asset: false,
-    notes: '',
-    items: [{ product_id: '', quantity: 1, unit_price: 0 }],
-  };
-  selectedSupplierInfo.value = null;
-  error.value = '';
-};
-
 const savePurchase = async () => {
   saving.value = true;
   error.value = '';
   
   try {
     await api.post('/purchases', form.value);
-    showModal.value = false;
-    loadPurchases();
-    resetForm();
+    await router.push({ name: 'Purchases', query: { type: form.value.transaction_type } });
   } catch (err) {
     error.value = err.response?.data?.message || uiText("Gagal membuat pesanan pembelian");
   } finally {
@@ -445,21 +408,6 @@ const saveProduct = async () => {
   }
 };
 
-const viewPurchase = (purchase) => {
-  alert(uiText('ui.purchaseOrderDetails', { p0: purchase.po_number, p1: purchase.supplier_name, p2: formatPrice(purchase.total_amount), p3: purchase.status }));
-};
-
-const deletePurchase = async (id) => {
-  if (!confirm(uiText("Yakin ingin menghapus pesanan pembelian ini?"))) return;
-  
-  try {
-    await api.delete(`/purchases/${id}`);
-    loadPurchases();
-  } catch (err) {
-    alert(err.response?.data?.message || uiText("Gagal menghapus pembelian"));
-  }
-};
-
 const saveNewSupplier = async () => {
   savingSupplier.value = true;
   supplierError.value = '';
@@ -478,7 +426,6 @@ const saveNewSupplier = async () => {
 };
 
 onMounted(() => {
-  loadPurchases();
   loadProducts();
   loadWarehouses();
   loadSuppliers();

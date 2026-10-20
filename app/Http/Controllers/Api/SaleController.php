@@ -458,11 +458,4 @@ class SaleController extends Controller
         return $pdf->download("invoice_{$sale->invoice_number}.pdf");
     }
 
-    public function printInvoice($id)
-    {
-        $sale = Sale::with(['items.product', 'salesPerson', 'user'])->findOrFail($id);
-        $html = view('invoices.pdf', compact('sale'))->render();
-        $html = str_replace('src="./public/', 'src="'.url('/').'/', $html);
-        return response($html, 200)->header('Content-Type', 'text/html; charset=UTF-8');
-    }
 }

@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "route:list": "node scripts/route-list.cjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",

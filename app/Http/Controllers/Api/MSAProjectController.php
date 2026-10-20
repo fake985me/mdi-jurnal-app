@@ -172,15 +172,18 @@ class MSAProjectController extends Controller
                 }
                 $item = \App\Models\ProjectInvestmentItem::where('project_investment_id', $msa->project_investment_id)->where('product_id', $msa->product_id)->lockForUpdate()->get()->first(fn ($item) => !array_diff(array_map('strtolower', $old), array_map('strtolower', $item->serial_numbers ?? [])));
                 if (!$item) throw new \RuntimeException('Catat SN lama pada detail proyek sebelum penggantian MSA.');
+                if ($item->transfers()->whereIn('status', ['pending', 'in_transit'])->exists()) throw new \RuntimeException('Complete the previous shipment before replacement.');
+                app(\App\Services\ProjectStockTransferService::class)->request($item, 'replacement', $msa->quantity, $new);
+                if (!$item->returned_item_id) $this->stockService->deductStock($item->product_id, $msa->quantity, 'project_defective_return', $msa->project_investment_id, $validated['condition'], $item->project->warehouse_id);
                 $mapping = array_combine(array_map('strtolower', $old), $new);
-                $item->update(['serial_numbers' => array_map(fn ($sn) => $mapping[strtolower($sn)] ?? $sn, $item->serial_numbers)]);
+                $item->update(['serial_numbers' => array_map(fn ($sn) => $mapping[strtolower($sn)] ?? $sn, $item->serial_numbers), 'returned_item_id' => null]);
                 \App\Models\ProjectItemChange::create(['project_investment_id' => $msa->project_investment_id, 'project_investment_item_id' => $item->id, 'type' => 'msa_replace', 'quantity' => $msa->quantity, 'old_serial_numbers' => $old, 'new_serial_numbers' => $new, 'notes' => $validated['condition'], 'user_id' => auth()->id()]);
             }
             app(\App\Services\ReturnedInventoryService::class)->register('msa', $msa->id, $msa->msa_code, $msa->product_id, $msa->quantity, $old, $validated['condition']);
             $stockService = $this->stockService;
             
             // Deduct replacement item from stock
-            $stockService->deductStock(
+            if (!$msa->project_investment_id) $stockService->deductStock(
                 $msa->product_id,
                 $msa->quantity,
                 'msa_replacement',

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Sale, Lending, RMAShipment, StockTransfer, StockTransaction};
+use App\Models\{Sale, Lending, RMAShipment, StockTransfer, StockTransaction, ProjectMaterial, ProjectProgressLog};
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\DeliveryFulfillment;
@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class DeliveryRequestController extends Controller
 {
-    private const ADJUSTMENT_TYPES = ['adjustment', 'manual_adjustment', 'stock_adjustment', 'project_defective_return'];
+    private const ADJUSTMENT_TYPES = ['adjustment', 'manual_adjustment', 'stock_adjustment', 'project_defective_return', 'project_transfer_correction'];
 
     public function index(Request $request)
     {
@@ -58,11 +58,19 @@ class DeliveryRequestController extends Controller
                 'notes' => $shipment->notes,
             ]));
         }
-        foreach (StockTransfer::with(['product', 'fromWarehouse', 'toWarehouse'])->get() as $transfer) {
+        foreach (StockTransfer::with(['product', 'fromWarehouse', 'toWarehouse', 'projectItem.project'])->get() as $transfer) {
             $append('transfer-'.$transfer->id, 'Transfer Gudang', $transfer->transfer_code,
                 ($transfer->fromWarehouse?->name ?? '-').' → '.($transfer->toWarehouse?->name ?? '-'),
-                [['product' => $transfer->product?->title, 'quantity' => $transfer->quantity]],
-                match ($transfer->status) { 'pending' => 'preparing', 'completed' => 'delivered', default => $transfer->status }, $transfer->created_at, '/dashboard/stock-transfers');
+                [['product' => $transfer->product?->title, 'quantity' => $transfer->quantity, 'serial_numbers' => $transfer->serial_numbers ?? []]],
+                match ($transfer->status) { 'pending' => 'preparing', 'completed' => 'delivered', default => $transfer->status }, $transfer->created_at, $transfer->projectItem ? '/dashboard/project-investments/'.$transfer->projectItem->project_investment_id : '/dashboard/stock-transfers');
+            $row = $rows->pop();
+            $rows->push($row + ['project_id' => $transfer->projectItem?->project_investment_id]);
+        }
+        foreach (ProjectMaterial::with('project')->whereHas('project', fn ($q) => $q->whereIn('status', ['approved', 'active', 'completed']))->get() as $material) {
+            $append('material-'.$material->id, 'Material Proyek', $material->project->project_code.' / MAT-'.$material->id,
+                $material->project->project_name, [['product' => $material->name, 'quantity' => $material->quantity_planned]],
+                $material->quantity_received >= $material->quantity_planned ? 'delivered' : 'preparing', $material->created_at,
+                '/dashboard/project-investments/'.$material->project_investment_id);
         }
         // Other outgoing stock movements are already durable records. Do not duplicate
         // movements belonging to the source documents displayed above.
@@ -96,8 +104,8 @@ class DeliveryRequestController extends Controller
                 ->map(fn ($file) => collect($file)->except('path')->all())->values()->all();
             if ($fulfillment) {
                 // Sales, RMA and transfers keep their authoritative source status.
-                if (str_starts_with($row['id'], 'stock-') || str_starts_with($row['id'], 'lending-')) {
-                    $row['status'] = $fulfillment->status;
+                if (str_starts_with($row['id'], 'stock-') || str_starts_with($row['id'], 'lending-') || str_starts_with($row['id'], 'material-')) {
+                    if (!str_starts_with($row['id'], 'material-') || $row['status'] !== 'delivered') $row['status'] = $fulfillment->status;
                 }
                 foreach (['courier', 'tracking_number', 'destination', 'notes'] as $field) {
                     $row[$field] = $row[$field] ?? $fulfillment->$field;
@@ -131,7 +139,7 @@ class DeliveryRequestController extends Controller
 
     public function update(Request $request, string $key, bool $statusModal = false)
     {
-        abort_unless(preg_match('/^(sale|lending|rma|transfer|stock)-([1-9][0-9]*)$/', $key, $match), 404);
+        abort_unless(preg_match('/^(sale|lending|rma|transfer|stock|material)-([1-9][0-9]*)$/', $key, $match), 404);
         $data = $request->validate([
             'status' => $statusModal ? 'required|in:preparing,shipped,in_transit,delivered,cancelled' : 'required|in:shipped,delivered',
             'courier' => ($statusModal ? 'nullable' : 'required_if:status,shipped').'|string|max:100',
@@ -148,8 +156,11 @@ class DeliveryRequestController extends Controller
             return DB::transaction(function () use ($request, $key, $data, $type, $id, $statusModal, &$storedPaths) {
                 $model = match ($type) {
                     'sale' => Sale::class, 'lending' => Lending::class, 'rma' => RMAShipment::class,
-                    'transfer' => StockTransfer::class, 'stock' => StockTransaction::class,
+                    'transfer' => StockTransfer::class, 'stock' => StockTransaction::class, 'material' => ProjectMaterial::class,
                 };
+                $candidate = $model::findOrFail($id);
+                if ($type === 'material') $candidate->project()->lockForUpdate()->firstOrFail();
+                if ($type === 'transfer' && $candidate->project_investment_item_id) $candidate->projectItem->project()->lockForUpdate()->firstOrFail();
                 $source = $model::lockForUpdate()->findOrFail($id);
                 if (($type === 'sale' && $source->status === 'cancelled') ||
                     ($type === 'transfer' && $source->status === 'cancelled') ||
@@ -166,9 +177,10 @@ class DeliveryRequestController extends Controller
                     'sale' => $source->delivery?->status ?? 'preparing',
                     'rma' => $source->status === 'pending' ? 'preparing' : $source->status,
                     'transfer' => match ($source->status) { 'pending' => 'preparing', 'completed' => 'delivered', default => $source->status },
+                    'material' => $source->quantity_received >= $source->quantity_planned ? 'delivered' : $fulfillment->status,
                     default => $fulfillment->status,
                 };
-                if (!$statusModal && (($data['status'] === 'shipped' && $status !== 'preparing') ||
+                if ((!$statusModal || $type === 'material') && (($data['status'] === 'shipped' && $status !== 'preparing') ||
                     ($data['status'] === 'delivered' && !in_array($status, ['shipped', 'in_transit'], true)))) {
                     throw new \RuntimeException('Urutan pengiriman harus: disiapkan, dikirim, lalu diterima.');
                 }
@@ -193,6 +205,23 @@ class DeliveryRequestController extends Controller
                         'cancelled' => $controller->cancelTransfer($request, $source),
                         'preparing' => $source->status === 'pending' ? null : throw new \RuntimeException('Transfer yang sudah berjalan tidak dapat kembali ke preparing.'),
                     };
+                }
+                if ($type === 'material') {
+                    $project = $source->project()->lockForUpdate()->firstOrFail();
+                    if (!in_array($project->status, ['approved', 'active'], true)) throw new \RuntimeException('Project is not open for shipment.');
+                    if ($data['status'] === 'in_transit' && !in_array($status, ['preparing', 'shipped', 'in_transit'], true)) throw new \RuntimeException('Invalid shipment transition.');
+                    if ($status === 'delivered' && $data['status'] !== 'delivered') throw new \RuntimeException('Received materials cannot be reverted.');
+                    if ($data['status'] === 'preparing' && $status !== 'preparing') throw new \RuntimeException('Shipment cannot return to preparing.');
+                    if (in_array($data['status'], ['shipped', 'in_transit'], true)) $source->quantity_ordered = $source->quantity_planned;
+                    if ($data['status'] === 'delivered') {
+                        $source->quantity_received = $source->quantity_planned;
+                        $source->actual_delivery_date = now()->toDateString();
+                    }
+                    $source->save();
+                    $source->updateStatus();
+                    ProjectProgressLog::logChange($project->id, 'material', 'shipment', $status, $data['status'],
+                        $source->name.' / '.$source->quantity_planned.' '.$source->unit.' / '.$data['status'],
+                        ['material_id' => $source->id, 'name' => $source->name, 'unit_price' => $source->unit_price, 'total_price' => $source->total_price]);
                 }
                 if ($response && $response->status() >= 400) {
                     throw new \RuntimeException($response->getData()->message ?? 'Pengiriman gagal diproses.');

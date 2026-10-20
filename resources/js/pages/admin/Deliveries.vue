@@ -23,16 +23,32 @@
           </tr></thead>
           <tbody class="divide-y divide-gray-200 bg-white">
             <tr v-for="request in requests.data" :key="request.id">
-              <td class="px-6 py-4"><p class="font-semibold">{{ request.number }}</p><p class="text-xs text-gray-500">{{ $label(request.type) }}</p></td>
-              <td class="px-6 py-4">{{ request.party || '-' }}</td>
-              <td class="px-6 py-4"><p v-for="(item, index) in request.items" :key="index">{{ item.product || $t('ui.productDeleted') }} × {{ item.quantity }}</p></td>
+              <td class="px-6 py-4">
+                <p class="font-semibold">{{ request.number }}</p>
+                <p class="text-xs text-gray-500">{{ $label(request.type) }}</p>
+              </td>
+              <td class="px-6 py-4">
+                {{ request.party || '-' }}
+              </td>
+              <td class="px-6 py-4">
+                <p v-for="(item, index) in request.items" :key="index">
+                  {{ item.product || $t('ui.productDeleted') }} × {{ item.quantity }}
+                </p>
+              </td>
               <td class="px-6 py-4">{{ formatStatus(request.status) }}</td>
               <td class="px-6 py-4 text-right">
-                <button v-if="['preparing', 'shipped', 'in_transit'].includes(request.status)" @click="openRequestModal(request)" class="mr-4 font-semibold text-green-600">{{ request.status === 'preparing' ? $t('ui.processShipment') : $t('ui.confirmReceipt') }}</button>
+                <button @click="printNote(request.id)" :disabled="!!printingNote" class="mr-4 font-medium text-blue-600 disabled:opacity-50">
+                  {{ $t(printingNote === request.id ? 'deliveryNote.loading' : 'deliveryNote.print') }}
+                </button>
+                <button v-if="['preparing', 'shipped', 'in_transit'].includes(request.status)" @click="openRequestModal(request)" class="mr-4 font-semibold text-green-600">
+                  {{ request.status === 'preparing' ? $t('ui.processShipment') : $t('ui.confirmReceipt') }}
+                </button>
                 <router-link :to="request.route" class="text-indigo-600">{{ $t('ui.openTransactions') }}</router-link>
               </td>
             </tr>
-            <tr v-if="!requests.data?.length"><td colspan="5" class="p-6 text-center text-gray-500">{{ $t('ui.noOutgoingItemRequests') }}</td></tr>
+            <tr v-if="!requests.data?.length">
+              <td colspan="5" class="p-6 text-center text-gray-500">{{ $t('ui.noOutgoingItemRequests') }}</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -109,8 +125,9 @@
                 <span v-else class="text-gray-400">-</span>
               </td>
               <td class="px-6 py-4 text-right text-sm">
+                <button @click="printNote(delivery.id)" :disabled="!!printingNote" class="mr-4 font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50">{{ $t(printingNote === delivery.id ? 'deliveryNote.loading' : 'deliveryNote.print') }}</button>
                 <button @click="openStatusModal(delivery)" class="mr-4 font-medium text-indigo-600 hover:text-indigo-800">{{ $t('projectInvestment.materials.status') }}</button>
-                <button @click="openSerialPage(delivery)" :disabled="!delivery.delivery_id && !delivery.id.startsWith('rma-')" class="font-medium text-purple-600 hover:text-purple-800 disabled:opacity-50 disabled:cursor-not-allowed">{{ $t('ui.serialNumber') }}</button>
+                <button @click="openSerialPage(delivery)" :disabled="!delivery.id.startsWith('transfer-') && !delivery.delivery_id && !delivery.id.startsWith('rma-')" class="font-medium text-purple-600 hover:text-purple-800 disabled:opacity-50 disabled:cursor-not-allowed">{{ $t('ui.serialNumber') }}</button>
               </td>
             </tr>
           </tbody>
@@ -188,6 +205,15 @@ import { uiText } from '../../utils/uiText';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../services/api';
+import { printDeliveryNote } from '../../utils/printDeliveryNote';
+
+const printingNote = ref('');
+const printNote = async (key) => {
+  printingNote.value = key;
+  try { await printDeliveryNote(key); }
+  catch (error) { alert(error.message); }
+  finally { printingNote.value = ''; }
+};
 
 const router = useRouter();
 const deliveries = ref({ data: [] });

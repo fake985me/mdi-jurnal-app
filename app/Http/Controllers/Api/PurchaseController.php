@@ -19,12 +19,38 @@ class PurchaseController extends Controller
     public function __construct(private StockSyncService $stockService) {}
     public function index(Request $request)
     {
+        $request->validate([
+            'transaction_type' => 'nullable|in:request,quotation,order,invoice',
+            'status' => 'nullable|in:unpaid,partial,paid,cancelled,recorded',
+            'start_date' => 'nullable|date',
+            'end_date' => ['nullable', 'date', ...($request->filled('start_date') ? ['after_or_equal:start_date'] : [])],
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
         try {
             $query = Purchase::with(['user', 'items.product', 'warehouse', 'payments', 'supplier']);
 
+            if ($request->filled('transaction_type')) {
+                $query->where('transaction_type', $request->transaction_type);
+            }
+
             // Filter by status
-            if ($request->has('status') && !empty($request->status)) {
-                $query->where('status', $request->status);
+            if ($request->status === 'cancelled') {
+                $query->where('status', 'cancelled');
+            } elseif ($request->status === 'recorded') {
+                $query->whereIn('transaction_type', ['request', 'quotation'])->where('status', '!=', 'cancelled');
+            } elseif ($request->filled('status')) {
+                $query->whereIn('transaction_type', ['order', 'invoice'])->where('status', '!=', 'cancelled');
+                $paid = DB::table('payments')->selectRaw('COALESCE(SUM(amount), 0)')
+                    ->whereColumn('payable_id', 'purchases.id')->where('payable_type', Purchase::class)->where('status', 'paid');
+                if ($request->status === 'paid') {
+                    $query->where('total_amount', '>', 0)->where($paid, '>=', DB::raw('purchases.total_amount - 0.01'));
+                } elseif ($request->status === 'partial') {
+                    $query->where(clone $paid, '>', 0)->where($paid, '<', DB::raw('purchases.total_amount - 0.01'));
+                } else {
+                    $query->where(function ($q) use ($paid) {
+                        $q->where($paid, '<=', 0)->orWhere('total_amount', '<=', 0);
+                    });
+                }
             }
 
             // Filter by date range
@@ -48,7 +74,8 @@ class PurchaseController extends Controller
                 });
             }
 
-            $purchases = $query->orderBy('created_at', 'desc')
+            $summary = (clone $query)->reorder()->selectRaw('COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total')->first();
+            $purchases = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')
                 ->paginate($request->per_page ?? 15);
 
             // Append payment summary to each purchase
@@ -62,7 +89,7 @@ class PurchaseController extends Controller
                 return $purchase;
             });
 
-            return response()->json($purchases);
+            return response()->json(array_merge($purchases->toArray(), ['summary' => $summary->only(['count', 'total'])]));
         } catch (\Exception $e) {
             \Log::error('Purchases API Error: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
@@ -88,6 +115,7 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'po_number' => 'required|unique:purchases,po_number',
+            'transaction_type' => 'sometimes|required|in:request,quotation,order,invoice',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_name' => 'required_without:supplier_id|string|max:255',
             'supplier_address' => 'nullable|string',
@@ -120,6 +148,7 @@ class PurchaseController extends Controller
             // Create purchase with status 'unpaid' (payment determines status)
             $purchase = Purchase::create([
                 'po_number' => $validated['po_number'],
+                'transaction_type' => $validated['transaction_type'] ?? 'order',
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'supplier_name' => $supplierName,
                 'supplier_address' => $validated['supplier_address'] ?? null,
@@ -156,18 +185,20 @@ class PurchaseController extends Controller
             $purchase->update(['total_amount' => $totalAmount]);
 
             // Auto-create payment record (unpaid)
-            Payment::create([
-                'payable_type' => Purchase::class,
-                'payable_id' => $purchase->id,
-                'payment_type' => 'full',
-                'amount' => $totalAmount,
-                'payment_date' => $validated['order_date'],
-                'method' => null,
-                'status' => 'unpaid',
-                'reference_number' => $purchase->po_number,
-                'notes' => "Auto-created from Purchase #{$purchase->po_number}",
-                'user_id' => auth()->id(),
-            ]);
+            if (in_array($purchase->transaction_type, ['order', 'invoice'], true)) {
+                Payment::create([
+                    'payable_type' => Purchase::class,
+                    'payable_id' => $purchase->id,
+                    'payment_type' => 'full',
+                    'amount' => $totalAmount,
+                    'payment_date' => $validated['order_date'],
+                    'method' => null,
+                    'status' => 'unpaid',
+                    'reference_number' => $purchase->po_number,
+                    'notes' => "Auto-created from Purchase #{$purchase->po_number}",
+                    'user_id' => auth()->id(),
+                ]);
+            }
 
             DB::commit();
             return response()->json($purchase->load(['items.product', 'user']), 201);

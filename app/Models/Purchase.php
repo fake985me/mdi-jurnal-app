@@ -11,6 +11,7 @@ class Purchase extends Model
 
     protected $fillable = [
         'po_number',
+        'transaction_type',
         'supplier_id',
         'supplier_name',
         'supplier_address',

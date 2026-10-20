@@ -15,6 +15,9 @@ export default defineConfig({
             "@": "/resources/js/",
         },
     },
+    optimizeDeps: {
+        include: ["apexcharts", "vue3-apexcharts"],
+    },
     build: {
         chunkSizeWarningLimit: 1500, // Naikkan batas dari default 500 KB → 1.5MB
         rollupOptions: {

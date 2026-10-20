@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Sale;
 use App\Models\Purchase;
+use App\Models\Expense;
 use App\Models\MsaContract;
 use App\Models\ProjectContract;
 use App\Models\Warehouse;
@@ -23,6 +24,7 @@ class PaymentController extends Controller
         return [
             'sale' => Sale::class,
             'purchase' => Purchase::class,
+            'expense' => Expense::class,
             'msa_contract' => MsaContract::class,
             'project_contract' => ProjectContract::class,
         ];
@@ -225,6 +227,7 @@ class PaymentController extends Controller
     protected function getPayableLabel($payable): string
     {
         if ($payable instanceof Purchase) return $payable->po_number;
+        if ($payable instanceof Expense) return $payable->expense_number;
         if ($payable instanceof Sale) return $payable->invoice_number;
         if ($payable instanceof ProjectContract) return $payable->contract_number;
         if ($payable instanceof MsaContract) return $payable->msa_code;
@@ -291,6 +294,7 @@ class PaymentController extends Controller
     {
         if (!$payable) return '—';
         if ($payable instanceof Purchase) return $payable->supplier_name ?? '—';
+        if ($payable instanceof Expense) return $payable->vendor_name ?? '—';
         if ($payable instanceof Sale) return $payable->customer_name ?? '—';
         if ($payable instanceof ProjectContract) return $payable->project?->project_name ?? '—';
         if ($payable instanceof MsaContract) return $payable->project?->project_name ?? '—';
@@ -315,6 +319,9 @@ class PaymentController extends Controller
 
         try {
             $payable = $this->resolvePayable($validated['payable_type'], $validated['payable_id']);
+            if ($payable instanceof Purchase && in_array($payable->transaction_type, ['request', 'quotation'], true)) {
+                return response()->json(['message' => 'Permintaan dan penawaran pembelian tidak dapat dibayar.'], 422);
+            }
             $payableType = get_class($payable);
             $newStatus = $validated['status'] ?? 'unpaid';
 
@@ -380,6 +387,7 @@ class PaymentController extends Controller
 
     public function update(Request $request, Payment $payment)
     {
+        abort_if($payment->payable_type === Expense::class, 422, 'Manage expense payments through Expenses.');
         $validated = $request->validate([
             'payment_type' => 'nullable|in:dp,full,termin,sharing_profit',
             'amount' => 'nullable|numeric|min:0.01',
@@ -449,6 +457,7 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
+        abort_if($payment->payable_type === Expense::class, 422, 'Manage expense payments through Expenses.');
         DB::beginTransaction();
         try {
             $oldStatus = $payment->status;

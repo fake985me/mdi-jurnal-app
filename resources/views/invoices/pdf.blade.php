@@ -6,103 +6,122 @@
     @vite (['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {
-            font-family: Arial, sans-serif;
-            width: 8.5in;
-            height: 11in;
-            margin: 0 auto;
-            padding: 20px;
-            print-color-adjust: exact;
-            print: {
-                size: A4;
-                margin: 0;
-            }
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #4F46E5;
-            padding-bottom: 20px;
-        }
-        .header h1 {
-            color: #4F46E5;
-            margin: 0;
-            font-size: 28px;
-        }
-        .header p {
-            margin: 5px 0;
-            color: #666;
-        }
-        .invoice-info {
-            margin-bottom: 30px;
-        }
-        .invoice-info table {
-            width: 100%;
-        }
-        .invoice-info td {
-            padding: 5px 0;
-        }
-        .invoice-info .label {
-            font-weight: bold;
-            width: 150px;
-        }
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .items-table th {
-            background-color: #4F46E5;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-        }
-        .items-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #ddd;
-        }
-        .items-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .total-section {
-            margin-top: 30px;
-            text-align: right;
-        }
-        .total-row {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-        .total-row.grand-total {
-            font-size: 20px;
-            font-weight: bold;
-            color: #4F46E5;
-            padding-top: 10px;
-            border-top: 2px solid #4F46E5;
-        }
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
-            @page { size: letter; margin: 0; }
-            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.header {
+  border-bottom: 2px solid #4f46e5;
+}
+
+.header h1 {
+  color: #4f46e5;
+  margin: 0;
+  font-size: 28px;
+}
+
+.header p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.invoice-info {
+  margin-bottom: 30px;
+}
+
+.invoice-info table {
+  width: 100%;
+}
+
+.invoice-info td {
+  padding: 5px 0;
+}
+
+.invoice-info .label {
+  font-weight: bold;
+  width: 150px;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.items-table th {
+  background-color: #4f46e5;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.items-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.items-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.topright {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  font-size: 20px;
+}
+
+.topleft {
+  position: absolute;
+  top: 80px;
+  left: 640px;
+  font-size: 20px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.total-section {
+  margin-top: 30px;
+  text-align: right;
+}
+
+.total-row {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+.total-row.grand-total {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4f46e5;
+  padding-top: 10px;
+  border-top: 2px solid #4f46e5;
+}
+
+.footer {
+  margin-top: 50px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+}
     </style>
 </head>
 <body>
-    <div class="mx-auto bg-white shadow-lg w-204 h-264 p-12 print:w-204 print:h-264 print:p-12 print:shadow-none print:mx-0">
+    <div class="mx-auto bg-white shadow-lg w-204 h-264 p-24 print:w-204 print:h-264 print:p-26 print:shadow-none print:mx-0">
         
         <!-- Invoice Header -->
-        <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; border-bottom: 1px solid #1c398e;">
+        <div class="flex items-center justify-between border-b border-blue-900 p-0" style="margin-bottom: 20px; padding-bottom: -12%; margin-top: -2%;">
             <div>
               <!-- Your Logo Perusahaan (Optional) -->
-              <img src="./public/assets/static/kop/header mdi kiri.png" alt="Logo Perusahaan" class="flex items-start justify-between relative w-28 " style="margin-left: 0px; margin-right: 24.5%;">
-              <img src="./public/assets/static/kop/header mdi kanan.png" alt="Logo Perusahaan" class="flex items-end justify-between relative w-72" style="margin-bottom: 10px; width: 450px;">
+              <img src="./public/assets/static/kop/header mdi kiri.png" alt="Logo Perusahaan" class="flex items-start justify-between relative w-26" style="top: -2px; margin-left: 0px; margin-right: 24.5%;">
+              <img src="./public/assets/static/kop/header mdi kanan.png" alt="Logo Perusahaan" class="flex items-end justify-between relative" style="top: 144px; right: 645px; position: absolute; width: 365px;">
             </div>
         </div>
 

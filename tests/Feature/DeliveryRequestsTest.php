@@ -10,6 +10,85 @@ use Tests\TestCase;
 
 class DeliveryRequestsTest extends TestCase
 {
+    public function test_delivery_note_endpoint_requires_login_and_returns_vue_print_data(): void
+    {
+        $this->getJson('/api/delivery-requests/sale-1/print-data')->assertUnauthorized();
+        DB::table('sales')->insert(['id' => 1, 'invoice_number' => 'INV-HTTP', 'status' => 'pending']);
+        $this->actingAs(new \App\Models\User(['role' => 'staff']), 'sanctum');
+        $this->getJson('/api/delivery-requests/sale-1/print-data')->assertOk()
+            ->assertJsonPath('reference', 'INV-HTTP')->assertJsonPath('number', 'DN-SALE-000001');
+        $this->getJson('/api/delivery-requests/invalid-1/print-data')->assertNotFound();
+        $this->getJson('/api/delivery-requests/sale-999/print-data')->assertNotFound();
+        $this->assertSame(0, DB::table('deliveries')->count());
+    }
+
+    public function test_delivery_note_returns_actual_shipment_serials_and_customer_text(): void
+    {
+        DB::table('products')->insert(['id' => 1, 'title' => 'Router', 'sku' => 'RTR-1']);
+        DB::table('sales')->insert(['id' => 1, 'invoice_number' => 'INV-PRINT', 'po_number' => 'PO-PRINT', 'status' => 'completed',
+            'customer_name' => '<script>alert(1)</script>', 'customer_address' => 'Alamat penerima', 'customer_phone' => '081234']);
+        DB::table('sale_items')->insert(['sale_id' => 1, 'product_id' => 1, 'quantity' => 2]);
+        DB::table('deliveries')->insert(['id' => 1, 'sale_id' => 1, 'status' => 'shipped', 'tracking_number' => 'RESI-1',
+            'courier' => 'Kurir MDI', 'destination' => 'Alamat tujuan pengiriman', 'shipped_date' => '2026-10-19']);
+        foreach (['SN-001', 'SN-002'] as $serial) {
+            DB::table('delivery_items')->insert(['delivery_id' => 1, 'product_id' => 1, 'quantity' => 1, 'serial_number' => $serial]);
+        }
+        DB::table('delivery_fulfillments')->insert(['request_key' => 'sale-1', 'notes' => 'Jangan dibanting']);
+        $note = app(\App\Services\DeliveryNoteService::class)->data('sale-1');
+        $this->assertSame(2, $note['totalQuantity']);
+        $this->assertSame(['SN-001', 'SN-002'], array_column($note['items'], 'serial'));
+        $this->assertSame('Alamat tujuan pengiriman', $note['destination']);
+        $this->assertSame('<script>alert(1)</script>', $note['recipient']);
+        $this->assertSame('INV-PRINT', $note['invoice']);
+        $this->assertSame('PO-PRINT', $note['po']);
+        $this->assertSame('RESI-1', $note['tracking']);
+        $this->assertSame('Kurir MDI', $note['courier']);
+        $this->assertSame('Jangan dibanting', $note['notes']);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+    }
+
+    public function test_delivery_note_keeps_unserialized_goods_and_supports_rma_serial_arrays(): void
+    {
+        DB::table('products')->insert(['id' => 1, 'title' => 'Router']);
+        DB::table('sales')->insert(['id' => 1, 'invoice_number' => 'INV-1', 'status' => 'pending']);
+        DB::table('sale_items')->insert(['sale_id' => 1, 'product_id' => 1, 'quantity' => 5]);
+        $service = app(\App\Services\DeliveryNoteService::class);
+        $note = $service->data('sale-1');
+        $this->assertSame(5, $note['totalQuantity']);
+        $this->assertNull($note['items'][0]['serial']);
+        $this->assertSame(0, DB::table('deliveries')->count());
+        DB::table('rma_shipments')->insert(['id' => 1, 'product_id' => 1, 'quantity' => 3, 'shipment_code' => 'RMA-SJ',
+            'serial_numbers' => json_encode(['RMA-SN-A', 'RMA-SN-B']), 'recipient_name' => 'Penerima RMA', 'recipient_address' => 'Bandung']);
+        $note = $service->data('rma-1');
+        $this->assertSame(3, $note['totalQuantity']);
+        $this->assertSame(['RMA-SN-A', 'RMA-SN-B', null], array_column($note['items'], 'serial'));
+        $this->assertSame('Penerima RMA', $note['recipient']);
+        $this->assertSame('Bandung', $note['destination']);
+    }
+
+    public function test_delivery_note_supports_other_outgoing_sources_and_fulfillment_details(): void
+    {
+        DB::table('products')->insert(['id' => 1, 'title' => 'Router']);
+        DB::table('lendings')->insert(['id' => 1, 'product_id' => 1, 'quantity' => 2, 'lending_code' => 'LND-PRINT', 'borrower_name' => 'Peminjam']);
+        DB::table('warehouses')->insert([['id' => 1, 'name' => 'Gudang Asal'], ['id' => 2, 'name' => 'Gudang Tujuan']]);
+        DB::table('stock_transfers')->insert(['id' => 1, 'product_id' => 1, 'quantity' => 4, 'transfer_code' => 'TRF-PRINT', 'from_warehouse_id' => 1, 'to_warehouse_id' => 2]);
+        DB::table('stock_transactions')->insert(['id' => 1, 'product_id' => 1, 'quantity' => 1, 'transaction_type' => 'out', 'reference_type' => 'manual']);
+        DB::table('delivery_fulfillments')->insert(['request_key' => 'lending-1', 'destination' => 'Surabaya', 'tracking_number' => 'RESI-LND']);
+        $service = app(\App\Services\DeliveryNoteService::class);
+        $this->assertSame('RESI-LND', $service->data('lending-1')['tracking']);
+        $this->assertSame('Surabaya', $service->data('lending-1')['destination']);
+        $this->assertSame('Gudang Tujuan', $service->data('transfer-1')['recipient']);
+        $this->assertSame('Gudang Asal', $service->data('transfer-1')['warehouse']);
+        $this->assertSame(1, $service->data('stock-1')['totalQuantity']);
+    }
+
+    public function test_delivery_note_rejects_stock_adjustments(): void
+    {
+        DB::table('stock_transactions')->insert(['id' => 1, 'transaction_type' => 'out', 'reference_type' => 'adjustment']);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        app(\App\Services\DeliveryNoteService::class)->data('stock-1');
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,13 +112,14 @@ class DeliveryRequestsTest extends TestCase
             'warranties' => ['sale_id', 'product_id', 'serial_number', 'status', 'warranty_period_months', 'start_date', 'deleted_at', 'end_date'],
             'delivery_items' => ['delivery_id', 'product_id', 'quantity', 'serial_number'],
             'returned_items' => ['source_key', 'source_type', 'source_id', 'source_code', 'product_id', 'serial_number', 'quantity', 'available_quantity', 'condition', 'book_value', 'notes', 'inspected_by', 'inspected_at'],
-            'project_investments' => ['project_code', 'project_name', 'client_name', 'warehouse_id', 'status', 'total_value', 'delivery_progress', 'installation_progress', 'expected_end_date', 'actual_end_date'],
+            'project_investments' => ['project_code', 'project_name', 'client_name', 'warehouse_id', 'status', 'total_value', 'delivery_progress', 'installation_progress', 'expected_end_date', 'actual_end_date', 'approved_by', 'approved_at'],
             'project_investment_items' => ['project_investment_id', 'product_id', 'quantity', 'unit_price', 'total_price', 'stock_deducted', 'serial_numbers', 'returned_item_id', 'notes'],
-            'project_materials' => ['project_investment_id', 'total_price'],
-            'project_item_changes' => ['project_investment_id', 'project_investment_item_id', 'type', 'quantity', 'old_serial_numbers', 'new_serial_numbers', 'notes', 'user_id'],
+            'project_materials' => ['project_investment_id', 'name', 'unit', 'specification', 'quantity_planned', 'quantity_ordered', 'quantity_received', 'quantity_installed', 'unit_price', 'total_price', 'status', 'expected_delivery_date', 'actual_delivery_date', 'notes', 'sort_order'],
+            'project_progress_logs' => ['project_investment_id', 'type', 'field_name', 'old_value', 'new_value', 'notes', 'updated_by', 'details'],
+            'project_item_changes' => ['project_investment_id', 'project_investment_item_id', 'type', 'quantity', 'old_serial_numbers', 'new_serial_numbers', 'notes', 'user_id', 'details'],
             'msa_projects' => ['msa_code', 'project_investment_id', 'product_id', 'quantity', 'serial_numbers', 'replacement_serial_numbers', 'issue_type', 'issue_description', 'status', 'reported_date', 'resolved_date', 'resolution', 'condition', 'user_id'],
             'users' => ['name'],
-            'stock_transfers' => ['product_id', 'quantity', 'status', 'transfer_code', 'from_warehouse_id', 'to_warehouse_id'],
+            'stock_transfers' => ['product_id', 'quantity', 'status', 'transfer_code', 'from_warehouse_id', 'to_warehouse_id', 'project_investment_item_id', 'returned_item_id', 'project_action', 'serial_numbers', 'notes', 'transferred_by', 'received_by', 'transferred_at', 'received_at'],
             'warehouses' => ['name', 'is_default'],
             'stock_transactions' => ['product_id', 'quantity', 'transaction_type', 'reference_type', 'reference_id', 'notes', 'user_id'],
         ] as $table => $columns) {
@@ -500,14 +580,280 @@ class DeliveryRequestsTest extends TestCase
         $this->assertSame(0, DB::table('stock_transactions')->count());
     }
 
-    public function test_project_addition_allocates_regular_stock_and_updates_total_and_history(): void
+    private function seedProjectShipment(): void
+    {
+        DB::table('products')->insert(['id' => 1, 'title' => 'Router', 'stock' => 10]);
+        DB::table('warehouses')->insert([['id' => 1, 'name' => 'Office', 'is_default' => 1], ['id' => 2, 'name' => 'Project', 'is_default' => 0]]);
+        DB::table('project_investments')->insert(['id' => 1, 'project_code' => 'PRJ-MANUAL', 'project_name' => 'Manual project', 'status' => 'active', 'warehouse_id' => 2]);
+    }
+
+    private function requestProjectGoods(): \App\Models\StockTransfer
+    {
+        $response = app(\App\Http\Controllers\Api\ProjectItemController::class)->store(Request::create('/', 'POST',
+            ['product_id' => 1, 'quantity' => 2, 'unit_price' => 100, 'serial_numbers' => ['MAN-1', 'MAN-2']]), 1);
+        $this->assertSame(201, $response->status(), $response->getContent());
+        return \App\Models\StockTransfer::firstOrFail();
+    }
+
+    private function seedLegacyProjectAllocation(): \App\Models\StockTransfer
+    {
+        $this->seedProjectShipment();
+        DB::table('users')->insert(['id' => 1, 'name' => 'Operator']);
+        $this->actingAs(\App\Models\User::findOrFail(1));
+        DB::table('products')->where('id', 1)->update(['stock' => 300]);
+        DB::table('current_stocks')->insert([
+            ['product_id' => 1, 'warehouse_id' => 1, 'quantity' => 300],
+            ['product_id' => 1, 'warehouse_id' => 2, 'quantity' => 50],
+        ]);
+        \App\Models\ProjectInvestmentItem::create(['id' => 1, 'project_investment_id' => 1, 'product_id' => 1,
+            'quantity' => 50, 'unit_price' => 500000, 'total_price' => 25000000, 'stock_deducted' => true]);
+        return \App\Models\StockTransfer::create(['product_id' => 1, 'quantity' => 50, 'from_warehouse_id' => 1,
+            'to_warehouse_id' => 2, 'status' => 'completed', 'transferred_by' => 1, 'received_by' => 1,
+            'transferred_at' => now(), 'received_at' => now(), 'notes' => 'Project allocation: PRJ-MANUAL']);
+    }
+
+    public function test_verified_undispatched_legacy_transfer_is_corrected_once_and_resumes_manual_shipping(): void
+    {
+        $transfer = $this->seedLegacyProjectAllocation();
+        DB::table('delivery_fulfillments')->insert(['request_key' => 'transfer-'.$transfer->id,
+            'status' => 'delivered', 'shipped_at' => now(), 'delivered_at' => now(), 'notes' => 'Original record']);
+        $service = app(\App\Services\LegacyProjectTransferCorrectionService::class);
+        $corrected = $service->resetUndispatched($transfer->id, 1, 'Owner verified: goods not dispatched');
+        $service->resetUndispatched($transfer->id, 1, 'Retry');
+        $this->assertSame('pending', $corrected->status);
+        $this->assertNull($corrected->received_at);
+        $this->assertNull($corrected->transferred_at);
+        $this->assertEquals(1, $corrected->project_investment_item_id);
+        $this->assertEquals(350, DB::table('products')->value('stock'));
+        $this->assertEquals(350, DB::table('current_stocks')->where('warehouse_id', 1)->value('quantity'));
+        $this->assertEquals(0, DB::table('current_stocks')->where('warehouse_id', 2)->value('quantity'));
+        $this->assertFalse(\App\Models\ProjectInvestmentItem::first()->stock_deducted);
+        $this->assertSame(2, DB::table('stock_transactions')->count());
+        $log = \App\Models\ProjectItemChange::where('type', 'shipment_correction')->firstOrFail();
+        $this->assertSame('completed', $log->details['before']['transfer']['status']);
+        $this->assertSame('pending', $log->details['after']['transfer']['status']);
+        $this->assertEquals(25000000, \App\Models\ProjectInvestmentItem::first()->total_price);
+        $rows = (new DeliveryRequestController)->index(Request::create('/'))->getData(true);
+        $this->assertSame(1, $rows['total']);
+        $this->assertSame('preparing', $rows['data'][0]['status']);
+        $this->assertSame('Original record', DB::table('delivery_fulfillments')->value('notes'));
+        $this->assertNull(DB::table('delivery_fulfillments')->value('delivered_at'));
+        $shipping = app(\App\Services\ProjectStockTransferService::class);
+        $shipping->transition($corrected, 'in_transit'); $shipping->transition($corrected, 'completed');
+        $service->resetUndispatched($transfer->id, 1, 'Retry after real dispatch');
+        $this->assertEquals(300, DB::table('products')->value('stock'));
+        $this->assertEquals(50, DB::table('current_stocks')->where('warehouse_id', 2)->value('quantity'));
+        $this->assertSame(1, \App\Models\ProjectItemChange::where('type', 'shipment_correction')->count());
+    }
+
+    public function test_legacy_correction_rejects_changed_inventory_without_partial_writes(): void
+    {
+        $transfer = $this->seedLegacyProjectAllocation();
+        DB::table('current_stocks')->where('warehouse_id', 2)->update(['quantity' => 49]);
+        try {
+            app(\App\Services\LegacyProjectTransferCorrectionService::class)->resetUndispatched($transfer->id, 1, 'Verified not dispatched');
+            $this->fail('Changed warehouse quantity must require reconciliation');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('balances', $e->getMessage());
+        }
+        $this->assertEquals(300, DB::table('products')->value('stock'));
+        $this->assertSame('completed', $transfer->fresh()->status);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+        $this->assertSame(0, DB::table('project_item_changes')->count());
+    }
+
+    public function test_transfer_serial_entry_syncs_project_and_delivery_note_without_moving_stock(): void
+    {
+        $this->seedProjectShipment(); $transfer = $this->requestProjectGoods();
+        $this->actingAs(new \App\Models\User(['role' => 'staff']), 'sanctum');
+        $url = '/api/stock-transfers/'.$transfer->id.'/serials';
+        $this->postJson($url, ['serial_numbers' => ['  UNIT-001 ', 'UNIT-002']])->assertOk()
+            ->assertJsonPath('serial_numbers', ['UNIT-001', 'UNIT-002']);
+        $this->assertSame(['UNIT-001', 'UNIT-002'], \App\Models\ProjectInvestmentItem::first()->serial_numbers);
+        $this->assertSame(['UNIT-001', 'UNIT-002'], array_column(app(\App\Services\DeliveryNoteService::class)->data('transfer-'.$transfer->id)['items'], 'serial'));
+        $change = \App\Models\ProjectItemChange::where('type', 'serials')->firstOrFail();
+        $this->assertSame(['MAN-1', 'MAN-2'], $change->old_serial_numbers);
+        $this->assertSame(['UNIT-001', 'UNIT-002'], $change->new_serial_numbers);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->postJson($url, ['serial_numbers' => ['UNIT-001']])->assertUnprocessable();
+        $this->postJson($url, ['serial_numbers' => ['UNIT-001', ' unit-001 ']])->assertUnprocessable();
+        $this->assertSame(['UNIT-001', 'UNIT-002'], $transfer->fresh()->serial_numbers);
+        app(\App\Services\ProjectStockTransferService::class)->transition($transfer, 'in_transit');
+        $this->postJson($url, ['serial_numbers' => ['NEW-001', 'NEW-002']])->assertUnprocessable();
+        $this->assertSame(['UNIT-001', 'UNIT-002'], \App\Models\ProjectInvestmentItem::first()->serial_numbers);
+    }
+
+    public function test_transfer_serial_entry_rejects_other_project_item_serials_and_viewer_writes(): void
+    {
+        $this->seedProjectShipment(); $transfer = $this->requestProjectGoods();
+        \App\Models\ProjectInvestmentItem::create(['project_investment_id' => 1, 'product_id' => 1, 'quantity' => 1, 'serial_numbers' => ['OTHER-1']]);
+        $url = '/api/stock-transfers/'.$transfer->id.'/serials';
+        $this->actingAs(new \App\Models\User(['role' => 'staff']), 'sanctum');
+        $this->postJson($url, ['serial_numbers' => ['other-1', 'NEW-2']])->assertUnprocessable();
+        $this->assertSame(['MAN-1', 'MAN-2'], $transfer->fresh()->serial_numbers);
+        $this->actingAs(new \App\Models\User(['role' => 'viewer']), 'sanctum');
+        $this->postJson($url, ['serial_numbers' => ['NEW-1', 'NEW-2']])->assertForbidden();
+    }
+
+    public function test_regular_warehouse_transfer_supports_serial_entry_without_a_project(): void
+    {
+        $this->seedProjectShipment();
+        $transfer = \App\Models\StockTransfer::create(['product_id' => 1, 'quantity' => 1, 'from_warehouse_id' => 1, 'to_warehouse_id' => 2, 'status' => 'pending']);
+        $this->actingAs(new \App\Models\User(['role' => 'staff']), 'sanctum');
+        $this->postJson('/api/stock-transfers/'.$transfer->id.'/serials', ['serial_numbers' => ['GENERAL-1']])->assertOk()->assertJsonPath('serial_numbers', ['GENERAL-1']);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+    }
+
+    public function test_project_stock_moves_only_on_manual_dispatch_and_receipt_once(): void
+    {
+        $this->seedProjectShipment();
+        $transfer = $this->requestProjectGoods();
+        $this->assertSame('pending', $transfer->status);
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+        $controller = new DeliveryRequestController;
+        $key = 'transfer-'.$transfer->id;
+        $this->assertSame(422, $controller->updateStatus(Request::create('/', 'PUT', ['status' => 'delivered']), $key)->status());
+        $shipping = Request::create('/', 'PUT', ['status' => 'shipped', 'courier' => 'Internal', 'tracking_number' => 'SJ-1', 'destination' => 'Project']);
+        $this->assertSame(200, $controller->update($shipping, $key)->status());
+        $this->assertEquals(8, DB::table('products')->value('stock'));
+        $this->assertEquals(0, DB::table('current_stocks')->where('warehouse_id', 2)->sum('quantity'));
+        // Repeated status confirmation must not change stock twice.
+        $this->assertSame(200, $controller->updateStatus($shipping, $key)->status());
+        $this->assertSame(1, DB::table('stock_transactions')->count());
+        $receive = Request::create('/', 'PUT', ['status' => 'delivered']);
+        $this->assertSame(200, $controller->update($receive, $key)->status());
+        $this->assertSame(200, $controller->updateStatus($receive, $key)->status());
+        $this->assertEquals(2, DB::table('current_stocks')->where('warehouse_id', 2)->value('quantity'));
+        $this->assertEquals(8, DB::table('products')->value('stock'));
+        $this->assertSame(2, DB::table('stock_transactions')->count());
+        $this->assertTrue(\App\Models\ProjectInvestmentItem::first()->stock_deducted);
+        $note = app(\App\Services\DeliveryNoteService::class)->data($key);
+        $this->assertSame(['MAN-1', 'MAN-2'], array_column($note['items'], 'serial'));
+        $this->assertSame(1, $controller->index(Request::create('/'))->getData(true)['total']);
+    }
+
+    public function test_approval_only_queues_shipments_without_moving_stock(): void
+    {
+        $this->seedProjectShipment();
+        DB::table('project_investments')->where('id', 1)->update(['status' => 'pending']);
+        \App\Models\ProjectInvestmentItem::create(['project_investment_id' => 1, 'product_id' => 1, 'quantity' => 3, 'unit_price' => 50, 'total_price' => 150, 'stock_deducted' => false]);
+        $controller = app(\App\Http\Controllers\Api\ProjectInvestmentController::class);
+        $response = $controller->approve(1);
+        $this->assertSame(200, $response->status(), $response->getContent());
+        $this->assertSame('pending', \App\Models\StockTransfer::first()->status);
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+        $this->assertSame(422, $controller->approve(1)->status());
+        $this->assertSame(1, DB::table('stock_transfers')->count());
+        $this->assertSame(422, $controller->complete(1)->status());
+    }
+
+    public function test_recovered_stock_leaves_pool_only_when_dispatched_and_can_be_returned_manually(): void
+    {
+        $this->seedProjectShipment();
+        $returned = \App\Models\ReturnedItem::create(['source_key' => 'recovered-1', 'product_id' => 1, 'quantity' => 1, 'available_quantity' => 1, 'serial_number' => 'REC-1', 'condition' => 'working']);
+        $controller = app(\App\Http\Controllers\Api\ProjectItemController::class);
+        $response = $controller->store(Request::create('/', 'POST', ['product_id' => 1, 'quantity' => 1, 'unit_price' => 500, 'returned_item_id' => $returned->id]), 1);
+        $this->assertSame(201, $response->status(), $response->getContent());
+        $this->assertSame(1, $returned->fresh()->available_quantity);
+        $transfer = \App\Models\StockTransfer::first();
+        $service = app(\App\Services\ProjectStockTransferService::class);
+        $service->transition($transfer, 'in_transit');
+        $this->assertSame(0, $returned->fresh()->available_quantity);
+        $service->transition($transfer, 'completed');
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+        app(\App\Http\Controllers\Api\ProjectInvestmentController::class)->cancel(1);
+        $return = \App\Models\StockTransfer::where('project_action', 'return')->firstOrFail();
+        $this->assertSame(0, $returned->fresh()->available_quantity);
+        $service->transition($return, 'in_transit'); $service->transition($return, 'completed');
+        $this->assertSame(1, $returned->fresh()->available_quantity);
+    }
+
+    public function test_cancelled_project_dispatch_restores_source_only_once(): void
+    {
+        $this->seedProjectShipment(); $transfer = $this->requestProjectGoods();
+        $service = app(\App\Services\ProjectStockTransferService::class);
+        $service->transition($transfer, 'in_transit');
+        $service->transition($transfer, 'cancelled');
+        $service->transition($transfer, 'cancelled');
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->assertEquals(0, DB::table('current_stocks')->where('warehouse_id', 2)->sum('quantity'));
+        $this->assertSame(2, DB::table('stock_transactions')->count());
+        $this->assertFalse(\App\Models\ProjectInvestmentItem::first()->stock_deducted);
+    }
+
+    public function test_cancelling_received_project_requires_manual_return(): void
+    {
+        $this->seedProjectShipment(); $transfer = $this->requestProjectGoods();
+        $service = app(\App\Services\ProjectStockTransferService::class);
+        $service->transition($transfer, 'in_transit'); $service->transition($transfer, 'completed');
+        $controller = app(\App\Http\Controllers\Api\ProjectInvestmentController::class);
+        $response = $controller->cancel(1);
+        $this->assertSame(200, $response->status(), $response->getContent());
+        $return = \App\Models\StockTransfer::where('project_action', 'return')->firstOrFail();
+        $this->assertSame('pending', $return->status);
+        $this->assertEquals(8, DB::table('products')->value('stock'));
+        $this->assertEquals(2, DB::table('current_stocks')->where('warehouse_id', 2)->value('quantity'));
+        $service->transition($return, 'in_transit'); $service->transition($return, 'completed');
+        $this->assertEquals(10, DB::table('products')->value('stock'));
+        $this->assertEquals(0, DB::table('current_stocks')->where('warehouse_id', 2)->value('quantity'));
+        $this->assertFalse(\App\Models\ProjectInvestmentItem::first()->stock_deducted);
+    }
+
+    public function test_project_material_prices_audit_and_manual_receipt(): void
+    {
+        $this->seedProjectShipment();
+        $this->actingAs(new \App\Models\User(['role' => 'staff']), 'sanctum');
+        $base = '/api/project-investments/1/materials';
+        $this->postJson($base, ['name' => 'Rack', 'quantity_planned' => 2])->assertUnprocessable()->assertJsonValidationErrors('unit_price');
+        $response = $this->postJson($base, ['name' => 'Rack', 'quantity_planned' => 2, 'unit_price' => 150, 'unit' => 'pcs'])->assertCreated();
+        $id = $response->json('id');
+        $this->assertEquals(300, DB::table('project_investments')->value('total_value'));
+        $this->putJson('/api/project-materials/'.$id, ['unit_price' => 175])->assertOk();
+        $this->assertEquals(350, DB::table('project_investments')->value('total_value'));
+        $details = json_decode(DB::table('project_progress_logs')->orderByDesc('id')->value('details'), true);
+        $this->assertEquals(150, $details['before']['unit_price']);
+        $this->assertEquals(175, $details['after']['unit_price']);
+        $this->postJson('/api/project-materials/'.$id.'/quantities', ['quantity_received' => 2])->assertUnprocessable();
+        $this->postJson('/api/project-materials/'.$id.'/quantities', ['quantity_installed' => 1])->assertUnprocessable();
+        $controller = new DeliveryRequestController; $key = 'material-'.$id;
+        $this->assertSame($key, $controller->index(Request::create('/'))->getData(true)['data'][0]['id']);
+        $this->assertSame(422, $controller->updateStatus(Request::create('/', 'PUT', ['status' => 'delivered']), $key)->status());
+        $ship = Request::create('/', 'PUT', ['status' => 'shipped', 'courier' => 'Internal', 'tracking_number' => 'SJ-MAT', 'destination' => 'Project']);
+        $this->assertSame(200, $controller->update($ship, $key)->status());
+        $receive = $controller->update(Request::create('/', 'PUT', ['status' => 'delivered']), $key);
+        $this->assertSame(200, $receive->status(), $receive->getContent());
+        $this->assertEquals(2, DB::table('project_materials')->value('quantity_received'));
+        $this->assertNotNull(DB::table('project_materials')->value('actual_delivery_date'));
+        $this->assertSame(422, $controller->updateStatus(Request::create('/', 'PUT', ['status' => 'preparing']), $key)->status());
+        $this->postJson('/api/project-materials/'.$id.'/quantities', ['quantity_installed' => 2])->assertOk()->assertJsonPath('status', 'installed');
+        $this->deleteJson('/api/project-materials/'.$id)->assertUnprocessable();
+        $this->assertSame('Rack', app(\App\Services\DeliveryNoteService::class)->data($key)['items'][0]['product']);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+    }
+
+    public function test_item_price_correction_records_previous_value_without_stock_movement(): void
+    {
+        $this->seedProjectShipment(); $this->requestProjectGoods();
+        $controller = app(\App\Http\Controllers\Api\ProjectItemController::class);
+        $item = \App\Models\ProjectInvestmentItem::firstOrFail();
+        $response = $controller->valuation(Request::create('/', 'PUT', ['unit_price' => 250, 'notes' => 'Actual purchase cost']), 1, $item->id);
+        $this->assertSame(200, $response->status());
+        $this->assertEquals(500, DB::table('project_investments')->value('total_value'));
+        $change = \App\Models\ProjectItemChange::where('type', 'valuation')->firstOrFail();
+        $this->assertEquals(100, $change->details['before']['unit_price']);
+        $this->assertEquals(500, $change->details['total_price']);
+        $this->assertSame(0, DB::table('stock_transactions')->count());
+    }
+
+    public function test_project_addition_requests_manual_shipment_and_updates_total_and_history(): void
     {
         DB::table('products')->insert(['id' => 1, 'title' => 'Router']);
         DB::table('warehouses')->insert(['id' => 1, 'is_default' => 1]);
         DB::table('project_investments')->insert(['id' => 1, 'status' => 'active', 'warehouse_id' => 2, 'project_code' => 'PRJ-1']);
-        $transfer = \Mockery::mock(\App\Services\StockTransferService::class);
-        $transfer->shouldReceive('transferNow')->once()->with(1, 2, 1, 2, \Mockery::type('string'), null)->andReturn(new \App\Models\StockTransfer);
-        $this->app->instance(\App\Services\StockTransferService::class, $transfer);
         $controller = new \App\Http\Controllers\Api\ProjectItemController;
         $response = $controller->store(Request::create('/api/project-investments/1/items', 'POST', ['product_id' => 1, 'quantity' => 2, 'unit_price' => 100, 'serial_numbers' => ['SN-1', 'SN-2']]), 1);
         $this->assertSame(201, $response->status(), $response->getContent());
@@ -522,7 +868,8 @@ class DeliveryRequestsTest extends TestCase
     public function test_recovered_project_allocation_has_no_value_and_cannot_be_used_twice(): void
     {
         DB::table('products')->insert(['id' => 1, 'title' => 'Router', 'stock' => 10]);
-        DB::table('project_investments')->insert(['id' => 1, 'status' => 'active', 'project_code' => 'PRJ-1']);
+        DB::table('project_investments')->insert(['id' => 1, 'status' => 'active', 'warehouse_id' => 2, 'project_code' => 'PRJ-1']);
+        DB::table('warehouses')->insert(['id' => 1, 'is_default' => 1]);
         $returned = \App\Models\ReturnedItem::create(['source_key' => 'rma-1-0', 'product_id' => 1, 'serial_number' => 'REC-1', 'condition' => 'working', 'quantity' => 1, 'available_quantity' => 1]);
         $controller = new \App\Http\Controllers\Api\ProjectItemController;
         $request = Request::create('/api/project-investments/1/items', 'POST', ['product_id' => 1, 'quantity' => 1, 'unit_price' => 999, 'returned_item_id' => $returned->id]);
@@ -545,9 +892,6 @@ class DeliveryRequestsTest extends TestCase
         $stock = \Mockery::mock(\App\Services\StockSyncService::class);
         $stock->shouldReceive('deductStock')->once()->with(1, 1, 'project_defective_return', 1, 'Rusak', '2')->andReturn(true);
         $this->app->instance(\App\Services\StockSyncService::class, $stock);
-        $transfer = \Mockery::mock(\App\Services\StockTransferService::class);
-        $transfer->shouldReceive('transferNow')->once()->andReturn(new \App\Models\StockTransfer);
-        $this->app->instance(\App\Services\StockTransferService::class, $transfer);
         $controller = new \App\Http\Controllers\Api\ProjectItemController;
         $request = Request::create('/api/project-investments/1/items/1/replace', 'POST', ['old_serial_numbers' => ['OLD-1'], 'new_serial_numbers' => ['NEW-1'], 'notes' => 'Rusak']);
         $response = $controller->replace($request, 1, $item->id);
@@ -593,11 +937,12 @@ class DeliveryRequestsTest extends TestCase
     public function test_msa_replacement_updates_project_serials_and_registers_old_units_without_duplicate_stock(): void
     {
         DB::table('products')->insert(['id' => 1, 'title' => 'Router']);
-        DB::table('project_investments')->insert(['id' => 1, 'status' => 'active']);
+        DB::table('project_investments')->insert(['id' => 1, 'status' => 'active', 'warehouse_id' => 2]);
+        DB::table('warehouses')->insert(['id' => 1, 'is_default' => 1]);
         $item = \App\Models\ProjectInvestmentItem::create(['project_investment_id' => 1, 'product_id' => 1, 'quantity' => 1, 'serial_numbers' => ['MSA-OLD']]);
         DB::table('msa_projects')->insert(['id' => 1, 'project_investment_id' => 1, 'product_id' => 1, 'quantity' => 1, 'msa_code' => 'MSA-1', 'status' => 'in_repair']);
         $stock = \Mockery::mock(\App\Services\StockSyncService::class);
-        $stock->shouldReceive('deductStock')->once()->with(1, 1, 'msa_replacement', 1, \Mockery::type('string'))->andReturn(true);
+        $stock->shouldReceive('deductStock')->once()->with(1, 1, 'project_defective_return', '1', 'Rusak', '2')->andReturn(true);
         $controller = new \App\Http\Controllers\Api\MSAProjectController($stock);
         $request = Request::create('/api/msa-projects/1/replace', 'POST', ['condition' => 'Rusak', 'serial_numbers' => ['MSA-OLD'], 'replacement_serial_numbers' => ['MSA-NEW']]);
         $response = $controller->replaceItem($request, 1);
@@ -637,8 +982,8 @@ class DeliveryRequestsTest extends TestCase
         }
         $this->assertSame('Pelanggan Baru', DB::table('sales')->value('customer_name'));
         $this->assertSame('PO-REF-15', DB::table('sales')->value('po_number'));
-        $print = $controller->printInvoice(1);
-        $this->assertStringContainsString('PO-REF-15', $print->getContent());
+        $printData = app(\App\Services\DeliveryNoteService::class)->data('sale-1');
+        $this->assertSame('PO-REF-15', $printData['po']);
         $this->assertSame('2026-11-15', DB::table('sales')->value('due_date'));
         $this->assertSame('Memo edit', DB::table('sales')->value('memo'));
         $this->assertSame('SJ-EDIT', DB::table('deliveries')->value('tracking_number'));

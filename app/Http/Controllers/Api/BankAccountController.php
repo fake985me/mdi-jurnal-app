@@ -173,7 +173,7 @@ class BankAccountController extends Controller
                 ->sum('amount');
 
             $totalOutgoing = (clone $paidPayments)
-                ->where('payable_type', \App\Models\Purchase::class)
+                ->whereIn('payable_type', [\App\Models\Purchase::class, \App\Models\Expense::class])
                 ->sum('amount');
 
             return [

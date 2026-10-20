@@ -38,4 +38,6 @@ class ProjectInvestmentItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function transfers() { return $this->hasMany(StockTransfer::class); }
 }

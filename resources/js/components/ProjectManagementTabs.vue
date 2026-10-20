@@ -98,11 +98,14 @@
             <div class="p-2 bg-purple-50 rounded"><span class="font-bold text-purple-600">{{ materialStats.installed || 0 }}</span> {{ $t('projectInvestment.materials.statusInstalled') }}</div>
           </div>
 
+          <router-link to="/dashboard/deliveries" class="block text-sm text-indigo-600">{{ $t('projectShipping.manualHint') }}</router-link>
           <!-- Add Material -->
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <input v-model="newMaterialName" type="text" :placeholder="$t('ui.materialName')" class="input flex-1" />
             <input v-model.number="newMaterialQty" type="number" min="1" :placeholder="$t('sales.quantity')" class="input w-20" />
-            <button @click="addMaterial" :disabled="!newMaterialName.trim() || newMaterialQty < 1" class="btn-primary px-4">{{ $t('ui.add') }}</button>
+            <input v-model="newMaterialUnit" :placeholder="$t('projectShipping.unit')" class="input w-24" />
+            <input v-model.number="newMaterialPrice" type="number" min="0" step="0.01" :placeholder="$t('projectShipping.unitPrice')" :aria-label="$t('projectShipping.unitPrice')" class="input w-40" />
+            <button @click="addMaterial" :disabled="!newMaterialName.trim() || newMaterialQty < 1 || newMaterialPrice === null || newMaterialPrice === '' || newMaterialPrice < 0" class="btn-primary px-4">{{ $t('ui.add') }}</button>
           </div>
 
           <!-- Materials Table -->
@@ -112,6 +115,7 @@
               <tr>
                 <th class="px-3 py-2 text-left">{{ $t('projectInvestment.materials.title') }}</th>
                 <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.planned') }}</th>
+                <th class="px-3 py-2 text-right">{{ $t('projectShipping.unitPrice') }}</th><th class="px-3 py-2 text-right">{{ $t('projectShipping.total') }}</th>
                 <th class="px-3 py-2 text-center">{{ $t('labels.received') }}</th>
                 <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.statusInstalled') }}</th>
                 <th class="px-3 py-2 text-center">{{ $t('projectInvestment.materials.status') }}</th>
@@ -125,9 +129,9 @@
                   <div class="text-xs text-gray-500">{{ mat.specification || mat.unit }}</div>
                 </td>
                 <td class="px-3 py-2 text-center">{{ mat.quantity_planned }}</td>
-                <td class="px-3 py-2 text-center">
-                  <input v-model.number="mat.quantity_received" @change="updateMaterialQty(mat)" type="number" min="0" :max="mat.quantity_planned" class="w-16 text-center input py-1 text-sm" />
-                </td>
+                <td class="px-3 py-2 text-right"><input v-model.number="mat.unit_price" @change="updateMaterialPrice(mat)" type="number" min="0" step="0.01" :aria-label="$t('projectShipping.unitPrice')" class="input w-32 text-right" /></td>
+                <td class="px-3 py-2 text-right">{{ formatCurrency(mat.total_price) }}</td>
+                <td class="px-3 py-2 text-center">{{ mat.quantity_received }}</td>
                 <td class="px-3 py-2 text-center">
                   <input v-model.number="mat.quantity_installed" @change="updateMaterialQty(mat)" type="number" min="0" :max="mat.quantity_received" class="w-16 text-center input py-1 text-sm" />
                 </td>
@@ -423,6 +427,8 @@ const materialStats = ref({});
 const loadingMaterials = ref(false);
 const newMaterialName = ref('');
 const newMaterialQty = ref(1);
+const newMaterialPrice = ref(null);
+const newMaterialUnit = ref('pcs');
 
 // Progress Management
 const progressForm = ref({ delivery: 0, installation: 0, notes: '' });
@@ -448,26 +454,41 @@ const addMaterial = async () => {
     await api.post(`/project-investments/${selectedProject.value.id}/materials`, {
       name: newMaterialName.value,
       quantity_planned: newMaterialQty.value,
+      unit_price: newMaterialPrice.value,
+      unit: newMaterialUnit.value,
     });
     newMaterialName.value = '';
     newMaterialQty.value = 1;
+    newMaterialPrice.value = null;
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert(uiText("Gagal menambahkan material"));
+    operationError.value = err.response?.data?.message || uiText("Gagal menambahkan material");
+    await loadMaterials();
+  }
+};
+
+const updateMaterialPrice = async (material) => {
+  operationError.value = '';
+  try {
+    await api.put(`/project-materials/${material.id}`, { unit_price: material.unit_price });
+    await loadMaterials(); emit('refresh');
+  } catch (err) {
+    operationError.value = err.response?.data?.message || uiText("Gagal memperbarui material");
+    await loadMaterials();
   }
 };
 
 const updateMaterialQty = async (material) => {
   try {
     await api.post(`/project-materials/${material.id}/quantities`, {
-      quantity_received: material.quantity_received,
       quantity_installed: material.quantity_installed,
     });
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert(uiText("Gagal memperbarui material"));
+    operationError.value = err.response?.data?.message || uiText("Gagal memperbarui material");
+    await loadMaterials();
   }
 };
 
@@ -478,7 +499,8 @@ const deleteMaterial = async (material) => {
     await loadMaterials();
     emit('refresh');
   } catch (err) {
-    alert(uiText("Gagal menghapus material"));
+    operationError.value = err.response?.data?.message || uiText("Gagal menghapus material");
+    await loadMaterials();
   }
 };
 

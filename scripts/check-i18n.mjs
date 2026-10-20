@@ -74,6 +74,8 @@ globalThis.localStorage = {
 // so the chart component is stubbed while its surrounding UI is rendered.
 const server = await createServer({
     configFile: false,
+    // Keep this SSR check from replacing the running dev server's dependency cache.
+    cacheDir: 'node_modules/.vite-i18n',
     resolve: { alias: { '@': path.resolve('resources/js') } },
     plugins: [{
         name: 'i18n-test-fixtures', enforce: 'pre',
@@ -103,6 +105,8 @@ try {
         Categories: ['Manajemen Kategori', 'Category Management'],
         Suppliers: ['Manajemen Pemasok', 'Supplier Management'],
         Purchases: ['Manajemen Pembelian', 'Purchase Management'],
+        Expenses: ['Biaya / Expenses', 'Expenses'],
+        Assets: ['Manajemen Aset Tetap', 'Fixed Asset Management'],
         Lendings: ['Manajemen Peminjaman', 'Lending Management'],
         Stock: ['Manajemen Stok', 'Stock Management'],
         BankAccounts: ['Rekening Bank', 'Bank Accounts'],
@@ -142,6 +146,32 @@ try {
         }
     }
 
+    // Render the Vue print template with many serials and untrusted customer text.
+    const { default: DeliveryNote } = await server.ssrLoadModule('/resources/js/components/print/DeliveryNote.vue');
+    const note = {
+        number: 'DN-SALE-000001', type: 'Penjualan', recipient: '<script>alert(1)</script>',
+        contact: '0812345678', destination: 'Test destination', date: '2026-10-19',
+        reference: 'INV-PRINT', invoice: 'INV-PRINT', po: 'PO-PRINT', courier: 'Test courier',
+        tracking: 'TRACK-PRINT', warehouse: 'Test warehouse', status: 'shipped',
+        notes: '<img src=x onerror=alert(1)>', totalQuantity: 60,
+        items: Array.from({ length: 60 }, (_, index) => ({
+            product: 'Router', sku: 'RTR-1', description: 'Test item', quantity: 1,
+            serial: index === 59 ? null : `SERIAL-${String(index + 1).padStart(4, '0')}`,
+        })),
+    };
+    for (const [locale, title, missing] of [['id', 'SURAT JALAN', 'Belum diisi'], ['en', 'DELIVERY NOTE', 'Not recorded']]) {
+        i18n.global.locale.value = locale;
+        const app = createSSRApp(DeliveryNote, { note });
+        app.use(i18n);
+        const output = await renderToString(app);
+        assert.ok(output.includes(title));
+        assert.equal((output.match(/class="serial"/g) || []).length, 60);
+        for (const value of ['SERIAL-0001', 'SERIAL-0059', 'PO-PRINT', 'TRACK-PRINT', missing]) assert.ok(output.includes(value));
+        assert.ok(output.includes('&lt;script&gt;'));
+        assert.ok(output.includes('&lt;img'));
+        assert.ok(!output.includes('<script>alert(1)</script>'));
+    }
+
     // Cached option labels must also change without recreating the component.
     i18n.global.locale.value = 'id';
     const cachedLabel = uiText('Ubah');
@@ -160,7 +190,7 @@ try {
     assert.equal(displayLabel('in_repair'), 'Dalam Perbaikan');
     assert.equal(uiText('Custom customer name'), 'Custom customer name');
 
-    console.log(`Passed: ${entries.id.size} matching locale keys, ${files.length} Vue components, 17 pages in both languages, and reactive label/date switching.`);
+    console.log(`Passed: ${entries.id.size} matching locale keys, ${files.length} Vue components, ${Object.keys(pages).length} pages and the delivery note in both languages, 60 serial rows, escaped customer text, and reactive label/date switching.`);
 } finally {
     await server.close();
 }

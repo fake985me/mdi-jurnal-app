@@ -114,6 +114,11 @@ const routes = [
                 component: () => import("../pages/admin/Purchases.vue"),
             },
             {
+                path: "expenses",
+                name: "Expenses",
+                component: () => import("../pages/admin/Expenses.vue"),
+            },
+            {
                 path: "purchases/create",
                 name: "PurchaseCreate",
                 component: () => import("../pages/admin/PurchaseCreate.vue"),

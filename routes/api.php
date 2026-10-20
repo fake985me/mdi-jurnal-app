@@ -95,12 +95,18 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     // Sales
     Route::get('/sales/{id}/export', [App\Http\Controllers\Api\SaleController::class, 'exportInvoice']);
     Route::get('/sales/{id}/pdf', [App\Http\Controllers\Api\SaleController::class, 'downloadPdf']);
-    Route::get('/sales/{id}/print', [App\Http\Controllers\Api\SaleController::class, 'printInvoice']);
     Route::apiResource('sales', App\Http\Controllers\Api\SaleController::class);
     Route::get('/sales-statistics', [App\Http\Controllers\Api\SaleController::class, 'statistics']);
 
     // Purchases
     Route::apiResource('purchases', App\Http\Controllers\Api\PurchaseController::class);
+
+    Route::get('/expense-categories', [App\Http\Controllers\Api\ExpenseController::class, 'categories']);
+    Route::post('/expense-categories', [App\Http\Controllers\Api\ExpenseController::class, 'storeCategory']);
+    Route::post('/expenses/{expense}/pay', [App\Http\Controllers\Api\ExpenseController::class, 'pay']);
+    Route::post('/expenses/{expense}/cancel', [App\Http\Controllers\Api\ExpenseController::class, 'cancel']);
+    Route::get('/expenses/{expense}/attachments/{attachment}', [App\Http\Controllers\Api\ExpenseController::class, 'attachment']);
+    Route::apiResource('expenses', App\Http\Controllers\Api\ExpenseController::class);
 
     // Sales People
     Route::apiResource('sales-people', App\Http\Controllers\Api\SalesPersonController::class);
@@ -108,6 +114,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     // Assets
     Route::get('/assets/filter-options', [App\Http\Controllers\Api\AssetController::class, 'filterOptions']);
     Route::post('/assets/create-product', [App\Http\Controllers\Api\AssetController::class, 'createAssetProduct']);
+    Route::post('/assets/{asset}/depreciate', [App\Http\Controllers\Api\AssetController::class, 'depreciate']);
+    Route::post('/assets/{asset}/dispose', [App\Http\Controllers\Api\AssetController::class, 'dispose']);
     Route::apiResource('assets', App\Http\Controllers\Api\AssetController::class);
 
     // Warranties
@@ -146,6 +154,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::apiResource('project-investments', App\Http\Controllers\Api\ProjectInvestmentController::class);
     Route::get('/project-investments/{id}/items-detail', [App\Http\Controllers\Api\ProjectItemController::class, 'show']);
     Route::post('/project-investments/{id}/items', [App\Http\Controllers\Api\ProjectItemController::class, 'store']);
+    Route::put('/project-investments/{id}/items/{itemId}/valuation', [App\Http\Controllers\Api\ProjectItemController::class, 'valuation']);
     Route::post('/project-investments/{id}/items/{itemId}/replace', [App\Http\Controllers\Api\ProjectItemController::class, 'replace']);
     Route::post('/project-investments/{id}/items/{itemId}/serials', [App\Http\Controllers\Api\ProjectItemController::class, 'serials']);
     Route::post('/returned-items/{id}/inspect', [App\Http\Controllers\Api\ReturnedItemController::class, 'inspect']);
@@ -202,6 +211,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     // Stock Transfers
     Route::prefix('stock-transfers')->group(function () {
         Route::get('/statistics', [App\Http\Controllers\Api\StockTransferController::class, 'statistics']);
+        Route::post('/{stockTransfer}/serials', [App\Http\Controllers\Api\StockTransferController::class, 'serials']);
         Route::post('/{stockTransfer}/start', [App\Http\Controllers\Api\StockTransferController::class, 'startTransfer']);
         Route::post('/{stockTransfer}/complete', [App\Http\Controllers\Api\StockTransferController::class, 'completeTransfer']);
         Route::post('/{stockTransfer}/cancel', [App\Http\Controllers\Api\StockTransferController::class, 'cancelTransfer']);
@@ -243,6 +253,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\AuthorizeInternalApi::cl
     Route::post('/deliveries/{id}/import-serials', [App\Http\Controllers\Api\DeliveryController::class, 'importSerialNumbers']);
     Route::get('/deliveries/{id}/serial-template', [App\Http\Controllers\Api\DeliveryController::class, 'downloadSerialTemplate']);
     Route::get('/delivery-requests', [App\Http\Controllers\Api\DeliveryRequestController::class, 'index']);
+    Route::get('/delivery-requests/{key}/print-data', [App\Http\Controllers\Api\DeliveryNoteController::class, 'show']);
     Route::get('/delivery-requests/{key}/attachments/{attachment}', [App\Http\Controllers\Api\DeliveryRequestController::class, 'downloadAttachment']);
     Route::put('/delivery-requests/{key}', [App\Http\Controllers\Api\DeliveryRequestController::class, 'update']);
     Route::put('/delivery-requests/{key}/status', [App\Http\Controllers\Api\DeliveryRequestController::class, 'updateStatus']);

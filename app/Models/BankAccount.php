@@ -68,7 +68,7 @@ class BankAccount extends Model
 
         $outgoing = $this->payments()
             ->where('status', 'paid')
-            ->where('payable_type', Purchase::class)
+            ->whereIn('payable_type', [Purchase::class, Expense::class])
             ->sum('amount');
 
         return (float) $this->initial_balance + $incoming - $outgoing;

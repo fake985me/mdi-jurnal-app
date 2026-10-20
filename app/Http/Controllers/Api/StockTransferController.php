@@ -91,11 +91,63 @@ class StockTransferController extends Controller
         return response()->json($stockTransfer);
     }
 
+    public function serials(Request $request, StockTransfer $stockTransfer)
+    {
+        $data = $request->validate(['serial_numbers' => 'required|array|min:1',
+            'serial_numbers.*' => 'required|string|max:255']);
+        $serials = array_map('trim', $data['serial_numbers']);
+        try {
+            return DB::transaction(function () use ($stockTransfer, $serials) {
+                $candidate = $stockTransfer->projectItem;
+                $project = $candidate?->project()->lockForUpdate()->firstOrFail();
+                $transfer = StockTransfer::lockForUpdate()->findOrFail($stockTransfer->id);
+                $item = $candidate ? \App\Models\ProjectInvestmentItem::lockForUpdate()->findOrFail($candidate->id) : null;
+                $old = $transfer->serial_numbers ?? [];
+                if (!in_array($transfer->status, ['pending', 'in_transit'], true) ||
+                    ($transfer->status === 'in_transit' && $old && $old !== $serials)) {
+                    throw new \RuntimeException('SN pengiriman yang sudah diproses tidak dapat diganti.');
+                }
+                $normalized = array_map('strtolower', $serials);
+                if (count($serials) !== $transfer->quantity || in_array('', $normalized, true) || count(array_unique($normalized)) !== count($normalized)) {
+                    throw new \RuntimeException('Isi satu SN unik untuk setiap unit pada transfer ini.');
+                }
+                if ($project) {
+                    if (!in_array($project->status, ['approved', 'active'], true) && $transfer->project_action !== 'return') throw new \RuntimeException('Proyek tidak aktif untuk pencatatan SN.');
+                    if ($transfer->project_action === 'allocation' && $transfer->quantity === $item->quantity) {
+                        if ($item->returned_item_id && $serials !== ($item->serial_numbers ?? [])) throw new \RuntimeException('SN stok RMA harus sesuai unit asal.');
+                        if ($transfer->status === 'in_transit' && $item->serial_numbers && $serials !== $item->serial_numbers) throw new \RuntimeException('SN harus sesuai barang proyek yang dikirim.');
+                        foreach ($project->items()->where('product_id', $transfer->product_id)->where('id', '!=', $item->id)->get() as $other) {
+                            if (array_intersect($normalized, array_map('strtolower', $other->serial_numbers ?? []))) throw new \RuntimeException('SN sudah digunakan pada barang proyek lainnya.');
+                        }
+                        $item->update(['serial_numbers' => $serials]);
+                    } elseif ($serials !== $old) {
+                        throw new \RuntimeException('Gunakan proses penggantian barang untuk mengubah SN retur atau pengganti.');
+                    }
+                    if ($serials !== $old) \App\Models\ProjectItemChange::create([
+                        'project_investment_id' => $project->id, 'project_investment_item_id' => $item->id,
+                        'type' => 'serials', 'quantity' => $transfer->quantity, 'old_serial_numbers' => $old,
+                        'new_serial_numbers' => $serials, 'notes' => 'Pencatatan SN transfer '.$transfer->transfer_code,
+                        'user_id' => auth()->id(), 'details' => ['transfer_id' => $transfer->id,
+                            'product' => $item->product?->title, 'unit_price' => $item->unit_price, 'total_price' => $item->total_price],
+                    ]);
+                }
+                $transfer->update(['serial_numbers' => $serials]);
+                return response()->json($transfer->load(['product', 'fromWarehouse', 'toWarehouse']));
+            });
+        } catch (\Exception $error) {
+            return response()->json(['message' => $error->getMessage()], 422);
+        }
+    }
+
     /**
      * Start the transfer (mark as in transit)
      */
     public function startTransfer(StockTransfer $stockTransfer)
     {
+        if ($stockTransfer->project_investment_item_id) {
+            try { return response()->json(['transfer' => app(\App\Services\ProjectStockTransferService::class)->transition($stockTransfer, 'in_transit')]); }
+            catch (\Exception $error) { return response()->json(['message' => $error->getMessage()], 422); }
+        }
         if (!$stockTransfer->canBeStarted()) {
             return response()->json([
                 'message' => 'Transfer cannot be started. Current status: ' . $stockTransfer->status
@@ -145,6 +197,10 @@ class StockTransferController extends Controller
      */
     public function completeTransfer(Request $request, StockTransfer $stockTransfer)
     {
+        if ($stockTransfer->project_investment_item_id) {
+            try { return response()->json(['transfer' => app(\App\Services\ProjectStockTransferService::class)->transition($stockTransfer, 'completed')]); }
+            catch (\Exception $error) { return response()->json(['message' => $error->getMessage()], 422); }
+        }
         if (!$stockTransfer->canBeCompleted()) {
             return response()->json([
                 'message' => 'Transfer cannot be completed. Current status: ' . $stockTransfer->status
@@ -192,6 +248,10 @@ class StockTransferController extends Controller
      */
     public function cancelTransfer(Request $request, StockTransfer $stockTransfer)
     {
+        if ($stockTransfer->project_investment_item_id) {
+            try { return response()->json(['transfer' => app(\App\Services\ProjectStockTransferService::class)->transition($stockTransfer, 'cancelled')]); }
+            catch (\Exception $error) { return response()->json(['message' => $error->getMessage()], 422); }
+        }
         if (!$stockTransfer->canBeCancelled()) {
             return response()->json([
                 'message' => 'Transfer cannot be cancelled. Current status: ' . $stockTransfer->status

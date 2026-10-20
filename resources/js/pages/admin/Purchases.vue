@@ -1,583 +1,260 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
+  <div class="space-y-5">
+    <header class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t('pageTitles.Purchases') }}</h2>
-        <p class="text-sm text-gray-600 mt-1">{{ $t('ui.managePurchaseOrdersAndInventory') }}</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('purchasePage.workspace') }}</p>
+        <h2 class="text-2xl font-semibold text-slate-900">{{ $t('pageTitles.Purchases') }}</h2>
+        <p class="mt-1 text-sm text-slate-500">{{ $t('purchasePage.subtitle') }}</p>
       </div>
-      <button
-        @click="$router.push({ name: 'PurchaseCreate' })"
-        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-      >
-        {{ $t('ui.createPurchaseOrder') }}
-      </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="card p-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <input
-          v-model="filters.search"
-          @input="loadPurchases"
-          type="text"
-          :placeholder="$t('ui.searchByPoOrSupplier')"
-          class="input"
-        />
-        <select v-model="filters.status" @change="loadPurchases" class="input">
-          <option value="">{{ $t('sales.allStatus') }}</option>
-          <option value="unpaid">{{ $t('labels.unpaid') }}</option>
-          <option value="paid">{{ $t('labels.paid') }}</option>
-          <option value="cancelled">{{ $t('labels.cancelled') }}</option>
-        </select>
-        <input v-model="filters.start_date" @change="loadPurchases" type="date" class="input" />
-        <input v-model="filters.end_date" @change="loadPurchases" type="date" class="input" />
+      <Menu as="div" class="relative">
+        <MenuButton class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+          <PlusIcon class="h-5 w-5" />{{ $t('purchasePage.create') }}<ChevronDownIcon class="h-4 w-4" />
+        </MenuButton>
+        <MenuItems class="absolute right-0 z-20 mt-2 w-64 rounded-lg border border-slate-200 bg-white p-1 shadow-lg focus:outline-none">
+          <MenuItem v-for="type in purchaseTypes" :key="type.value" v-slot="{ active }">
+            <button @click="createPurchase(type.value)" :class="['w-full rounded-md px-3 py-3 text-left text-sm', active ? 'bg-blue-50 text-blue-700' : 'text-slate-700']">
+              {{ $t(type.label) }}
+            </button>
+          </MenuItem>
+        </MenuItems>
+      </Menu>
+    </header>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div v-for="card in summaryCards" :key="card.label" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">{{ $t(card.label) }}</p>
+        <p class="mt-3 text-xl font-semibold text-slate-900">{{ loading ? '…' : card.value }}</p>
+        <p class="mt-2 text-xs text-slate-400">{{ $t('purchasePage.filteredSummary') }}</p>
       </div>
     </div>
-
-    <!-- Purchases Table -->
-    <div class="table-wrapper">
-      <div class="card-header">
-        <h3 class="text-lg font-semibold text-gray-900">{{ $t('projectInvestment.po.title') }}</h3>
+    <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="flex overflow-x-auto border-b border-slate-200 w-full" :aria-label="$t('purchasePage.type')">
+        <button v-for="tab in tabs" :key="tab.value" 
+          @click="setType(tab.value)" :aria-pressed="filters.transaction_type === tab.value" 
+          :class="['whitespace-nowrap border-b-2 px-5 py-4 text-sm font-medium', filters.transaction_type === tab.value ? 'border-blue-600 text-blue-600 bg-blue-50/40' 
+          : 'border-transparent text-slate-500 hover:text-blue-600']">
+          {{ $t(tab.label) }}
+        </button>
       </div>
-
-      <div v-if="loading" class="p-8 text-center">
-        <p class="text-gray-600">{{ $t('ui.loadingPurchases') }}</p>
-      </div>
-
-      <table v-else class="min-w-full">
-        <thead class="table-header">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.po.number') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('nav.suppliers') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ui.orderDate2') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('nav.warehouses') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.product') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.quantity') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('sales.total') }}</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('projectInvestment.materials.status') }}</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('sales.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="purchase in purchases.data" :key="purchase.id" class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ purchase.po_number }}</td>
-            <td class="px-6 py-4">
-              <div class="text-sm font-medium text-gray-900">{{ purchase.supplier?.company || purchase.supplier?.name || purchase.supplier_name }}</div>
-              <div class="text-sm text-gray-500">{{ purchase.supplier?.phone || purchase.supplier_phone }}</div>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(purchase.order_date).toLocaleDateString() }}</td>
-            <td class="px-6 py-4 text-sm text-gray-700">{{ purchase.warehouse?.name || '-' }}</td>
-            <td class="px-6 py-4 text-sm text-gray-700">
-              <span v-for="(item, i) in purchase.items" :key="item.id">
-                {{ item.product?.title }}<span v-if="i < purchase.items.length - 1">, </span>
-              </span>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-700">
-              <span v-for="(item, i) in purchase.items" :key="item.id">
-                {{ item.quantity }}<span v-if="i < purchase.items.length - 1">, </span>
-              </span>
-            </td>
-            <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp {{ formatPrice(purchase.total_amount) }}</td>
-            <td class="px-6 py-4">
-              <span :class="getStatusBadgeClass(purchase.status)" class="text-xs font-medium px-2 py-1 rounded-full">
-                {{ $label(purchase.status) }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right text-sm space-x-2">
-              <button @click="viewPurchase(purchase)" class="text-blue-600 hover:text-blue-900 font-medium">{{ $t('projectInvestment.actions.view') }}</button>
-              <button @click="deletePurchase(purchase.id)" class="text-red-600 hover:text-red-900 font-medium">{{ $t('common.delete') }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Pagination -->
-      <div v-if="purchases.data?.length" class="px-6 py-4 bg-gray-50 flex justify-between items-center border-t">
-        <p class="text-sm text-gray-700">{{ $t('sales.showing') }} {{ purchases.from }} {{ $t('ui.to') }} {{ purchases.to }} {{ $t('sales.of') }} {{ purchases.total }} {{ $t('ui.purchases') }}</p>
-        <div class="flex space-x-2">
-          <button
-            @click="loadPurchases(purchases.current_page - 1)"
-            :disabled="!purchases.prev_page_url"
-            class="btn-secondary disabled:opacity-50"
-          >
-            {{ $t('sales.previous') }}
-          </button>
-          <button
-            @click="loadPurchases(purchases.current_page + 1)"
-            :disabled="!purchases.next_page_url"
-            class="btn-secondary disabled:opacity-50"
-          >
-            {{ $t('sales.next') }}
-          </button>
+      <div class="p-5 space-y-4 w-full">
+        <div class="flex flex-wrap justify-between gap-3 items-center">
+          <h3 class="font-semibold text-slate-800">
+            {{ $t('purchasePage.list') }}
+          </h3>
+          <input v-model="filters.search" :placeholder="$t('ui.searchByPoOrSupplier')" :aria-label="$t('ui.searchByPoOrSupplier')" class="field w-full sm:w-80" />
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="text-xs text-slate-500">
+            {{ $t('projectInvestment.materials.status') }}
+            <select v-model="filters.status" class="field block mt-1">
+              <option value="">{{ $t('sales.allStatus') }}</option>
+              <option v-for="state in statusOptions" :key="state" :value="state">{{ state === 'recorded' ? $t('purchasePage.recorded') : $t(`labels.${state}`) }}</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-500">
+            {{ $t('purchasePage.fromDate') }}
+            <input v-model="filters.start_date" type="date" class="field block mt-1" />
+          </label>
+          <label class="text-xs text-slate-500">
+            {{ $t('purchasePage.toDate') }}
+            <input v-model="filters.end_date" type="date" :min="filters.start_date" class="field block mt-1" />
+          </label>
+          <button @click="resetFilters" class="field text-blue-600 hover:bg-slate-50">{{ $t('ui.reset') }}</button>
+          <label class="ml-auto text-xs text-slate-500">
+            {{ $t('ui.rows') }}
+            <select v-model.number="filters.per_page" class="field ml-2">
+              <option v-for="size in [10,15,25,50]" :key="size" :value="size">
+                {{ size }}
+              </option>
+            </select>
+          </label>
         </div>
       </div>
-    </div>
-
-    <!-- Create Purchase Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ $t('ui.createPurchaseOrder2') }}</h3>
-        
-        <form @submit.prevent="savePurchase" class="space-y-6">
-          <!-- Supplier Information -->
-          <div class="p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3">{{ $t('ui.supplierInformation') }}</h4>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.poNumber') }}</label>
-                <input v-model="form.po_number" required class="input" placeholder="PO-001" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.orderDate') }}</label>
-                <input v-model="form.order_date" type="date" required class="input" />
-              </div>
-              <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.supplier') }}</label>
-                <div class="flex gap-2">
-                  <select v-model="form.supplier_id" @change="onSupplierSelect" class="input flex-1">
-                    <option value="">{{ $t('ui.selectSupplier') }}</option>
-                    <option v-for="s in supplierList" :key="s.id" :value="s.id">
-                      {{ s.company ? `${s.company} (${s.name})` : s.name }} — {{ s.phone || '' }}
-                    </option>
-                  </select>
-                  <button type="button" @click="showSupplierModal = true" class="btn-secondary text-sm whitespace-nowrap">{{ $t('ui.newSupplier') }}</button>
-                </div>
-              </div>
-              <div v-if="!form.supplier_id">
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.supplierName') }}</label>
-                <input v-model="form.supplier_name" :required="!form.supplier_id" class="input" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('nav.warehouses') }}</label>
-                <select v-model="form.warehouse_id" class="input">
-                  <option value="">{{ $t('ui.defaultWarehouse') }}</option>
-                  <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
-                </select>
-              </div>
-              <div v-if="!form.supplier_id">
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
-                <input v-model="form.supplier_phone" class="input" />
-              </div>
-              <div v-if="!form.supplier_id" class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
-                <textarea v-model="form.supplier_address" rows="2" class="input"></textarea>
-              </div>
-              <div v-if="form.supplier_id" class="col-span-2">
-                <div class="p-2 bg-white rounded border border-blue-200 text-sm text-gray-600">
-                  <strong>{{ selectedSupplierInfo?.company || selectedSupplierInfo?.name }}</strong>
-                  <span v-if="selectedSupplierInfo?.phone"> — {{ selectedSupplierInfo.phone }}</span>
-                  <span v-if="selectedSupplierInfo?.address" class="block text-xs text-gray-500 mt-1">{{ selectedSupplierInfo.address }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Line Items -->
-          <div class="p-4 bg-cyan-50 rounded-lg">
-            <div class="flex justify-between items-center mb-3">
-              <h4 class="font-semibold text-gray-900">{{ $t('ui.purchaseItems') }}</h4>
-              <div class="flex gap-2">
-                <input 
-                  v-model="productSearch" 
-                  type="text" 
-                  :placeholder="$t('sales.searchProducts')"
-                  class="input text-sm w-48"
-                />
-                <button type="button" @click="showProductModal = true" class="btn-secondary text-sm">{{ $t('sales.newProduct') }}</button>
-                <button type="button" @click="addLineItem" class="btn-primary text-sm">{{ $t('sales.addItem') }}</button>
-              </div>
-            </div>
-            <div class="space-y-3">
-              <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 items-end p-3 bg-white rounded-lg shadow-sm">
-                <div class="col-span-5">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.product') }}</label>
-                  <select v-model="item.product_id" @change="updatePrice(index)" required class="input text-sm">
-                    <option value="">{{ $t('sales.selectProduct') }}</option>
-                    <option v-for="product in filteredProducts" :key="product.id" :value="product.id">
-                      {{ product.title || product.name }} - {{ product.brand }} ({{ product.sku }})
-                    </option>
-                  </select>
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.quantity') }}</label>
-                  <input v-model.number="item.quantity" type="number" min="1" required class="input text-sm" />
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('labels.pricing') }}</label>
-                  <input v-model.number="item.unit_price" type="number" step="0.01" required class="input text-sm" />
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs font-medium text-gray-700 mb-1">{{ $t('sales.subtotal') }}</label>
-                  <input :value="formatPrice(item.quantity * item.unit_price)" disabled class="input text-sm bg-gray-50" />
-                </div>
-                <div class="col-span-1">
-                  <button type="button" @click="removeLineItem(index)" class="btn-danger text-sm w-full">×</button>
-                </div>
-              </div>
-            </div>
-            <div class="mt-4 text-right">
-              <p class="text-lg font-bold text-gray-900">Total: Rp {{ formatPrice(calculateTotal()) }}</p>
-            </div>
-          </div>
-
-          <!-- Additional Info -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="flex items-center space-x-2 h-full pt-6">
-                <input v-model="form.is_for_asset" type="checkbox" class="w-5 h-5 text-blue-600 rounded border-gray-300" />
-                <span class="text-sm font-medium text-gray-700">{{ $t('ui.purchaseForAssetNotForSale') }}</span>
-              </label>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('projectInvestment.progress.notes') }}</label>
-              <textarea v-model="form.notes" rows="2" class="input"></textarea>
-            </div>
-          </div>
-
-          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-700">
-            <strong>{{ $t('ui.note') }}</strong> {{ $t('ui.purchaseAkanDibuatDenganStatus') }} <strong>{{ $t('labels.unpaid') }}</strong>{{ $t('ui.paymentsAreMadeOnThe') }} <strong>{{ $t('pageTitles.Accounting') }}</strong>{{ $t('ui.stockAkanDitambahkanOtomatisSetelahPembayaranDiConfirm') }}
-          </div>
-
-          <div v-if="form.is_for_asset" class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm text-amber-700">
-            <strong>{{ $t('ui.note') }}</strong> {{ $t('ui.pembelianIniAkanDicatatSebagaiAssetProdukTidakAkanMasukStockPenjualan') }}
-          </div>
-
-          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{{ $ui(error) }}</div>
-
-          <div class="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" @click="showModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
-            <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? $t('sales.saving') : $t('ui.createPurchaseOrder2') }}
+      <div v-if="loadError" role="alert" class="m-5 rounded-lg bg-red-50 p-4 text-sm text-red-700 flex justify-between gap-3">
+        {{ loadError }}
+        <button @click="loadPurchases()" class="font-semibold underline">
+          {{ $t('purchasePage.retry') }}
+        </button>
+      </div>
+      <div v-else-if="loading" class="p-14 text-center text-sm text-slate-500" role="status">
+        {{ $t('ui.loadingPurchases') }}
+      </div>
+      <div v-else-if="!purchases.data.length" class="p-14 text-center">
+        <DocumentTextIcon class="mx-auto h-10 w-10 text-slate-300" />
+        <p class="mt-3 font-medium text-slate-700">{{ $t('purchasePage.empty') }}</p>
+        <p class="mt-1 text-sm text-slate-500">{{ $t('purchasePage.emptyHint') }}</p>
+      </div>
+        <div v-else class="overflow-x-auto w-full">
+          <table class="w-full whitespace-nowrap text-sm">
+            <thead class="border-y border-slate-200 bg-slate-50 text-xs text-slate-500">
+              <tr>
+                <th class="cell text-left">{{ $t('sales.date') }}</th>
+                <th class="cell text-left">{{ $t('purchasePage.number') }}</th>
+                <th class="cell text-left">{{ $t('purchasePage.type') }}</th>
+                <th class="cell text-left">{{ $t('ui.supplier') }}</th>
+                <th class="cell text-left">{{ $t('projectInvestment.materials.status') }}</th>
+                <th class="cell text-left">{{ $t('nav.warehouses') }}</th>
+                <th class="cell text-right">{{ $t('sales.total') }}</th>
+                <th class="cell text-right">{{ $t('sales.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="purchase in purchases.data" :key="purchase.id" class="hover:bg-blue-50/30">
+                <td class="cell text-slate-500">
+                  {{ displayDate(purchase.order_date) }}
+                </td>
+                <td class="cell">
+                  <button @click="selectedPurchase = purchase" class="font-medium text-blue-600 hover:underline">
+                    {{ purchase.po_number }}
+                  </button>
+                </td>
+                <td class="cell text-slate-600">
+                  {{ typeLabel(purchase.transaction_type) }}
+                </td>
+                <td class="cell">
+                  <p class="font-medium text-slate-800">{{ purchase.supplier?.company || purchase.supplier?.name || purchase.supplier_name }}</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ purchase.supplier?.phone || purchase.supplier_phone }}</p>
+                </td>
+                <td class="cell">
+                  <span :class="statusClass(purchase)" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">{{ statusLabel(purchase) }}</span>
+                </td>
+                <td class="cell text-slate-500">
+                  {{ purchase.warehouse?.name || '—' }}
+                </td>
+                <td class="cell text-right font-medium">
+                  {{ money(purchase.total_amount) }}
+                </td>
+                <td class="cell text-right">
+                  <button @click="selectedPurchase = purchase" class="text-blue-600 mr-4">{{ $t('projectInvestment.actions.view') }}</button>
+                  <button @click="deletePurchase(purchase)" :disabled="deleting === purchase.id" class="text-red-600 disabled:opacity-40">{{ $t('common.delete') }}</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="purchases.total && !loadError && !loading" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500">
+          <p>{{ $t('sales.showing') }} {{ purchases.from }}–{{ purchases.to }} {{ $t('sales.of') }} {{ purchases.total }}</p>
+          <div class="flex items-center gap-3">
+            <button @click="loadPurchases(purchases.current_page - 1)" :disabled="!purchases.prev_page_url" class="field disabled:opacity-40">
+              {{ $t('sales.previous') }}
+            </button>
+            <span>{{ purchases.current_page }} / {{ purchases.last_page }}</span>
+            <button @click="loadPurchases(purchases.current_page + 1)" :disabled="!purchases.next_page_url" class="field disabled:opacity-40">
+              {{ $t('sales.next') }}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Quick Add Product Modal -->
-    <div v-if="showProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">{{ $t('ui.quickAddProduct') }}</h3>
-        
-        <form @submit.prevent="saveProduct" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.productTitle') }}</label>
-            <input v-model="productForm.title" required class="input" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.brand2') }}</label>
-            <input v-model="productForm.brand" required class="input" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.price') }}</label>
-              <input v-model.number="productForm.price" type="number" step="0.01" required class="input" />
+        </div>
+    </section>
+    <Dialog :open="!!selectedPurchase" @close="selectedPurchase = null" class="relative z-50">
+      <div class="fixed inset-0 bg-slate-900/40" aria-hidden="true" />
+        <div class="fixed inset-0 overflow-y-auto p-4 flex items-center justify-center">
+          <DialogPanel v-if="selectedPurchase" class="w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-auto">
+            <div class="flex justify-between gap-4">
+              <div>
+                <p class="text-sm text-slate-500">
+                  {{ typeLabel(selectedPurchase.transaction_type) }}
+                </p>
+                <DialogTitle class="text-xl font-semibold mt-1">
+                  {{ selectedPurchase.po_number }}
+                </DialogTitle>
+              </div>
+              <button @click="selectedPurchase = null" :aria-label="$t('common.cancel')">
+                 <XMarkIcon class="h-6 w-6" />
+              </button>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('sales.stock') }}</label>
-              <input v-model.number="productForm.stock" type="number" class="input" />
+            <div class="grid sm:grid-cols-2 gap-4 my-6 text-sm">
+              <div>
+                <p class="text-slate-500">{{ $t('ui.supplier') }}</p>
+                <p class="mt-1 font-medium">{{ selectedPurchase.supplier?.company || selectedPurchase.supplier?.name || selectedPurchase.supplier_name }}</p>
+              </div>
+              <div>
+                <p class="text-slate-500">{{ $t('sales.date') }}</p>
+                <p class="mt-1">{{ displayDate(selectedPurchase.order_date) }}</p>
+              </div>
             </div>
-          </div>
-
-          <div v-if="productError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ $ui(productError) }}</div>
-
-          <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showProductModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
-            <button type="submit" :disabled="savingProduct" class="btn-primary">
-              {{ savingProduct ? $t('sales.saving') : $t('ui.addProduct') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Quick Add Supplier Modal -->
-    <div v-if="showSupplierModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{{ $t('ui.quickAddSupplier') }}</h3>
-        
-        <form @submit.prevent="saveNewSupplier" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ui.contactName') }}</label>
-            <input v-model="supplierForm.name" required class="input" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.company') }}</label>
-            <input v-model="supplierForm.company" class="input" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.phone') }}</label>
-              <input v-model="supplierForm.phone" class="input" />
+            <div class="overflow-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50">
+                  <tr>
+                    <th class="cell text-left">{{ $t('sales.product') }}</th>
+                    <th class="cell text-right">{{ $t('sales.quantity') }}</th>
+                    <th class="cell text-right">{{ $t('ui.price') }}</th>
+                    <th class="cell text-right">{{ $t('sales.subtotal') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in selectedPurchase.items" :key="item.id" class="border-b border-slate-100">
+                    <td class="cell">{{ item.product?.title || item.product?.name || '—' }}</td>
+                    <td class="cell text-right">{{ item.quantity }}</td>
+                    <td class="cell text-right">{{ money(item.unit_price) }}</td>
+                    <td class="cell text-right">{{ money(item.subtotal) }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.email') }}</label>
-              <input v-model="supplierForm.email" type="email" class="input" />
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('labels.address') }}</label>
-            <textarea v-model="supplierForm.address" rows="2" class="input"></textarea>
-          </div>
-
-          <div v-if="supplierError" class="bg-red-50 text-red-600 p-2 rounded text-sm">{{ $ui(supplierError) }}</div>
-
-          <div class="flex justify-end space-x-2 pt-3">
-            <button type="button" @click="showSupplierModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
-            <button type="submit" :disabled="savingSupplier" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all text-sm font-medium disabled:opacity-50">
-              {{ savingSupplier ? $t('sales.saving') : $t('ui.addSupplier2') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+             <p class="mt-5 text-right font-semibold">{{ $t('sales.total') }}: {{ money(selectedPurchase.total_amount) }}</p>
+             <p v-if="selectedPurchase.notes" class="mt-5 whitespace-pre-wrap text-sm text-slate-600">{{ selectedPurchase.notes }}</p>
+          </DialogPanel>
+        </div>
+    </Dialog>
   </div>
 </template>
-
 <script setup>
-import { uiText, uiLocale } from '../../utils/uiText';
-
-import { ref, computed, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { Dialog, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
+import { PlusIcon, ChevronDownIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import api from '../../services/api';
-
-const purchases = ref({ data: [] });
-const products = ref([]);
-const warehouses = ref([]);
+import { displayDate, uiLocale } from '../../utils/uiText';
+import { purchaseTypes } from '../../utils/purchaseTypes';
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const tabs = [{ value: '', label: 'purchasePage.all' }, ...purchaseTypes];
+const filters = ref({ transaction_type: purchaseTypes.some(type => type.value === route.query.type) ? route.query.type : '', search: '', status: '', start_date: '', end_date: '', per_page: 15 });
+const purchases = ref({ data: [], summary: { count: 0, total: 0 } });
 const loading = ref(true);
-const showModal = ref(false);
-const showProductModal = ref(false);
-const showSupplierModal = ref(false);
-const saving = ref(false);
-const savingProduct = ref(false);
-const savingSupplier = ref(false);
-const error = ref('');
-const productError = ref('');
-const supplierError = ref('');
-const productSearch = ref('');
-const supplierList = ref([]);
-const selectedSupplierInfo = ref(null);
-
-const filters = ref({
-  search: '',
-  status: '',
-  start_date: '',
-  end_date: '',
-});
-
-const form = ref({
-  po_number: '',
-  supplier_id: '',
-  supplier_name: '',
-  supplier_address: '',
-  supplier_phone: '',
-  warehouse_id: '',
-  order_date: new Date().toISOString().split('T')[0],
-  is_for_asset: false,
-  notes: '',
-  items: [{ product_id: '', quantity: 1, unit_price: 0 }],
-});
-
-const supplierForm = ref({
-  name: '',
-  company: '',
-  phone: '',
-  email: '',
-  address: '',
-});
-
-const productForm = ref({
-  title: '',
-  brand: '',
-  price: 0,
-  stock: 0,
-  sku: '',
-});
-
-const filteredProducts = computed(() => {
-  if (!productSearch.value) return products.value;
-  const search = productSearch.value.toLowerCase();
-  return products.value.filter(p => 
-    (p.title?.toLowerCase().includes(search)) ||
-    (p.name?.toLowerCase().includes(search)) ||
-    (p.brand?.toLowerCase().includes(search)) ||
-    (p.sku?.toLowerCase().includes(search))
-  );
-});
-
-const formatPrice = (price) => {
-  return new Intl.NumberFormat(uiLocale()).format(price || 0);
-};
-
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    unpaid: 'bg-red-100 text-red-700',
-    paid: 'bg-green-100 text-green-700',
-    partial: 'bg-yellow-100 text-yellow-700',
-    cancelled: 'bg-gray-100 text-gray-500',
-  };
-  return classes[status] || 'bg-gray-100 text-gray-700';
-};
-
+const loadError = ref('');
+const selectedPurchase = ref(null);
+const deleting = ref(null);
+let timer;
+let requestId = 0;
+const money = value => new Intl.NumberFormat(uiLocale(), { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value) || 0);
+const typeLabel = value => t(purchaseTypes.find(type => type.value === (value || 'order'))?.label || 'purchasePage.order');
+const status = purchase => purchase.status === 'cancelled' ? 'cancelled' : ['request', 'quotation'].includes(purchase.transaction_type) ? 'recorded' : purchase.payment_status || purchase.status;
+const statusLabel = purchase => status(purchase) === 'recorded' ? t('purchasePage.recorded') : t(`labels.${status(purchase)}`);
+const statusClass = purchase => ({ paid: 'bg-emerald-50 text-emerald-700', unpaid: 'bg-amber-50 text-amber-700', partial: 'bg-blue-50 text-blue-700', recorded: 'bg-blue-50 text-blue-700', cancelled: 'bg-slate-100 text-slate-500' }[status(purchase)]);
+const statusOptions = computed(() => ['request', 'quotation'].includes(filters.value.transaction_type) ? ['recorded', 'cancelled'] : ['unpaid', 'partial', 'paid', 'recorded', 'cancelled']);
+const summaryCards = computed(() => [
+  { label: 'purchasePage.totalTransactions', value: purchases.value.summary?.count || 0 },
+  { label: 'purchasePage.totalValue', value: money(purchases.value.summary?.total) },
+  { label: 'purchasePage.activeType', value: filters.value.transaction_type ? typeLabel(filters.value.transaction_type) : t('purchasePage.all') },
+]);
+const createPurchase = type => router.push({ name: 'PurchaseCreate', query: { type } });
+const setType = type => { filters.value.transaction_type = type; filters.value.status = ''; router.replace({ query: { ...route.query, type: type || undefined } }); };
+watch(() => route.query.type, type => { filters.value.transaction_type = purchaseTypes.some(option => option.value === type) ? type : ''; });
+const resetFilters = () => { Object.assign(filters.value, { search: '', status: '', start_date: '', end_date: '' }); };
 const loadPurchases = async (page = 1) => {
+  const id = ++requestId;
   loading.value = true;
-  try {
-    const params = { page, ...filters.value };
-    const response = await api.get('/purchases', { params });
-    purchases.value = response.data;
-  } catch (err) {
-    console.error('Gagal memuat pembelian:', err);
-  } finally {
-    loading.value = false;
-  }
+  loadError.value = '';
+  try { const response = await api.get('/purchases', { params: { ...filters.value, page } }); if (id === requestId) purchases.value = response.data; }
+  catch (error) { if (id === requestId) loadError.value = t('purchasePage.loadError'); }
+  finally { if (id === requestId) loading.value = false; }
 };
-
-const loadProducts = async () => {
-  try {
-    const response = await api.get('/products', { params: { per_page: 1000 } });
-    products.value = response.data.data;
-  } catch (err) {
-    console.error('Gagal memuat produk:', err);
-  }
+watch(filters, () => { clearTimeout(timer); ++requestId; loading.value = true; timer = setTimeout(() => loadPurchases(), 300); }, { deep: true });
+const deletePurchase = async purchase => {
+  if (!confirm(t('purchasePage.confirmDelete', { number: purchase.po_number }))) return;
+  deleting.value = purchase.id;
+  try { await api.delete(`/purchases/${purchase.id}`); await loadPurchases(purchases.value.data.length === 1 ? Math.max(1, purchases.value.current_page - 1) : purchases.value.current_page); }
+  catch (error) { alert(error.response?.data?.message || t('purchasePage.deleteError')); }
+  finally { deleting.value = null; }
 };
-
-const loadWarehouses = async () => {
-  try {
-    const response = await api.get('/warehouses', { params: { per_page: 200 } });
-    warehouses.value = response.data.data || response.data || [];
-  } catch (err) {
-    console.error('Gagal memuat gudang:', err);
-  }
-};
-
-const loadSuppliers = async () => {
-  try {
-    const response = await api.get('/suppliers', { params: { all: true } });
-    supplierList.value = response.data;
-  } catch (err) {
-    console.error('Gagal memuat pemasok:', err);
-  }
-};
-
-const onSupplierSelect = () => {
-  const supplier = supplierList.value.find(s => s.id == form.value.supplier_id);
-  selectedSupplierInfo.value = supplier || null;
-  if (supplier) {
-    form.value.supplier_name = supplier.company ? `${supplier.company} (${supplier.name})` : supplier.name;
-    form.value.supplier_phone = supplier.phone || '';
-    form.value.supplier_address = supplier.address || '';
-  }
-};
-
-const addLineItem = () => {
-  form.value.items.push({ product_id: '', quantity: 1, unit_price: 0 });
-};
-
-const removeLineItem = (index) => {
-  form.value.items.splice(index, 1);
-};
-
-const updatePrice = (index) => {
-  const product = products.value.find(p => p.id == form.value.items[index].product_id);
-  if (product) {
-    form.value.items[index].unit_price = product.price;
-  }
-};
-
-const calculateTotal = () => {
-  return form.value.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-};
-
-const resetForm = () => {
-  form.value = {
-    po_number: 'PO-' + Date.now(),
-    supplier_id: '',
-    supplier_name: '',
-    supplier_address: '',
-    supplier_phone: '',
-    warehouse_id: '',
-    order_date: new Date().toISOString().split('T')[0],
-    is_for_asset: false,
-    notes: '',
-    items: [{ product_id: '', quantity: 1, unit_price: 0 }],
-  };
-  selectedSupplierInfo.value = null;
-  error.value = '';
-};
-
-const savePurchase = async () => {
-  saving.value = true;
-  error.value = '';
-  
-  try {
-    await api.post('/purchases', form.value);
-    showModal.value = false;
-    loadPurchases();
-    resetForm();
-  } catch (err) {
-    error.value = err.response?.data?.message || uiText("Gagal membuat pesanan pembelian");
-  } finally {
-    saving.value = false;
-  }
-};
-
-const saveProduct = async () => {
-  savingProduct.value = true;
-  productError.value = '';
-  
-  try {
-    productForm.value.sku = `SKU-${Date.now()}`;
-    productForm.value.stock = productForm.value.stock || 0;
-    const response = await api.post('/products', productForm.value);
-    
-    products.value.push(response.data);
-    showProductModal.value = false;
-    productForm.value = { title: '', brand: '', price: 0, stock: 0, sku: '' };
-    
-    alert(uiText("Produk berhasil ditambahkan!"));
-  } catch (err) {
-    productError.value = err.response?.data?.message || uiText("Gagal menambahkan produk");
-  } finally {
-    savingProduct.value = false;
-  }
-};
-
-const viewPurchase = (purchase) => {
-  alert(uiText('ui.purchaseOrderDetails', { p0: purchase.po_number, p1: purchase.supplier_name, p2: formatPrice(purchase.total_amount), p3: purchase.status }));
-};
-
-const deletePurchase = async (id) => {
-  if (!confirm(uiText("Yakin ingin menghapus pesanan pembelian ini?"))) return;
-  
-  try {
-    await api.delete(`/purchases/${id}`);
-    loadPurchases();
-  } catch (err) {
-    alert(err.response?.data?.message || uiText("Gagal menghapus pembelian"));
-  }
-};
-
-const saveNewSupplier = async () => {
-  savingSupplier.value = true;
-  supplierError.value = '';
-  try {
-    const response = await api.post('/suppliers', supplierForm.value);
-    supplierList.value.push(response.data);
-    form.value.supplier_id = response.data.id;
-    onSupplierSelect();
-    showSupplierModal.value = false;
-    supplierForm.value = { name: '', company: '', phone: '', email: '', address: '' };
-  } catch (err) {
-    supplierError.value = err.response?.data?.message || uiText("Gagal menambahkan pemasok");
-  } finally {
-    savingSupplier.value = false;
-  }
-};
-
-onMounted(() => {
-  loadPurchases();
-  loadProducts();
-  loadWarehouses();
-  loadSuppliers();
-});
+onMounted(() => loadPurchases());
+onBeforeUnmount(() => { clearTimeout(timer); ++requestId; });
 </script>
+<style scoped>
+.field { border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: white; padding: 0.55rem 0.75rem; font-size: 0.875rem; color: #475569; }
+.field:focus { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.cell { padding: 1rem 1.25rem; }
+</style>

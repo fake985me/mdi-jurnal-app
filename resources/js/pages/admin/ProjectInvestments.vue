@@ -272,7 +272,7 @@ const setItemPrice = (index) => {
   const item = form.value.items[index];
   const product = products.value.find(p => p.id === parseInt(item.product_id));
   if (product) {
-    item.unit_price = product.sell_price || 0;
+    item.unit_price = product.price ?? product.sell_price ?? 0;
   }
 };
 

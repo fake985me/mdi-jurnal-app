@@ -28,6 +28,8 @@ class Asset extends Model
         'warranty_end_date',
         'notes',
         'image',
+        'depreciation_method', 'depreciation_start_date', 'useful_life_months', 'residual_value',
+        'accumulated_depreciation', 'disposal_date', 'disposal_proceeds', 'disposal_book_value', 'disposal_reason',
     ];
 
     protected $casts = [
@@ -35,6 +37,9 @@ class Asset extends Model
         'warranty_end_date' => 'date',
         'purchase_price' => 'decimal:2',
         'current_value' => 'decimal:2',
+        'depreciation_start_date' => 'date', 'useful_life_months' => 'integer',
+        'residual_value' => 'decimal:2', 'accumulated_depreciation' => 'decimal:2',
+        'disposal_date' => 'date', 'disposal_proceeds' => 'decimal:2', 'disposal_book_value' => 'decimal:2',
     ];
 
     /**
@@ -43,6 +48,11 @@ class Asset extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function depreciations()
+    {
+        return $this->hasMany(AssetDepreciation::class)->orderBy('period');
     }
 
     /**
@@ -94,8 +104,6 @@ class Asset extends Model
      */
     public static function generateAssetCode()
     {
-        $lastAsset = static::orderBy('id', 'desc')->first();
-        $lastNumber = $lastAsset ? intval(substr($lastAsset->asset_code, 4)) : 0;
-        return 'AST-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        return 'AST-' . strtoupper(\Illuminate\Support\Str::random(10));
     }
 }

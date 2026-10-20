@@ -3,16 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProjectInvestment;
-use App\Models\ProjectMaterial;
-use App\Models\ProjectProgressLog;
+use App\Models\{ProjectInvestment, ProjectMaterial, ProjectProgressLog, DeliveryFulfillment};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectMaterialController extends Controller
 {
-    /**
-     * Get all materials for a project
-     */
     public function index(ProjectInvestment $project)
     {
         $materials = $project->materials()
@@ -39,179 +35,101 @@ class ProjectMaterialController extends Controller
         ]);
     }
 
-    /**
-     * Store a new material
-     */
+
+    private function rules(bool $update = false): array
+    {
+        $required = $update ? 'sometimes|required' : 'required';
+        return ['name' => $required.'|string|max:255', 'unit' => 'nullable|string|max:50',
+            'specification' => 'nullable|string|max:500', 'quantity_planned' => $required.'|integer|min:1',
+            'unit_price' => $required.'|numeric|min:0|max:9999999999.99', 'notes' => 'nullable|string|max:5000',
+            'expected_delivery_date' => 'nullable|date', 'sort_order' => 'nullable|integer'];
+    }
+
+    private function project($id): ProjectInvestment
+    {
+        $project = ProjectInvestment::lockForUpdate()->findOrFail($id);
+        abort_unless(in_array($project->status, ['pending', 'approved', 'active'], true), 422, 'Project is closed.');
+        return $project;
+    }
+
+    private function snapshot(ProjectMaterial $material): array
+    {
+        return $material->only(['id', 'name', 'unit', 'quantity_planned', 'quantity_ordered', 'quantity_received', 'quantity_installed', 'unit_price', 'total_price', 'status']);
+    }
+
+    private function record(ProjectMaterial $material, string $action, ?array $before): void
+    {
+        ProjectProgressLog::logChange($material->project_investment_id, 'material', $action,
+            $before['total_price'] ?? null, $material->total_price,
+            $material->name.' | Qty '.$material->quantity_planned.' '.$material->unit.' | Rp '.$material->unit_price.' | Total Rp '.$material->total_price,
+            ['before' => $before, 'after' => $this->snapshot($material)]);
+    }
+
     public function store(Request $request, ProjectInvestment $project)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'unit' => 'nullable|string|max:50',
-            'specification' => 'nullable|string|max:500',
-            'quantity_planned' => 'required|integer|min:0',
-            'unit_price' => 'nullable|numeric|min:0',
-            'expected_delivery_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-        ]);
-
-        $validated['project_investment_id'] = $project->id;
-        $validated['unit'] = $validated['unit'] ?? 'pcs';
-        $validated['unit_price'] = $validated['unit_price'] ?? 0;
-        $validated['total_price'] = $validated['quantity_planned'] * $validated['unit_price'];
-        $validated['status'] = ProjectMaterial::STATUS_PENDING;
-
-        $material = ProjectMaterial::create($validated);
-
-        // Update project total value
-        $project->calculateTotalValue();
-
-        // Log the change
-        ProjectProgressLog::logChange(
-            $project->id,
-            ProjectProgressLog::TYPE_MATERIAL,
-            'material_added',
-            null,
-            $material->name,
-            "Added material: {$material->name} x {$material->quantity_planned} {$material->unit}"
-        );
-
-        return response()->json($material, 201);
+        $data = $request->validate($this->rules());
+        $data['unit'] = $data['unit'] ?? 'pcs';
+        return DB::transaction(function () use ($project, $data) {
+            $project = $this->project($project->id);
+            $material = $project->materials()->create($data + ['unit' => 'pcs', 'total_price' => round($data['quantity_planned'] * $data['unit_price'], 2), 'status' => 'pending']);
+            $project->calculateTotalValue();
+            $this->record($material, 'material_added', null);
+            return response()->json($material, 201);
+        });
     }
 
-    /**
-     * Update a material
-     */
     public function update(Request $request, ProjectMaterial $material)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'unit' => 'nullable|string|max:50',
-            'specification' => 'nullable|string|max:500',
-            'quantity_planned' => 'required|integer|min:0',
-            'quantity_ordered' => 'nullable|integer|min:0',
-            'quantity_received' => 'nullable|integer|min:0',
-            'quantity_installed' => 'nullable|integer|min:0',
-            'unit_price' => 'nullable|numeric|min:0',
-            'expected_delivery_date' => 'nullable|date',
-            'actual_delivery_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'sort_order' => 'nullable|integer',
-        ]);
-
-        $validated['total_price'] = $validated['quantity_planned'] * ($validated['unit_price'] ?? $material->unit_price);
-
-        $material->update($validated);
-        $material->updateStatus();
-
-        // Update project total value
-        $material->project->calculateTotalValue();
-
-        return response()->json($material);
+        $data = $request->validate($this->rules(true));
+        if (array_key_exists('unit', $data)) $data['unit'] = $data['unit'] ?? 'pcs';
+        return DB::transaction(function () use ($material, $data) {
+            $project = $this->project($material->project_investment_id);
+            $material = ProjectMaterial::lockForUpdate()->findOrFail($material->id);
+            $before = $this->snapshot($material);
+            $quantity = $data['quantity_planned'] ?? $material->quantity_planned;
+            abort_if($quantity < $material->quantity_received || $quantity < $material->quantity_installed, 422, 'Quantity cannot be below received or installed quantity.');
+            $shipment = DeliveryFulfillment::where('request_key', 'material-'.$material->id)->first();
+            abort_if($quantity != $material->quantity_planned && $shipment && $shipment->status !== 'preparing', 422, 'Shipment quantities are locked after shipping.');
+            $data['total_price'] = round($quantity * ($data['unit_price'] ?? $material->unit_price), 2);
+            $material->update($data); $material->updateStatus();
+            $project->calculateTotalValue(); $this->record($material, 'material_updated', $before);
+            return response()->json($material);
+        });
     }
 
-    /**
-     * Update material quantities and status
-     */
     public function updateQuantities(Request $request, ProjectMaterial $material)
     {
-        $validated = $request->validate([
-            'quantity_ordered' => 'nullable|integer|min:0',
-            'quantity_received' => 'nullable|integer|min:0',
-            'quantity_installed' => 'nullable|integer|min:0',
-            'actual_delivery_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-        ]);
-
-        $oldReceived = $material->quantity_received;
-        $oldInstalled = $material->quantity_installed;
-
-        if (isset($validated['quantity_ordered'])) {
-            $material->quantity_ordered = $validated['quantity_ordered'];
-        }
-        if (isset($validated['quantity_received'])) {
-            $material->quantity_received = $validated['quantity_received'];
-        }
-        if (isset($validated['quantity_installed'])) {
-            $material->quantity_installed = $validated['quantity_installed'];
-        }
-        if (isset($validated['actual_delivery_date'])) {
-            $material->actual_delivery_date = $validated['actual_delivery_date'];
-        }
-
-        $material->save();
-        $material->updateStatus();
-
-        // Log changes
-        $project = $material->project;
-        
-        if ($oldReceived != $material->quantity_received) {
-            ProjectProgressLog::logChange(
-                $project->id,
-                ProjectProgressLog::TYPE_MATERIAL,
-                'quantity_received',
-                $oldReceived,
-                $material->quantity_received,
-                "Material: {$material->name} - " . ($validated['notes'] ?? '')
-            );
-        }
-
-        if ($oldInstalled != $material->quantity_installed) {
-            ProjectProgressLog::logChange(
-                $project->id,
-                ProjectProgressLog::TYPE_MATERIAL,
-                'quantity_installed',
-                $oldInstalled,
-                $material->quantity_installed,
-                "Material: {$material->name} - " . ($validated['notes'] ?? '')
-            );
-        }
-
-        return response()->json($material);
+        $data = $request->validate(['quantity_ordered' => 'nullable|integer|min:0', 'quantity_received' => 'nullable|integer|min:0',
+            'quantity_installed' => 'nullable|integer|min:0', 'actual_delivery_date' => 'nullable|date', 'notes' => 'nullable|string|max:5000']);
+        return DB::transaction(function () use ($material, $data) {
+            $this->project($material->project_investment_id);
+            $material = ProjectMaterial::lockForUpdate()->findOrFail($material->id);
+            abort_if(isset($data['quantity_received']) && $data['quantity_received'] != $material->quantity_received, 422, 'Confirm receipt manually in Deliveries.');
+            abort_if(($data['quantity_installed'] ?? $material->quantity_installed) > $material->quantity_received || ($data['quantity_ordered'] ?? $material->quantity_ordered) > $material->quantity_planned, 422, 'Material quantities are inconsistent.');
+            $before = $this->snapshot($material);
+            $material->update($data); $material->updateStatus();
+            $this->record($material, 'material_quantities', $before);
+            return response()->json($material);
+        });
     }
 
-    /**
-     * Delete a material
-     */
     public function destroy(ProjectMaterial $material)
     {
-        $project = $material->project;
-        $materialName = $material->name;
-        
-        $material->delete();
-
-        // Update project total value
-        $project->calculateTotalValue();
-
-        // Log the deletion
-        ProjectProgressLog::logChange(
-            $project->id,
-            ProjectProgressLog::TYPE_MATERIAL,
-            'material_deleted',
-            $materialName,
-            null,
-            "Deleted material: {$materialName}"
-        );
-
-        return response()->json(['message' => 'Material deleted successfully']);
+        return DB::transaction(function () use ($material) {
+            $project = $this->project($material->project_investment_id);
+            $material = ProjectMaterial::lockForUpdate()->findOrFail($material->id);
+            $shipment = DeliveryFulfillment::where('request_key', 'material-'.$material->id)->first();
+            abort_if($material->quantity_received > 0 || $material->quantity_installed > 0 || ($shipment && !in_array($shipment->status, ['preparing', 'cancelled'], true)), 422, 'Received or shipped materials must remain in the register.');
+            $this->record($material, 'material_deleted', $this->snapshot($material));
+            $material->delete(); $project->calculateTotalValue();
+            return response()->json(['message' => 'Material deleted.']);
+        });
     }
 
-    /**
-     * Reorder materials
-     */
     public function reorder(Request $request, ProjectInvestment $project)
     {
-        $validated = $request->validate([
-            'materials' => 'required|array',
-            'materials.*.id' => 'required|exists:project_materials,id',
-            'materials.*.sort_order' => 'required|integer',
-        ]);
-
-        foreach ($validated['materials'] as $item) {
-            ProjectMaterial::where('id', $item['id'])
-                ->where('project_investment_id', $project->id)
-                ->update(['sort_order' => $item['sort_order']]);
-        }
-
-        return response()->json(['message' => 'Materials reordered successfully']);
+        $data = $request->validate(['materials' => 'required|array', 'materials.*.id' => 'required|integer', 'materials.*.sort_order' => 'required|integer']);
+        foreach ($data['materials'] as $item) $project->materials()->whereKey($item['id'])->update(['sort_order' => $item['sort_order']]);
+        return response()->json(['message' => 'Materials reordered.']);
     }
 }

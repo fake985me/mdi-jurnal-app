@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ProjectInvestment;
 use App\Models\ProjectInvestmentItem;
 use App\Services\StockSyncService;
-use App\Services\StockTransferService;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -136,6 +135,7 @@ class ProjectInvestmentController extends Controller
     {
         $project = ProjectInvestment::with([
             'items.product',
+            'items.transfers',
             'materials',
             'tasks.assignee',
             'progressLogs.updatedBy',
@@ -144,6 +144,10 @@ class ProjectInvestmentController extends Controller
             'warehouse',
             'contract',
         ])->findOrFail($id);
+        $project->setAttribute('legacy_transfers', \App\Models\StockTransfer::with('product')
+            ->whereNull('project_investment_item_id')->where(function ($q) use ($project) {
+                $q->where('to_warehouse_id', $project->warehouse_id)->orWhere('from_warehouse_id', $project->warehouse_id);
+            })->get());
         return response()->json($project);
     }
 
@@ -209,17 +213,16 @@ class ProjectInvestmentController extends Controller
     {
         $project = ProjectInvestment::findOrFail($id);
         
-        // Return stock if items were deducted
-        if ($project->status !== 'pending') {
-            $this->returnItemsToStock($project);
+        if ($project->items()->exists() || $project->materials()->exists() || $project->progressLogs()->exists()) {
+            return response()->json(['message' => 'Proyek memiliki catatan barang/material. Gunakan pembatalan untuk mempertahankan riwayat.'], 422);
         }
-        
+
         $project->delete();
         return response()->json(['message' => 'Project deleted successfully']);
     }
 
     /**
-     * Approve project and deduct stock
+     * Approve project and request manual shipments
      */
     public function approve($id)
     {
@@ -231,34 +234,11 @@ class ProjectInvestmentController extends Controller
 
         DB::beginTransaction();
         try {
-            $stockService = $this->stockService;
-            $transferService = new StockTransferService();
-            $defaultWarehouseId = Warehouse::getDefault()?->id;
-            $projectWarehouseId = $project->warehouse_id;
-
-            // Deduct stock for all items
+            $project = ProjectInvestment::lockForUpdate()->findOrFail($id);
+            if ($project->status !== 'pending') throw new \RuntimeException('Proyek sudah diproses.');
             foreach ($project->items as $item) {
-                if (!$item->stock_deducted) {
-                    if ($projectWarehouseId && $defaultWarehouseId) {
-                        $transferService->transferNow(
-                            $defaultWarehouseId,
-                            $projectWarehouseId,
-                            $item->product_id,
-                            $item->quantity,
-                            "Project allocation: {$project->project_code}",
-                            auth()->id()
-                        );
-                    } else {
-                        $stockService->deductStock(
-                            $item->product_id,
-                            $item->quantity,
-                            'project_allocation',
-                            $project->id,
-                            "Project: {$project->project_code} - {$project->project_name}",
-                            $defaultWarehouseId
-                        );
-                    }
-                    $item->update(['stock_deducted' => true]);
+                if (!$item->stock_deducted && !$item->transfers()->whereIn('status', ['pending', 'in_transit', 'completed'])->exists()) {
+                    app(\App\Services\ProjectStockTransferService::class)->request($item);
                 }
             }
 
@@ -296,18 +276,23 @@ class ProjectInvestmentController extends Controller
      */
     public function complete($id)
     {
-        $project = ProjectInvestment::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $project = ProjectInvestment::lockForUpdate()->findOrFail($id);
         
-        if (!in_array($project->status, ['approved', 'active'])) {
-            return response()->json(['message' => 'Only approved or active projects can be completed'], 422);
-        }
+            if (!in_array($project->status, ['approved', 'active'])) {
+                return response()->json(['message' => 'Only approved or active projects can be completed'], 422);
+            }
 
-        $project->update([
-            'status' => 'completed',
-            'actual_end_date' => now(),
-        ]);
+            if ($project->items()->where('stock_deducted', false)->exists() || \App\Models\StockTransfer::whereHas('projectItem', fn ($q) => $q->where('project_investment_id', $project->id))->whereIn('status', ['pending', 'in_transit'])->exists() || $project->materials()->whereColumn('quantity_received', '<', 'quantity_planned')->exists()) {
+                return response()->json(['message' => 'Selesaikan pengiriman dan penerimaan seluruh barang/material sebelum menyelesaikan proyek.'], 422);
+            }
+            $project->update([
+                'status' => 'completed',
+                'actual_end_date' => now(),
+            ]);
 
-        return response()->json($project->load(['items.product', 'user', 'approver']));
+            return response()->json($project->load(['items.product', 'user', 'approver']));
+        });
     }
 
     /**
@@ -323,7 +308,8 @@ class ProjectInvestmentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Return stock for deducted items
+            $project = ProjectInvestment::with('items')->lockForUpdate()->findOrFail($id);
+            if ($project->status === 'completed') throw new \RuntimeException('Completed projects cannot be cancelled.');
             $this->returnItemsToStock($project);
 
             $project->update(['status' => 'cancelled']);
@@ -361,7 +347,7 @@ class ProjectInvestmentController extends Controller
         $sheet->setCellValue('A6', 'Status:');
         $sheet->setCellValue('B6', strtoupper($project->status));
         $sheet->setCellValue('A7', 'Start Date:');
-        $sheet->setCellValue('B7', $project->start_date->format('d/m/Y'));
+        $sheet->setCellValue('B7', $project->start_date?->format('d/m/Y'));
         $sheet->setCellValue('A8', 'Total Value:');
         $sheet->setCellValue('B8', 'Rp ' . number_format($project->total_value, 0, ',', '.'));
 
@@ -388,6 +374,13 @@ class ProjectInvestmentController extends Controller
             $no++;
         }
 
+        $row += 2;
+        $sheet->fromArray(['Material', 'Unit', 'Planned', 'Received', 'Installed', 'Unit Price', 'Total'], null, 'A'.$row++);
+        foreach ($project->materials as $material) {
+            $sheet->fromArray([$material->name, $material->unit, $material->quantity_planned, $material->quantity_received,
+                $material->quantity_installed, $material->unit_price, $material->total_price], null, 'A'.$row++);
+        }
+
         // Auto width
         foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
@@ -406,39 +399,14 @@ class ProjectInvestmentController extends Controller
 
     private function returnItemsToStock(ProjectInvestment $project)
     {
-        $stockService = $this->stockService;
-        $transferService = new StockTransferService();
-        $defaultWarehouseId = Warehouse::getDefault()?->id;
-        $projectWarehouseId = $project->warehouse_id;
-
+        $service = app(\App\Services\ProjectStockTransferService::class);
         foreach ($project->items as $item) {
-            if ($item->stock_deducted) {
-                if ($item->returned_item_id) {
-                    $returned = \App\Models\ReturnedItem::whereKey($item->returned_item_id)->lockForUpdate()->firstOrFail();
-                    $returned->increment('available_quantity', $item->quantity);
-                    $item->update(['stock_deducted' => false]);
-                    continue;
-                }
-                if ($projectWarehouseId && $defaultWarehouseId) {
-                    $transferService->transferNow(
-                        $projectWarehouseId,
-                        $defaultWarehouseId,
-                        $item->product_id,
-                        $item->quantity,
-                        "Return from project: {$project->project_code}",
-                        auth()->id()
-                    );
-                } else {
-                    $stockService->addStock(
-                        $item->product_id,
-                        $item->quantity,
-                        'project_return',
-                        $project->id,
-                        "Returned from cancelled project: {$project->project_code}",
-                        $defaultWarehouseId
-                    );
-                }
-                $item->update(['stock_deducted' => false]);
+            $pending = $item->transfers()->whereIn('status', ['pending', 'in_transit'])->where('project_action', '!=', 'return')->get();
+            $missing = $pending->where('project_action', 'replacement')->sum('quantity');
+            foreach ($pending as $transfer) $service->transition($transfer, 'cancelled');
+            if ($item->stock_deducted && !$item->transfers()->where('project_action', 'return')->whereIn('status', ['pending', 'in_transit', 'completed'])->exists()) {
+                $quantity = max(0, $item->quantity - $missing);
+                if ($quantity) $service->request($item, 'return', $quantity);
             }
         }
     }

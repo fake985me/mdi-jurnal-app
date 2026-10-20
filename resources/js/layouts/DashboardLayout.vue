@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+  <div class="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
     <!-- Sidebar Component -->
     <Sidebar :collapsed="sidebarCollapsed" :is-super-admin="authStore.isSuperAdmin" :user-role="authStore.user?.role"
       @toggle="toggleSidebar" />
@@ -10,7 +10,7 @@
     <div :class="['transition-all duration-300', sidebarCollapsed ? 'ml-20' : 'ml-64']">
       <!-- Top Bar -->
       <header class="sticky top-0 z-50 bg-white shadow-md h-16 flex items-center justify-between px-6 border-b border-gray-200">
-        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <h2 class="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
           {{ pageTitle }}
         </h2>
         <div class="flex items-center space-x-4">
@@ -19,7 +19,7 @@
           
           <div class="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-lg">
             <div
-              class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              class="w-8 h-8 bg-linear-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {{ authStore.user?.name?.charAt(0).toUpperCase() }}
             </div>
             <div class="text-sm">
@@ -28,7 +28,7 @@
             </div>
           </div>
           <button @click="handleLogout"
-            class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium">
+            class="px-4 py-2 bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium">
             {{ $t('common.logout') }}
           </button>
         </div>
