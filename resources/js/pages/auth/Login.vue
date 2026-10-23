@@ -51,6 +51,7 @@
 
           <div v-if="error" class="bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 p-4 rounded-lg text-sm">
             {{ $ui(error) }}
+            <button v-if="pageLoadFailed" type="button" @click="reloadPage" class="block mt-2 font-semibold underline">{{ $t('authNavigation.reload') }}</button>
           </div>
 
           <button
@@ -94,6 +95,7 @@
 
 <script setup>
 import { uiText } from '../../utils/uiText';
+import { isPageLoadError } from '../../utils/pageLoadError';
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -106,10 +108,13 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref('');
+const pageLoadFailed = ref(false);
+const reloadPage = () => window.location.reload();
 
 const handleLogin = async () => {
   loading.value = true;
   error.value = '';
+  pageLoadFailed.value = false;
 
   try {
     const response = await authStore.login({
@@ -119,12 +124,13 @@ const handleLogin = async () => {
     
     // Check if 2FA is required
     if (response.requires_2fa) {
-      router.push('/verify-2fa');
+      await router.push('/verify-2fa');
     } else {
-      router.push('/dashboard');
+      await router.push('/dashboard');
     }
   } catch (err) {
-    error.value = err.response?.data?.message || uiText("Gagal masuk. Periksa email dan kata sandi Anda.");
+    pageLoadFailed.value = isPageLoadError(err);
+    error.value = pageLoadFailed.value ? uiText("authNavigation.failed") : err.response?.data?.message || uiText("Gagal masuk. Periksa email dan kata sandi Anda.");
   } finally {
     loading.value = false;
   }

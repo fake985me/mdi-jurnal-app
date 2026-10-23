@@ -57,6 +57,7 @@
           <!-- Error Message -->
           <div v-if="error" class="bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 p-4 rounded-lg text-sm">
             {{ $ui(error) }}
+            <button v-if="pageLoadFailed" type="button" @click="reloadPage" class="block mt-2 font-semibold underline">{{ $t('authNavigation.reload') }}</button>
           </div>
 
           <!-- Success Message -->
@@ -101,6 +102,7 @@
 
 <script setup>
 import { uiText } from '../../utils/uiText';
+import { isPageLoadError } from '../../utils/pageLoadError';
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -117,6 +119,8 @@ const codeInputs = ref([]);
 const loading = ref(false);
 const resending = ref(false);
 const error = ref('');
+const pageLoadFailed = ref(false);
+const reloadPage = () => window.location.reload();
 const successMessage = ref('');
 
 // Timer state
@@ -176,13 +180,15 @@ const handleVerify = async () => {
   
   loading.value = true;
   error.value = '';
+  pageLoadFailed.value = false;
   
   try {
     const code = codeDigits.value.join('');
     await authStore.verify2fa(code);
-    router.push('/dashboard');
+    await router.push('/dashboard');
   } catch (err) {
-    error.value = err.response?.data?.message || 'Kode verifikasi tidak valid.';
+    pageLoadFailed.value = isPageLoadError(err);
+    error.value = pageLoadFailed.value ? uiText('authNavigation.failed') : err.response?.data?.message || 'Kode verifikasi tidak valid.';
     // Clear the code on error
     codeDigits.value = ['', '', '', '', '', ''];
     codeInputs.value[0]?.focus();
@@ -194,6 +200,7 @@ const handleVerify = async () => {
 const handleResend = async () => {
   resending.value = true;
   error.value = '';
+  pageLoadFailed.value = false;
   successMessage.value = '';
   
   try {

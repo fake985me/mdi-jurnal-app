@@ -2353,5 +2353,9 @@
         "saved": "Serial number transfer berhasil disimpan.",
         "locked": "Serial number yang sudah dikirim tidak dapat diganti.",
         "failed": "Gagal menyimpan serial number transfer."
+    },
+    "authNavigation": {
+        "failed": "Halaman berikutnya gagal dimuat. Muat ulang halaman, lalu coba lagi.",
+        "reload": "Muat ulang halaman"
     }
 }

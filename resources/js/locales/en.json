@@ -2353,5 +2353,9 @@
         "saved": "Transfer serial numbers saved.",
         "locked": "Serial numbers already dispatched cannot be replaced.",
         "failed": "Failed to save transfer serial numbers."
+    },
+    "authNavigation": {
+        "failed": "The next page could not load. Reload the page, then try again.",
+        "reload": "Reload page"
     }
 }
